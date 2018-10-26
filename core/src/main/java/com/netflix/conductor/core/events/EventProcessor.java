@@ -30,6 +30,7 @@ import com.netflix.conductor.metrics.Monitors;
 import com.netflix.conductor.service.ExecutionService;
 import com.netflix.conductor.service.MetadataService;
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.NDC;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +46,7 @@ import java.util.stream.Collectors;
  */
 @Singleton
 public class EventProcessor {
-	private static String EVENT_BUS_VAR = "${event_bus}";
+
 	private static Logger logger = LoggerFactory.getLogger(EventProcessor.class);
 
 	private MetadataService ms;
@@ -60,15 +61,12 @@ public class EventProcessor {
 
 	private ObjectMapper om;
 
-	private String eventBus;
-
 	@Inject
 	public EventProcessor(ExecutionService es, MetadataService ms, ActionProcessor ap, Configuration config, ObjectMapper om) {
 		this.es = es;
 		this.ms = ms;
 		this.ap = ap;
 		this.om = om;
-		this.eventBus = config.getProperty("event_bus", null);
 
 		int executorThreadCount = config.getIntProperty("workflow.event.processor.thread.count", 2);
 
@@ -105,7 +103,7 @@ public class EventProcessor {
 	}
 
 	public void refresh() {
-		Set<String> events = ms.getEventHandlers().stream().map(EventHandler::getEvent).map(this::handleEventBus).collect(Collectors.toSet());
+		Set<String> events = ms.getEventHandlers().stream().map(EventHandler::getEvent).collect(Collectors.toSet());
 		List<ObservableQueue> created = new LinkedList<>();
 		events.forEach(event -> queuesMap.computeIfAbsent(event, s -> {
 			ObservableQueue q = EventQueues.getQueue(event, false);
@@ -125,13 +123,6 @@ public class EventProcessor {
 			}
 		});
 		queuesMap.entrySet().removeIf(entry -> remove.contains(entry.getKey()));
-	}
-
-	private String handleEventBus(String event) {
-		if (StringUtils.isEmpty(eventBus)) {
-			return event;
-		}
-		return event.replace(EVENT_BUS_VAR, eventBus);
 	}
 
 	private void listen(ObservableQueue queue) {
@@ -156,15 +147,8 @@ public class EventProcessor {
 
 			es.addMessage(queue.getName(), msg);
 
-			// Find event handlers with direct event bus name as the prefix based on queue type
 			String event = queue.getType() + ":" + queue.getName();
 			List<EventHandler> handlers = ms.getEventHandlersForEvent(event, true);
-
-			// Find additional event handler which starts with ${event_bus} ...
-			if (StringUtils.isNotEmpty(eventBus)) {
-				event = EVENT_BUS_VAR + ":" + queue.getName();
-				handlers.addAll(ms.getEventHandlersForEvent(event, true));
-			}
 
 			for (EventHandler handler : handlers) {
 
@@ -225,6 +209,7 @@ public class EventProcessor {
 
 	private Future<Void> execute(EventExecution ee, Action action, String payload) {
 		return executors.submit(() -> {
+			NDC.push("event-"+ee.getMessageId());
 			try {
 
 				logger.debug("Executing {} with payload {}", action.getAction(), payload);
@@ -241,6 +226,8 @@ public class EventProcessor {
 				ee.setStatus(Status.FAILED);
 				ee.getOutput().put("exception", e.getMessage());
 				return null;
+			} finally {
+				NDC.remove();
 			}
 		});
 	}
