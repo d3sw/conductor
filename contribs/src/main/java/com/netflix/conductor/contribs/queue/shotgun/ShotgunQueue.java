@@ -33,6 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
 
+import java.time.Duration;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -246,7 +247,8 @@ public class ShotgunQueue implements ObservableQueue {
 
         Runnable task = () -> {
             try {
-                publish(subject, payload.getBytes());
+                ensureConnected();
+                conn.get().publish(subject, payload.getBytes(), Duration.ZERO);
                 queue.add(Boolean.TRUE);
             } catch (Exception ex) {
                 queue.add(ex);
@@ -280,7 +282,7 @@ public class ShotgunQueue implements ObservableQueue {
     private void connect() {
         try {
             OneMQClient temp = new OneMQ();
-            temp.connect(dns);
+            temp.connect(dns, null, null);
             logger.debug("Successfully connected for " + queueURI);
 
             conn.set(temp);
@@ -291,17 +293,12 @@ public class ShotgunQueue implements ObservableQueue {
     }
 
     private boolean isConnected() {
-        return (conn.get() != null && !conn.get().isClosed());
+        return (conn.get() != null && conn.get().isConnected());
     }
 
     private boolean isSubscribed() {
         return subs.get() != null;
 
-    }
-
-    private void publish(String subject, byte[] data) throws Exception {
-        ensureConnected();
-        conn.get().publish(subject, data);
     }
 
     private void subscribe() {
@@ -332,7 +329,7 @@ public class ShotgunQueue implements ObservableQueue {
 
     private void onMessage(Subscription subscription, ShotgunOuterClass.Message message) {
         String payload = message.getContent().toStringUtf8();
-        logger.debug(String.format("Received message for %s: %s", subscription.getSubject(), payload));
+        logger.info(String.format("Received message for %s: %s", subscription.getSubject(), payload));
 
         Message dstMsg = new Message();
         dstMsg.setId(NUID.nextGlobal());
