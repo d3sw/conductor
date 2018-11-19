@@ -77,12 +77,4 @@ public class ShotgunEventQueueProvider implements EventQueueProvider {
 		return queues.computeIfAbsent(queueURI, q -> new ShotgunQueue(dns, service, queueURI, publishRetryIn));
 	}
 
-	@Override
-	public void remove(String queueURI) {
-		ShotgunQueue queue = queues.get(queueURI);
-		if (queue != null) {
-			queue.close();
-			queues.remove(queueURI);
-		}
-	}
 }
