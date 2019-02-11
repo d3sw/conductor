@@ -207,7 +207,7 @@ class GenericHttpTask extends WorkflowSystemTask {
 			logger.error(ex.getMessage(), ex);
 			response.body = null;
 			response.headers = null;
-			response.statusCode = 0;
+			response.statusCode = -1;
 			response.error = ex.getMessage();
 			return response;
 		}
