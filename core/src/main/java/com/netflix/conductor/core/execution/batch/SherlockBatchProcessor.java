@@ -51,6 +51,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
+import static org.apache.commons.lang.StringUtils.defaultIfEmpty;
+
 /**
  * @author Oleksiy Lysak
  */
@@ -104,12 +106,15 @@ public class SherlockBatchProcessor extends AbstractBatchProcessor {
 
         Output response = new Output();
         try {
-            String uri = DNSLookup.lookup(service);
-            if (StringUtils.isEmpty(uri)) {
+            String url = DNSLookup.lookup(service);
+            if (StringUtils.isEmpty(url)) {
                 throw new IllegalStateException("Service lookup failed for " + service);
             }
-
-            WebResource.Builder builder = httpClient.resource(uri + endpoint).type(MediaType.APPLICATION_JSON);
+            String override = null;
+            if (carried.getInputData().containsKey("endpoint")) {
+                override = carried.getInputData().get("endpoint").toString();
+            }
+            WebResource.Builder builder = httpClient.resource(url + defaultIfEmpty(override, endpoint)).type(MediaType.APPLICATION_JSON);
 
             // Attaching Deluxe Owf Context
             builder.header("Deluxe-Owf-Context", carried.getCorrelationId());
