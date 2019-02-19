@@ -74,6 +74,9 @@ class GenericHttpTask extends WorkflowSystemTask {
 		if (responses != null && ArrayUtils.isNotEmpty(responses.getResponses())) {
 			String address = responses.getResponses()[0].getAddress();
 			int port = responses.getResponses()[0].getPort();
+			if (service.startsWith("sherlock.service")) {
+				return "http://" + address + ":9999"; // dummy port
+			}
 			return "http://" + address + ":" + port;
 		}
 		return null;
