@@ -65,7 +65,6 @@ public class Event extends WorkflowSystemTask {
 		
 		String payloadJson = om.writeValueAsString(payload);
 		Message message = new Message(task.getTaskId(), payloadJson, task.getTaskId());
-		message.setTraceId(workflow.getTraceId());
 		
 		ObservableQueue queue = getQueue(workflow, task);
 		if(queue != null) {

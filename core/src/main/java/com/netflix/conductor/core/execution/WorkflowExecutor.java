@@ -95,7 +95,6 @@ public class WorkflowExecutor {
 	private WorkflowStatusListener workflowStatusListener;
 
 	private boolean validateAuth;
-	private boolean traceIdEnabled;
 	private boolean authContextEnabled;
 	private boolean lazyDecider;
 
@@ -117,7 +116,6 @@ public class WorkflowExecutor {
 		this.workflowStatusListener = workflowStatusListener;
 		this.decider = new DeciderService(metadata, om);
 		this.validateAuth = Boolean.parseBoolean(config.getProperty("workflow.auth.validate", "false"));
-		this.traceIdEnabled = Boolean.parseBoolean(config.getProperty("workflow.traceid.enabled", "false"));
 		this.authContextEnabled = Boolean.parseBoolean(config.getProperty("workflow.authcontext.enabled", "false"));
 		this.lazyDecider = Boolean.parseBoolean(config.getProperty("workflow.lazy.decider", "false"));
 	}
@@ -131,32 +129,42 @@ public class WorkflowExecutor {
 	}
 
 	public String startWorkflow(String name, int version, String correlationId, Map<String, Object> input, String event, Map<String, String> taskToDomain) throws Exception {
-		return startWorkflow(null, name, version, input, correlationId, null, null, event, taskToDomain, null, null, null, null, null, false);
+		return startWorkflow(null, name, version, input, correlationId, null, null, event,
+			taskToDomain, null, null, null, null, false);
 	}
 
 	public String startWorkflow(String workflowId, String name, int version, String correlationId, Map<String, Object> input, String event, Map<String, String> taskToDomain, Map<String, Object> authorization) throws Exception {
-		return startWorkflow(workflowId, name, version, input, correlationId, null, null, event, taskToDomain, null, authorization, null, null, null, false);
+		return startWorkflow(workflowId, name, version, input, correlationId, null, null,
+			event, taskToDomain, null, authorization, null, null, false);
 	}
-	public String startWorkflow(String workflowId, String name, int version, String correlationId, Map<String, Object> input, String event, Map<String, String> taskToDomain, Map<String, Object> authorization, String contextToken, String contextUser, String traceId) throws Exception {
-		return startWorkflow(workflowId, name, version, input, correlationId, null, null, event, taskToDomain, null, authorization, contextToken, contextUser, traceId, false);
+	public String startWorkflow(String workflowId, String name, int version, String correlationId, Map<String, Object> input, String event, Map<String, String> taskToDomain, Map<String, Object> authorization, String contextToken, String contextUser) throws Exception {
+		return startWorkflow(workflowId, name, version, input, correlationId, null, null, event,
+			taskToDomain, null, authorization, contextToken, contextUser, false);
 	}
 	public String startWorkflow(String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event) throws Exception {
-		return startWorkflow(null, name, version, input, correlationId, parentWorkflowId,  parentWorkflowTaskId, event, null, null, null, null, null, null, false);
+		return startWorkflow(null, name, version, input, correlationId, parentWorkflowId,  parentWorkflowTaskId,
+			event, null, null, null, null, null, false);
 	}
 
-	public String startWorkflow(String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event, Map<String, String> taskToDomain, List<String> workflowIds, String traceId) throws Exception {
-		return startWorkflow(null, name, version, input, correlationId, parentWorkflowId, parentWorkflowTaskId, event, taskToDomain, workflowIds, null, null, null, traceId, false);
+	public String startWorkflow(String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event, Map<String, String> taskToDomain, List<String> workflowIds) throws Exception {
+		return startWorkflow(null, name, version, input, correlationId, parentWorkflowId, parentWorkflowTaskId,
+			event, taskToDomain, workflowIds, null, null, null, false);
 	}
 
-	public String startWorkflow(String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event, Map<String, String> taskToDomain, List<String> workflowIds, Map<String, Object> authorization, String contextToken, String contextUser, String traceId, boolean deciderInSweeper) throws Exception {
-		return startWorkflow(null, name, version, input, correlationId, parentWorkflowId, parentWorkflowTaskId, event, taskToDomain, workflowIds, authorization, contextToken, contextUser, traceId, deciderInSweeper);
+	public String startWorkflow(String name, int version, Map<String, Object> input, String correlationId,
+								String parentWorkflowId, String parentWorkflowTaskId, String event,
+								Map<String, String> taskToDomain, List<String> workflowIds,
+								Map<String, Object> authorization, String contextToken,
+								String contextUser, boolean deciderInSweeper) throws Exception {
+		return startWorkflow(null, name, version, input, correlationId, parentWorkflowId, parentWorkflowTaskId, event,
+			taskToDomain, workflowIds, authorization, contextToken, contextUser, deciderInSweeper);
 	}
 
 	public String startWorkflow(String workflowId, String name, int version, Map<String, Object> input,
 								String correlationId, String parentWorkflowId, String parentWorkflowTaskId,
 								String event, Map<String, String> taskToDomain, List<String> workflowIds,
 								Map<String, Object> authorization, String contextToken, String contextUser,
-								String traceId, boolean deciderInSweeper) throws Exception {
+								boolean deciderInSweeper) throws Exception {
 		// If no predefined workflowId - generate one
 		if (StringUtils.isEmpty(workflowId)) {
 			workflowId = IDGenerator.generate();
@@ -197,9 +205,6 @@ public class WorkflowExecutor {
 			wf.setContextToken(contextToken);
 			wf.setAuthorization(authorization);
 			wf.setContextUser(contextUser);
-			if (traceIdEnabled) {
-				wf.setTraceId(traceId);
-			}
 			// Add other ids if passed
 			if (CollectionUtils.isNotEmpty(workflowIds)) {
 				workflowIds.forEach(id -> {
@@ -719,9 +724,7 @@ public class WorkflowExecutor {
 			try {
 
 				WorkflowDef latestCancelWorkflow = metadata.getLatest(cancelWorkflow);
-				String cancelWFId = startWorkflow(cancelWorkflow, latestCancelWorkflow.getVersion(), input,
-					workflow.getCorrelationId(), workflow.getWorkflowId(), null, null, null,
-					workflow.getWorkflowIds(), workflow.getTraceId());
+				String cancelWFId = startWorkflow(cancelWorkflow, latestCancelWorkflow.getVersion(), input, workflow.getCorrelationId(), workflow.getWorkflowId(), null, null, null, workflow.getWorkflowIds());
 
 				workflow.getOutput().put("conductor.cancel_workflow", cancelWFId);
 
@@ -884,9 +887,7 @@ public class WorkflowExecutor {
 				input.put("taskRetryCount", failedTask.getRetryCount());
 
 				try {
-					startWorkflow(workflowName, workflowVersion, input, workflow.getCorrelationId(),
-						workflow.getWorkflowId(), null, null, null,
-						workflow.getWorkflowIds(), workflow.getTraceId());
+					startWorkflow(workflowName, workflowVersion, input, workflow.getCorrelationId(), workflow.getWorkflowId(), null, null, null, workflow.getWorkflowIds());
 				} catch (Exception e) {
 					logger.debug("Error workflow " + workflowName + " failed to start. reason: " + e.getMessage(), e);
 					Monitors.recordWorkflowStartError(workflowName);
@@ -930,9 +931,7 @@ public class WorkflowExecutor {
 			try {
 
 				WorkflowDef latestFailureWorkflow = metadata.getLatest(failureWorkflow);
-				String failureWFId = startWorkflow(failureWorkflow, latestFailureWorkflow.getVersion(), input,
-					workflow.getCorrelationId(), workflow.getWorkflowId(), null, null,null,
-					workflow.getWorkflowIds(), workflow.getTraceId());
+				String failureWFId=startWorkflow(failureWorkflow, latestFailureWorkflow.getVersion(), input, workflow.getCorrelationId(), workflow.getWorkflowId(), null, null,null, workflow.getWorkflowIds());
 				workflow.getOutput().put("conductor.failure_workflow", failureWFId);
 
 			} catch (Exception e) {
