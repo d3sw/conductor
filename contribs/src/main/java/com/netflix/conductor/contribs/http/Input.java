@@ -39,8 +39,6 @@ public class Input {
 
 	private boolean followRedirects = true;
 
-	private boolean traceId;
-
 	/**
 	 * @return the method
 	 */
@@ -243,19 +241,5 @@ public class Input {
 	 */
 	public void setFollowRedirects(boolean followRedirects) {
 		this.followRedirects = followRedirects;
-	}
-
-	/**
-	 * @return Whether set TraceId or not
-	 */
-	public boolean isTraceId() {
-		return traceId;
-	}
-
-	/**
-	 * @param traceId Whether set TraceId or not
-	 */
-	public void setTraceId(boolean traceId) {
-		this.traceId = traceId;
 	}
 }
