@@ -32,12 +32,12 @@ import com.netflix.dyno.connectionpool.impl.ConnectionPoolConfigurationImpl;
 import com.netflix.dyno.connectionpool.impl.lb.HostToken;
 import com.netflix.dyno.jedis.DynoJedisClient;
 import com.sun.jersey.api.client.Client;
-import org.eclipse.jetty.server.Connector;
-import org.eclipse.jetty.server.HttpConnectionFactory;
-import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.*;
+import org.eclipse.jetty.server.handler.HandlerCollection;
 import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.JedisCommands;
@@ -206,28 +206,31 @@ public class ConductorServer {
 			System.exit(-1);
 		}
 
-		//Swagger
-		String resourceBasePath = Main.class.getResource("/swagger-ui").toExternalForm();
-		this.server = new Server(port);
+		// Server
+		int maxThreads = cc.getIntProperty("conductor.server.max.threads", 200); // default value
+		server = new Server(new QueuedThreadPool(maxThreads));
+		server.setRequestLog(new AccessLogHandler());
 
+		final int maxHeaderSize = 64 * 1024; // ONECOND-758: Increase default request and response header size from 8kb to 64kb
+		HttpConfiguration httpConfiguration = new HttpConfiguration();
+		httpConfiguration.setRequestHeaderSize(maxHeaderSize);
+		httpConfiguration.setResponseHeaderSize(maxHeaderSize);
+
+		ServerConnector serverConnector = new ServerConnector(server, new HttpConnectionFactory(httpConfiguration));
+		serverConnector.setPort(port);
+
+		server.setConnectors(new Connector[] { serverConnector } );
+
+		// Swagger
+		String resourceBasePath = Main.class.getResource("/swagger-ui").toExternalForm();
 		ServletContextHandler context = new ServletContextHandler();
 		context.addFilter(GuiceFilter.class, "/*", EnumSet.allOf(DispatcherType.class));
 		context.setResourceBase(resourceBasePath);
 		context.setWelcomeFiles(new String[]{"index.html"});
 
-		server.setHandler(context);
-
-
-		// ONECOND-758: Increase default request and response header size from 8kb to 64kb
-		final int max = 64 * 1024;
-		for (Connector conn : server.getConnectors()) {
-			conn.getConnectionFactory(HttpConnectionFactory.class).getHttpConfiguration().setRequestHeaderSize(max);
-			conn.getConnectionFactory(HttpConnectionFactory.class).getHttpConfiguration().setResponseHeaderSize(max);
-		}
-
-
 		DefaultServlet staticServlet = new DefaultServlet();
 		context.addServlet(new ServletHolder(staticServlet), "/*");
+		server.setHandler(context);
 
 		server.start();
 		System.out.println("Started server on http://localhost:" + port + "/");
