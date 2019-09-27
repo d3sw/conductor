@@ -93,7 +93,7 @@ public class ConductorServer {
 			System.exit(1);
 		}
 
-		if ((db.equals(DB.dynomite) || db.equals(DB.redis))) {
+		if((db.equals(DB.dynomite) || db.equals(DB.redis))) {
 			String hosts = cc.getProperty("workflow.dynomite.cluster.hosts", null);
 			if (hosts == null) {
 				System.err.println("Missing dynomite/redis hosts.  Ensure 'workflow.dynomite.cluster.hosts' has been set in the supplied configuration.");
@@ -206,16 +206,15 @@ public class ConductorServer {
 			System.exit(-1);
 		}
 
-		// Server
-		server = new Server(port);
-		server.setRequestLog(new AccessLogHandler());
-
-		// Swagger
-		ServletContextHandler context = new ServletContextHandler();
+		//Swagger
 		String resourceBasePath = Main.class.getResource("/swagger-ui").toExternalForm();
+		this.server = new Server(port);
+		server.setRequestLog(new AccessLogHandler());
+		ServletContextHandler context = new ServletContextHandler();
 		context.addFilter(GuiceFilter.class, "/*", EnumSet.allOf(DispatcherType.class));
 		context.setResourceBase(resourceBasePath);
 		context.setWelcomeFiles(new String[]{"index.html"});
+
 		server.setHandler(context);
 
 		// ONECOND-758: Increase default request and response header size from 8kb to 64kb
@@ -243,6 +242,7 @@ public class ConductorServer {
 		if (join) {
 			server.join();
 		}
+
 	}
 
 	public synchronized void stop() throws Exception {
