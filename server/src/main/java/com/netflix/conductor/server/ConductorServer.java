@@ -247,7 +247,6 @@ public class ConductorServer {
 		if (join) {
 			server.join();
 		}
-
 	}
 
 	public synchronized void stop() throws Exception {
