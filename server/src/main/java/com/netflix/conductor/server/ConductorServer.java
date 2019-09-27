@@ -149,11 +149,11 @@ public class ConductorServer {
 				}).setLocalRack(cc.getAvailabilityZone()).setLocalDataCenter(cc.getRegion());
 
 				jedis = new DynoJedisClient.Builder()
-					.withHostSupplier(hs)
-					.withApplicationName(cc.getAppId())
-					.withDynomiteClusterName(dynoClusterName)
-					.withCPConfig(cp)
-					.build();
+						.withHostSupplier(hs)
+						.withApplicationName(cc.getAppId())
+						.withDynomiteClusterName(dynoClusterName)
+						.withCPConfig(cp)
+						.build();
 
 				logger.debug("Starting conductor server using dynomite cluster " + dynoClusterName);
 
