@@ -8,7 +8,6 @@ public class AccessLogHandler extends AbstractNCSARequestLog {
 	private static Logger logger = LoggerFactory.getLogger(AccessLogHandler.class);
 
 	AccessLogHandler() {
-		setLogServer(true);
 		setLogLatency(true);
 	}
 

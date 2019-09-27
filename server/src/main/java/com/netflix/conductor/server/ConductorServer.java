@@ -93,7 +93,7 @@ public class ConductorServer {
 			System.exit(1);
 		}
 
-		if((db.equals(DB.dynomite) || db.equals(DB.redis))) {
+		if ((db.equals(DB.dynomite) || db.equals(DB.redis))) {
 			String hosts = cc.getProperty("workflow.dynomite.cluster.hosts", null);
 			if (hosts == null) {
 				System.err.println("Missing dynomite/redis hosts.  Ensure 'workflow.dynomite.cluster.hosts' has been set in the supplied configuration.");
@@ -149,11 +149,11 @@ public class ConductorServer {
 				}).setLocalRack(cc.getAvailabilityZone()).setLocalDataCenter(cc.getRegion());
 
 				jedis = new DynoJedisClient.Builder()
-						.withHostSupplier(hs)
-						.withApplicationName(cc.getAppId())
-						.withDynomiteClusterName(dynoClusterName)
-						.withCPConfig(cp)
-						.build();
+					.withHostSupplier(hs)
+					.withApplicationName(cc.getAppId())
+					.withDynomiteClusterName(dynoClusterName)
+					.withCPConfig(cp)
+					.build();
 
 				logger.debug("Starting conductor server using dynomite cluster " + dynoClusterName);
 
@@ -206,17 +206,17 @@ public class ConductorServer {
 			System.exit(-1);
 		}
 
-		//Swagger
-		String resourceBasePath = Main.class.getResource("/swagger-ui").toExternalForm();
-		this.server = new Server(port);
+		// Server
+		server = new Server(port);
+		server.setRequestLog(new AccessLogHandler());
 
+		// Swagger
 		ServletContextHandler context = new ServletContextHandler();
+		String resourceBasePath = Main.class.getResource("/swagger-ui").toExternalForm();
 		context.addFilter(GuiceFilter.class, "/*", EnumSet.allOf(DispatcherType.class));
 		context.setResourceBase(resourceBasePath);
 		context.setWelcomeFiles(new String[]{"index.html"});
-
 		server.setHandler(context);
-
 
 		// ONECOND-758: Increase default request and response header size from 8kb to 64kb
 		final int max = 64 * 1024;
@@ -224,7 +224,6 @@ public class ConductorServer {
 			conn.getConnectionFactory(HttpConnectionFactory.class).getHttpConfiguration().setRequestHeaderSize(max);
 			conn.getConnectionFactory(HttpConnectionFactory.class).getHttpConfiguration().setResponseHeaderSize(max);
 		}
-
 
 		DefaultServlet staticServlet = new DefaultServlet();
 		context.addServlet(new ServletHolder(staticServlet), "/*");
@@ -244,7 +243,6 @@ public class ConductorServer {
 		if (join) {
 			server.join();
 		}
-
 	}
 
 	public synchronized void stop() throws Exception {
