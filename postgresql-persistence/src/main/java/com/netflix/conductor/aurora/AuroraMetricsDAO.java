@@ -133,6 +133,10 @@ public class AuroraMetricsDAO extends AuroraBaseDAO implements MetricsDAO {
 
 			// Wait until completed
 			waitCompleted(futures);
+
+			metrics.put("deluxe.conductor.admin.app.name", new AtomicLong(1L));
+			metrics.put("deluxe.conductor.admin.server.time", new AtomicLong(new Date().getTime()));
+
 		} finally {
 			pool.shutdown();
 		}
