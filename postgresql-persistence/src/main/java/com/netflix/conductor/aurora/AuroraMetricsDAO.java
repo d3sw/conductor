@@ -131,6 +131,9 @@ public class AuroraMetricsDAO extends AuroraBaseDAO implements MetricsDAO {
 //				futures.add(pool.submit(() -> eventWaitAverage(metrics, today)));
 			}
 
+			// Get the average execution time for execute event workflow based on each action
+			futures.add(pool.submit(() -> execWorkflowActionAverage(metrics)));
+
 			// Admin counters
 			futures.add(pool.submit(() -> adminCounters(metrics)));
 
@@ -743,11 +746,11 @@ public class AuroraMetricsDAO extends AuroraBaseDAO implements MetricsDAO {
                     }
 
                     // Parent typeName
-                    String metricName = String.format("%s.task_%s_%s", PREFIX, typeName, toLabel(today));
+                    String metricName = String.format("%s.task_%s%s", PREFIX, typeName, toLabel(today));
                     map.get(metricName).addAndGet(count);
 
                     // typeName + status
-                    metricName = String.format("%s.task_%s_%s_%s", PREFIX, typeName, status, toLabel(today));
+                    metricName = String.format("%s.task_%s_%s%s", PREFIX, typeName, status, toLabel(today));
                     map.get(metricName).addAndGet(count);
                 }
                 return null;
@@ -796,6 +799,28 @@ public class AuroraMetricsDAO extends AuroraBaseDAO implements MetricsDAO {
 				query(tx, SQL.toString(), q -> q.addParameter(filtered)
 					.executeAndFetch(handler));
 			}
+		});
+	}
+
+
+	private void execWorkflowActionAverage(Map<String, AtomicLong> map) {
+		withTransaction(tx -> {
+			ResultSetHandler<Object> handler = rs -> {
+				while (rs.next()) {
+					long avg = rs.getLong("avg_time_taken");
+					String metricName = String.format("%s.avg_execproc_workflow_msec%s.%s", PREFIX, toLabel(true), rs.getString("action_type"));
+					map.put(metricName, new AtomicLong(avg));
+				}
+				return null;
+			};
+
+            StringBuilder SQL = new StringBuilder("SELECT input::json->>'action' as action_type, avg(extract('epoch' from end_time) - extract('epoch' from start_time)) as avg_time_taken ");
+            SQL.append("FROM workflow WHERE start_time IS NOT NULL AND end_time IS NOT NULL ");
+			SQL.append("AND workflow_type like 'deluxe.dependencygraph.execute.process%' AND workflow_status = 'COMPLETED' ");
+			SQL.append("AND start_time >= ? ");
+			SQL.append("group by input::json->>'action' ");
+
+			query(tx, SQL.toString(), q -> q.addTimestampParameter(getStartTime()).executeAndFetch(handler));
 		});
 	}
 
