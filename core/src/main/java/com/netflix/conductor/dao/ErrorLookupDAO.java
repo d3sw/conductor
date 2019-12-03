@@ -30,7 +30,9 @@ public interface ErrorLookupDAO{
 
 	List<ErrorLookup> getErrors();
 
-	boolean addError(int id, String errorCode, String lookup, String workflowName, String generalMessage, String root_cause, String resolution);
+	boolean addError(ErrorLookup errorLookup);
+
+	boolean updateError(ErrorLookup errorLookup);
 
 	List<ErrorLookup> getErrorMatching(String errorString);
 

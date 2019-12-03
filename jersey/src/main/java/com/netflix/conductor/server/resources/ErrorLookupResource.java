@@ -75,6 +75,24 @@ public class ErrorLookupResource {
         return errorLookupDAO.getErrorMatching(error);
     }
 
+    @POST
+    @Path("/error")
+    @Consumes(MediaType.TEXT_PLAIN)
+    @ApiOperation(value = "Create a new error")
+    public void addError(ErrorLookup errorLookup) {
+        logger.debug("Called getErrors");
+        errorLookupDAO.addError(errorLookup);
+    }
+
+    @PUT
+    @Path("/error")
+    @Consumes(MediaType.TEXT_PLAIN)
+    @ApiOperation(value = "Create a new error")
+    public void updateError(ErrorLookup errorLookup) {
+        logger.debug("Called getErrors");
+        errorLookupDAO.addError(errorLookup);
+    }
+
 
 //    @POST
 //    @Path("/lookup/{error}")
