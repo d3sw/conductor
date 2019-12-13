@@ -84,6 +84,7 @@ create table meta_event_handler
     json_data   text         not null
 );
 
+CREATE SEQUENCE meta_error_registry_id_seq;
 
 CREATE TABLE meta_error_registry
 (
