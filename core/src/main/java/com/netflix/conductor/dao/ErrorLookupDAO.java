@@ -36,4 +36,8 @@ public interface ErrorLookupDAO{
 
 	List<ErrorLookup> getErrorMatching(String errorString);
 
+	List<ErrorLookup> getErrorMatching(String workflow, String errorString);
+
+	List<ErrorLookup> getErrorByCode(String errorCode);
+
 }

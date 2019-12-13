@@ -7,6 +7,8 @@ import com.netflix.conductor.common.run.ErrorLookup;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.dao.ErrorLookupDAO;
 import com.netflix.conductor.dao.ExecutionDAO;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.sql.DataSource;
@@ -15,9 +17,17 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * @author Pradeep Palat
+ */
+
 public class AuroraErrorLookupDAO extends AuroraBaseDAO implements ErrorLookupDAO {
 
 	private ExecutionDAO executionDAO;
+	private static Logger logger = LoggerFactory.getLogger(AuroraErrorLookupDAO.class);
+
+	private final String INSERT_SQL = "INSERT INTO meta_error_registry (error_code, lookup, workflow_name, general_message, root_cause, resolution) values (?,?,?,?,?,?)";
+	private final String UPDATE_SQL = "UPDATE meta_error_registry SET error_code = ?, lookup = ?, workflow_name = ?, general_message = ?, root_cause = ?, resolution = ? WHERE id = ?";
 
 	@Inject
 	public AuroraErrorLookupDAO(DataSource dataSource, ObjectMapper mapper, ExecutionDAO executionDAO, Configuration config) {
@@ -37,19 +47,38 @@ public class AuroraErrorLookupDAO extends AuroraBaseDAO implements ErrorLookupDA
 	}
 
 	@Override
-	public List<ErrorLookup> getErrorMatching(String errorString) {
+	public List<ErrorLookup> getErrorMatching(String workflow, String errorString) {
 		return getWithTransaction( tx->{
             ErrorLookupHandler handler = new ErrorLookupHandler();
+			logger.debug("Lookup error details for Workflow: " + workflow + " and Error: " + errorString);
 
-			StringBuilder SQL = new StringBuilder("select * from ( ");
-			SQL.append("select substring(?, lookup) as matched_txt, * ");
-			SQL.append("from meta_error_registry ");
-			SQL.append(") as match_results ");
-			SQL.append("where matched_txt is not null ");
-			SQL.append("order by length(matched_txt) desc ");
+			StringBuilder SQL = new StringBuilder("SELECT * FROM ( ");
+			SQL.append("SELECT SUBSTRING(?, lookup) AS matched_txt, * ");
+			SQL.append("FROM meta_error_registry ");
+			SQL.append("WHERE (WORKFLOW_NAME = ? OR WORKFLOW_NAME IS NULL) ");
+			SQL.append(") AS match_results ");
+			SQL.append("WHERE matched_txt IS NOT NULL ");
+			SQL.append("ORDER BY WORKFLOW_NAME, LENGTH(matched_txt) DESC ");
 
-			return query( tx, SQL.toString(), q-> q.addParameter(errorString).executeAndFetch(handler));
+			return query( tx, SQL.toString(), q-> q.addParameter(errorString).addParameter(workflow).executeAndFetch(handler));
 
+		});
+	}
+
+
+	@Override
+	public List<ErrorLookup> getErrorMatching(String errorString) {
+		return getErrorMatching(null, errorString);
+	}
+
+	@Override
+	public List<ErrorLookup> getErrorByCode(String errorCode) {
+		return getWithTransaction( tx->{
+			ErrorLookupHandler handler = new ErrorLookupHandler();
+			logger.debug("Lookup error details for Error Code: " + errorCode );
+
+			String SQL = "SELECT * FROM meta_error_registry WHERE ERROR_CODE = ?";
+			return query( tx, SQL, q-> q.addParameter(errorCode).executeAndFetch(handler));
 		});
 	}
 
@@ -66,9 +95,6 @@ public class AuroraErrorLookupDAO extends AuroraBaseDAO implements ErrorLookupDA
 	}
 
 	private boolean insertOrUpdateErrorLookup(ErrorLookup errorLookup) {
-
-		String INSERT_SQL = "INSERT INTO meta_error_registry (error_code, lookup, workflow_name, general_message, root_cause, resolution) values (?,?,?,?,?,?)";
-		String UPDATE_SQL = "UPDATE meta_error_registry SET error_code = ?, lookup = ?, workflow_name = ?, general_message = ?, root_cause = ?, resolution = ? WHERE id = ?";
 
 		return getWithTransaction( tx->{
 			int result = query( tx, INSERT_SQL, q->q.addParameter(errorLookup.getErrorCode())

@@ -6,6 +6,10 @@ import com.netflix.conductor.dao.ErrorLookupDAO;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * @author Pradeep Palat
+ */
+
 public class Elasticsearch6ErrorLookupDAO implements ErrorLookupDAO {
 
     List<ErrorLookup> emptyList = new ArrayList<>();
@@ -29,4 +33,10 @@ public class Elasticsearch6ErrorLookupDAO implements ErrorLookupDAO {
     public List<ErrorLookup> getErrorMatching(String errorString) {
         return emptyList;
     }
+
+    @Override
+    public List<ErrorLookup> getErrorMatching(String workflow, String errorString) { return emptyList; }
+
+    @Override
+    public List<ErrorLookup> getErrorByCode(String errorCode) { return emptyList; }
 }

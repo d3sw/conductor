@@ -1,5 +1,11 @@
 package com.netflix.conductor.common.run;
 
+import java.text.MessageFormat;
+
+/**
+ * @author Pradeep Palat
+ */
+
 public class ErrorLookup {
     private int id;
     private String errorCode;
@@ -8,6 +14,8 @@ public class ErrorLookup {
     private String generalMessage;
     private String rootCause;
     private String resolution;
+
+    final String formattedErr = "{0}: {1}: Resolution: {2}";
 
     public int getId() {
         return id;
@@ -64,4 +72,9 @@ public class ErrorLookup {
     public void setResolution(String resolution) {
         this.resolution = resolution;
     }
+
+    public String getFormattedError(){
+        return MessageFormat.format(formattedErr, errorCode, generalMessage, resolution);
+    }
+
 }
