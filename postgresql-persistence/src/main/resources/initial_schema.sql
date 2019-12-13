@@ -84,6 +84,22 @@ create table meta_event_handler
     json_data   text         not null
 );
 
+
+CREATE TABLE meta_error_registry
+(
+    id INTEGER DEFAULT nextval('meta_error_registry_id_seq'::regclass) NOT NULL,
+    error_code TEXT NOT NULL,
+    lookup TEXT NOT NULL,
+    workflow_name TEXT,
+    general_message TEXT,
+    root_cause TEXT,
+    resolution TEXT NOT NULL,
+    PRIMARY KEY (id),
+    UNIQUE (error_code),
+    UNIQUE (lookup, workflow_name)
+);
+
+
 -- ----------------------------------------------------------------------------------------------------------------
 -- schema for execution dao
 -- --------------------------------------------------------------------------------------------------------------
