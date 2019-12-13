@@ -94,7 +94,7 @@ public class ErrorLookupResource {
 
     @POST
     @Path("/error")
-    @Consumes(MediaType.TEXT_PLAIN)
+    @Consumes(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Create a new error")
     public void addError(ErrorLookup errorLookup) {
         logger.debug("Called getErrors");
@@ -103,7 +103,7 @@ public class ErrorLookupResource {
 
     @PUT
     @Path("/error")
-    @Consumes(MediaType.TEXT_PLAIN)
+    @Consumes(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Create a new error")
     public void updateError(ErrorLookup errorLookup) {
         logger.debug("Called getErrors");
