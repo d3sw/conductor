@@ -68,7 +68,7 @@ job "conductor" {
       env {
         TLD = "${meta.tld}"
         APP_VERSION = "[[.app_version]]"
-        WF_SERVICE  = "${NOMAD_JOB_NAME}-server.service.${meta.tld}"
+        WF_SERVICE  = "${NOMAD_JOB_NAME}-api.service.${meta.tld}"
         AUTH_SERVICE_NAME    = "auth.service.${meta.tld}"
         KEYCLOAK_SERVICE_URL = "http://keycloak.service.${meta.tld}"
       }
@@ -89,8 +89,9 @@ job "conductor" {
       # Write secrets to the file that can be mounted as volume
       template {
         data = <<EOF
-        {{ with printf "secret/conductor/ui" | secret }}{{ range $k, $v := .Data }}{{ $k }}={{ $v }}
-        {{ end }}{{ end }}
+        {{ with printf "secret/conductor/ui" | secret }}
+          {{ range $k, $v := .Data }}{{ $k }}={{ $v }}{{ end }}
+        {{ end }}
         EOF
 
         destination   = "local/secrets/conductor-ui.env"
@@ -110,6 +111,158 @@ job "conductor" {
     } // end ui task
   } // end ui group
 
+  group "api" {
+    count = 3
+
+    # vault declaration
+    vault {
+      change_mode = "restart"
+      env         = false
+      policies    = ["read-secrets"]
+    }
+
+    task "api" {
+      meta {
+        product-class = "custom"
+        stack-role    = "api"
+      }
+
+      driver = "docker"
+
+      config {
+        image = "583623634344.dkr.ecr.us-west-2.amazonaws.com/conductor:[[.app_version]]-server"
+
+        port_map {
+          http = 8080
+        }
+
+        volumes = [
+          "local/secrets/conductor-api.env:/app/config/secrets.env",
+        ]
+
+        labels {
+          service   = "${NOMAD_JOB_NAME}"
+          component = "${NOMAD_TASK_NAME}"
+        }
+
+        logging {
+          type = "syslog"
+
+          config {
+            tag = "${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}"
+          }
+        }
+      }
+
+      env {
+        TLD         = "${meta.tld}"
+        STACK       = "${meta.env}"
+        APP_VERSION = "[[.app_version]]"
+
+        // Database settings
+        db = "aurora"
+
+        // Workflow settings
+        workflow_failure_expandInline                = "false"
+        decider_sweep_frequency_seconds              = "60"
+        workflow_system_task_worker_thread_count     = "5"
+        workflow_system_task_worker_poll_count       = "50"
+        workflow_system_task_worker_poll_timeout     = "1000"
+        workflow_system_task_worker_poll_frequency   = "1000"
+        workflow_system_task_worker_queue_size       = "300"
+        workflow_system_task_http_unack_timeout      = "300"
+        workflow_sweeper_frequency                   = "500"
+        workflow_sweeper_thread_count                = "50"
+        workflow_sweeper_pool_timeout                = "1000"
+        workflow_sweeper_batch_names                 = "sherlock"
+        workflow_batch_sherlock_service              = "sherlock.service.${meta.tld}"
+        workflow_batch_sherlock_worker_count         = "100"
+        workflow_batch_sherlock_enabled              = "true"
+        workflow_lazy_decider                        = "true"
+
+        // Elasticsearch settings.
+        workflow_elasticsearch_mode = "none"
+
+        // Auth settings. Rest settings are in vault
+        conductor_auth_service  = "auth.service.${meta.tld}"
+        conductor_auth_endpoint = "/v1/tenant/deluxe/auth/token"
+
+        // One MQ settings
+        io_shotgun_dns            = "shotgun.service.${meta.tld}"
+        io_shotgun_service        = "${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}-${meta.tld}"
+        io_shotgun_publishRetryIn = "5,10,15"
+        io_shotgun_shared         = "false"
+        com_bydeluxe_onemq_log    = "false"
+
+        // Additional modules
+        conductor_additional_modules = "com.netflix.conductor.contribs.ShotgunModule"
+
+        // Exclude demo workflows
+        loadSample = "false"
+
+        // Disable system-level loggers by default
+        log4j_logger_com_jayway_jsonpath = "OFF"
+        log4j_logger_com_zaxxer_hikari = "INFO"
+        log4j_logger_org_eclipse_jetty = "INFO"
+        log4j_logger_org_apache_http = "INFO"
+        log4j_logger_io_grpc_netty = "INFO"
+        log4j_logger_io_swagger = "OFF"
+        log4j_logger_tracer = "OFF"
+
+        // DataDog Integration
+        DD_AGENT_HOST = "datadog-apm.service.${meta.tld}"
+        DD_SERVICE_NAME = "conductor.server.webapi"
+        DD_SERVICE_MAPPING = "postgresql:conductor.server.postgresql"
+        DD_TRACE_GLOBAL_TAGS = "env:${meta.tld}"
+        DD_LOGS_INJECTION = "true"
+      }
+
+      service {
+        tags = ["urlprefix-${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}.dmlib.${meta.public_tld}/ auth=true trace=true", "urlprefix-${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}.service.${meta.tld}/ trace=true"]
+        name = "${JOB}-${TASK}"
+        port = "http"
+
+        check {
+          type     = "http"
+          path     = "/v1/health"
+          interval = "30s"
+          timeout  = "10s"
+          check_restart {
+            limit           = 3
+            grace           = "180s"
+            ignore_warnings = false
+          }
+        }
+      }
+
+      # Write secrets to the file that can be mounted as volume
+      template {
+        data = <<EOF
+        {{ with printf "secret/conductor" | secret }}
+          {{ range $k, $v := .Data }}{{ $k }}={{ $v }}{{ end }}
+        {{ end }}
+        {{ with printf "secret/conductor/api" | secret }}
+          {{ range $k, $v := .Data }}{{ $k }}={{ $v }}{{ end }}
+        {{ end }}
+        EOF
+
+        destination   = "local/secrets/conductor-api.env"
+        change_mode   = "signal"
+        change_signal = "SIGINT"
+      }
+
+      resources {
+        cpu    = 512  # MHz
+        memory = 1024 # MB
+
+        network {
+          mbits = 1000
+          port  "http"{}
+        }
+      }
+    } // end api task
+  } // end api group
+
   group "server" {
     count = 5
 
@@ -123,7 +276,7 @@ job "conductor" {
     task "server" {
       meta {
         product-class = "custom"
-        stack-role    = "api"
+        stack-role    = "worker"
       }
 
       driver = "docker"
@@ -237,8 +390,9 @@ job "conductor" {
       # Write secrets to the file that can be mounted as volume
       template {
         data = <<EOF
-        {{ with printf "secret/conductor" | secret }}{{ range $k, $v := .Data }}{{ $k }}={{ $v }}
-        {{ end }}{{ end }}
+        {{ with printf "secret/conductor" | secret }}
+          {{ range $k, $v := .Data }}{{ $k }}={{ $v }}{{ end }}
+        {{ end }}
         EOF
 
         destination   = "local/secrets/conductor-server.env"
