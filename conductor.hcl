@@ -237,12 +237,10 @@ job "conductor" {
       # Write secrets to the file that can be mounted as volume
       template {
         data = <<EOF
-        {{ with printf "secret/conductor" | secret }}
-          {{ range $k, $v := .Data }}{{ $k }}={{ $v }}
-        {{ end }} {{ end }}
-        {{ with printf "secret/conductor/api" | secret }}
-          {{ range $k, $v := .Data }}{{ $k }}={{ $v }}
-        {{ end }} {{ end }}
+        {{ with printf "secret/conductor" | secret }}{{ range $k, $v := .Data }}{{ $k }}={{ $v }}
+        {{ end }}{{ end }}
+        {{ with printf "secret/conductor/api" | secret }}{{ range $k, $v := .Data }}{{ $k }}={{ $v }}
+        {{ end }}{{ end }}
         EOF
 
         destination   = "local/secrets/conductor-api.env"
