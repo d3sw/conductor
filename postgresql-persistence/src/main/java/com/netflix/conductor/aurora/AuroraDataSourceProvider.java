@@ -28,14 +28,15 @@ public class AuroraDataSourceProvider implements Provider<HikariDataSource> {
 
 		String options = config.getProperty("aurora.options", "");
 		String url = String.format("jdbc:postgresql://%s:%s/%s?%s", host, port, db, options);
+		String pool_name = config.getProperty("aurora.core.pool.name", "core");
 
 		HikariConfig poolConfig = new HikariConfig();
 		poolConfig.setJdbcUrl(url);
 		poolConfig.setUsername(user);
 		poolConfig.setPassword(pwd);
 		poolConfig.setAutoCommit(false);
-		poolConfig.setPoolName("core");
-		poolConfig.addDataSourceProperty("ApplicationName", "core-" + getHostName());
+		poolConfig.setPoolName(pool_name);
+		poolConfig.addDataSourceProperty("ApplicationName", pool_name + "-" + getHostName());
 		poolConfig.addDataSourceProperty("cachePrepStmts", "true");
 		poolConfig.addDataSourceProperty("prepStmtCacheSize", "250");
 		poolConfig.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
