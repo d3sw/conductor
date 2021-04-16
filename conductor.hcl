@@ -162,22 +162,15 @@ job "conductor" {
         db = "aurora"
 
         // Workflow settings
-        workflow_failure_expandInline                = "false"
-        decider_sweep_frequency_seconds              = "60"
-        workflow_system_task_worker_thread_count     = "5"
-        workflow_system_task_worker_poll_count       = "50"
-        workflow_system_task_worker_poll_timeout     = "1000"
-        workflow_system_task_worker_poll_frequency   = "1000"
-        workflow_system_task_worker_queue_size       = "300"
-        workflow_system_task_http_unack_timeout      = "300"
-        workflow_sweeper_frequency                   = "500"
-        workflow_sweeper_thread_count                = "50"
-        workflow_sweeper_pool_timeout                = "1000"
-        workflow_sweeper_batch_names                 = "sherlock"
-        workflow_batch_sherlock_service              = "sherlock.service.${meta.tld}"
-        workflow_batch_sherlock_worker_count         = "100"
-        workflow_batch_sherlock_enabled              = "true"
         workflow_lazy_decider                        = "true"
+        workflow_failure_expandInline                = "false"
+        workflow_system_task_worker_thread_count     = 0
+        workflow_system_task_worker_queue_size       = 1
+        workflow_sweeper_thread_count                = 0
+        workflow_sweeper_batch_names                 = ""
+        workflow_batch_sherlock_worker_count         = 1
+        workflow_batch_sherlock_enabled              = "true"  # Must be enabled as this is used by Workflow definition
+        workflow_event_processor_disabled            = "true"
 
         // Elasticsearch settings.
         workflow_elasticsearch_mode = "none"
