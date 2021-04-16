@@ -241,6 +241,7 @@ job "conductor" {
         {{ with printf "secret/conductor" | secret }}
           {{ range $k, $v := .Data }}{{ $k }}={{ $v }}{{ end }}
         {{ end }}
+
         {{ with printf "secret/conductor/api" | secret }}
           {{ range $k, $v := .Data }}{{ $k }}={{ $v }}{{ end }}
         {{ end }}
