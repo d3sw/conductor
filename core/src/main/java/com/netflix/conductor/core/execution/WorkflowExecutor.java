@@ -1462,7 +1462,9 @@ public class WorkflowExecutor {
 
 			queue.setUnackTimeout(QueueUtils.getQueueName(task), task.getTaskId(), systemTask.getRetryTimeInSecond() * 1000L);
 			task.setStarted(true);
-			task.setStartTime(System.currentTimeMillis());
+			if (task.getStartTime() == 0) {
+				task.setStartTime(System.currentTimeMillis());
+			}
 			task.setPollCount(task.getPollCount() + 1);
 
 			// Metrics
