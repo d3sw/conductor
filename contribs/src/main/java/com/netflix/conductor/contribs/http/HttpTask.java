@@ -69,7 +69,7 @@ public class HttpTask extends GenericHttpTask {
 		String hostAndPort = null;
 		Input input = om.convertValue(request, Input.class);
 
-		long sd_took_time = -1;
+		long sd_lookup_time = -1;
 		if (request == null) {
 			task.setReasonForIncompletion(MISSING_REQUEST);
 			task.setStatus(Status.FAILED);
@@ -77,7 +77,7 @@ public class HttpTask extends GenericHttpTask {
 		} else if (StringUtils.isNotEmpty(input.getServiceDiscoveryQuery())) {
 			long sd_start_time = System.currentTimeMillis();
 			hostAndPort = lookup(input.getServiceDiscoveryQuery());
-			sd_took_time = System.currentTimeMillis() - sd_start_time;
+			sd_lookup_time = System.currentTimeMillis() - sd_start_time;
 
 			if (null == hostAndPort) {
 				final String msg = "Service discovery failed for: " + input.getServiceDiscoveryQuery()
@@ -129,7 +129,7 @@ public class HttpTask extends GenericHttpTask {
 					+ ",service=" + input.getServiceDiscoveryQuery()
 					+ ",taskId=" + task.getTaskId()
 					+ ",url=" + input.getUri()
-					+ ",sd took=" + sd_took_time + " ms"
+					+ ",sd took=" + sd_lookup_time + " ms"
 					+ ",correlationId=" + workflow.getCorrelationId()
 					+ ",traceId=" + workflow.getTraceId()
 					+ ",contextUser=" + workflow.getContextUser());
@@ -175,28 +175,28 @@ public class HttpTask extends GenericHttpTask {
 
 			task.getOutputData().put("response", response.asMap());
 
-			long took_time = System.currentTimeMillis() - start_time;
+			long exec_time = System.currentTimeMillis() - start_time;
 			logger.info("http task completed. WorkflowId=" + workflow.getWorkflowId()
 					+ ",taskReferenceName=" + task.getReferenceTaskName()
 					+ ",service=" + input.getServiceDiscoveryQuery()
 					+ ",taskId=" + task.getTaskId()
 					+ ",url=" + input.getUri()
-					+ ",sd_time_ms=" + sd_took_time
-					+ ",execute_time_ms=" + took_time
+					+ ",sdTimeMs=" + sd_lookup_time
+					+ ",executeTimeMs=" + exec_time
 					+ ",statusCode=" + response.statusCode
 					+ ",correlationId=" + workflow.getCorrelationId()
 					+ ",contextUser=" + workflow.getContextUser()
 					+ ",traceId=" + workflow.getTraceId()
 					+ ",request=" + input.getBody());
 		} catch (Exception ex) {
-			long took_time = System.currentTimeMillis() - start_time;
+			long exec_time = System.currentTimeMillis() - start_time;
 			logger.error("http task failed. WorkflowId=" + workflow.getWorkflowId()
 					+ ",taskReferenceName=" + task.getReferenceTaskName()
 					+ ",service=" + input.getServiceDiscoveryQuery()
 					+ ",taskId=" + task.getTaskId()
 					+ ",url=" + input.getUri()
-					+ ",sd_time_ms=" + sd_took_time
-					+ ",execute_time_ms=" + took_time
+					+ ",sdTimeMs=" + sd_lookup_time
+					+ ",executeTimeMs=" + exec_time
 					+ ",correlationId=" + workflow.getCorrelationId()
 					+ ",contextUser=" + workflow.getContextUser() + " with " + ex.getMessage(), ex);
 			task.setStatus(Status.FAILED);
