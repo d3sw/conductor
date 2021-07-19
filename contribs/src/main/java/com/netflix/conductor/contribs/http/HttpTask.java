@@ -121,6 +121,7 @@ public class HttpTask extends GenericHttpTask {
 			return;
 		}
 
+		long start_time = System.currentTimeMillis();
 		try {
 			HttpResponse response = new HttpResponse();
 			logger.debug("http task starting. WorkflowId=" + workflow.getWorkflowId()
@@ -128,7 +129,7 @@ public class HttpTask extends GenericHttpTask {
 					+ ",service=" + input.getServiceDiscoveryQuery()
 					+ ",taskId=" + task.getTaskId()
 					+ ",url=" + input.getUri()
-					+ ",dns sd took=" + sd_took_time + " ms"
+					+ ",sd took=" + sd_took_time + " ms"
 					+ ",correlationId=" + workflow.getCorrelationId()
 					+ ",traceId=" + workflow.getTraceId()
 					+ ",contextUser=" + workflow.getContextUser());
@@ -149,17 +150,6 @@ public class HttpTask extends GenericHttpTask {
 			} else {
 				response = httpCall(input, task, workflow, executor);
 			}
-
-			logger.info("http task completed. WorkflowId=" + workflow.getWorkflowId()
-					+ ",taskReferenceName=" + task.getReferenceTaskName()
-					+ ",service=" + input.getServiceDiscoveryQuery()
-					+ ",taskId=" + task.getTaskId()
-					+ ",url=" + input.getUri()
-					+ ",statusCode=" + response.statusCode
-					+ ",correlationId=" + workflow.getCorrelationId()
-					+ ",contextUser=" + workflow.getContextUser()
-					+ ",traceId=" + workflow.getTraceId()
-					+ ",request=" + input.getBody());
 
 			// true - means status been handled, otherwise should apply the original logic
 			boolean handled = handleStatusMapping(task, response);
@@ -184,12 +174,29 @@ public class HttpTask extends GenericHttpTask {
 			handleResetStartTime(task, executor);
 
 			task.getOutputData().put("response", response.asMap());
+
+			long took_time = System.currentTimeMillis() - start_time;
+			logger.info("http task completed. WorkflowId=" + workflow.getWorkflowId()
+					+ ",taskReferenceName=" + task.getReferenceTaskName()
+					+ ",service=" + input.getServiceDiscoveryQuery()
+					+ ",taskId=" + task.getTaskId()
+					+ ",url=" + input.getUri()
+					+ ",sd_time_ms=" + sd_took_time
+					+ ",execute_time_ms=" + took_time
+					+ ",statusCode=" + response.statusCode
+					+ ",correlationId=" + workflow.getCorrelationId()
+					+ ",contextUser=" + workflow.getContextUser()
+					+ ",traceId=" + workflow.getTraceId()
+					+ ",request=" + input.getBody());
 		} catch (Exception ex) {
+			long took_time = System.currentTimeMillis() - start_time;
 			logger.error("http task failed. WorkflowId=" + workflow.getWorkflowId()
 					+ ",taskReferenceName=" + task.getReferenceTaskName()
 					+ ",service=" + input.getServiceDiscoveryQuery()
 					+ ",taskId=" + task.getTaskId()
 					+ ",url=" + input.getUri()
+					+ ",sd_time_ms=" + sd_took_time
+					+ ",execute_time_ms=" + took_time
 					+ ",correlationId=" + workflow.getCorrelationId()
 					+ ",contextUser=" + workflow.getContextUser() + " with " + ex.getMessage(), ex);
 			task.setStatus(Status.FAILED);
