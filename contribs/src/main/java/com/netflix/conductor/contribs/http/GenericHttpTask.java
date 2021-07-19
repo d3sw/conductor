@@ -171,7 +171,7 @@ class GenericHttpTask extends WorkflowSystemTask {
 		if (headers.containsKey(CommonParams.AUTH_CONTEXT)) {
 			headers.put(CommonParams.AUTH_CONTEXT, "xxxxxxxxxxxxxxxxxxx");
 		}
-		logger.debug("http task headers " + headers);
+		logger.trace("http task headers " + headers);
 
 		// Store input headers back to the input request
 		if (MapUtils.isNotEmpty(input.getHeaders())) {
