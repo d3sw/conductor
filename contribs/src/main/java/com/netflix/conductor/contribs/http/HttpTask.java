@@ -129,7 +129,7 @@ public class HttpTask extends GenericHttpTask {
 					+ ",service=" + input.getServiceDiscoveryQuery()
 					+ ",taskId=" + task.getTaskId()
 					+ ",url=" + input.getUri()
-					+ ",sd took=" + sd_lookup_time + " ms"
+					+ ",sdTimeMs=" + sd_lookup_time
 					+ ",correlationId=" + workflow.getCorrelationId()
 					+ ",traceId=" + workflow.getTraceId()
 					+ ",contextUser=" + workflow.getContextUser());
