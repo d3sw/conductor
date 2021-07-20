@@ -24,6 +24,7 @@ import com.netflix.conductor.auth.ForeignAuthManager;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
 import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.core.DNSLookup;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.ScriptEvaluator;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
@@ -69,20 +70,17 @@ public class HttpTask extends GenericHttpTask {
 		String hostAndPort = null;
 		Input input = om.convertValue(request, Input.class);
 
-		long sd_lookup_time = -1;
 		if (request == null) {
 			task.setReasonForIncompletion(MISSING_REQUEST);
 			task.setStatus(Status.FAILED);
 			return;
 		} else if (StringUtils.isNotEmpty(input.getServiceDiscoveryQuery())) {
-			long sd_start_time = System.currentTimeMillis();
-			hostAndPort = lookup(input.getServiceDiscoveryQuery());
-			sd_lookup_time = System.currentTimeMillis() - sd_start_time;
+			hostAndPort = DNSLookup.lookup(input.getServiceDiscoveryQuery());
 
 			if (null == hostAndPort) {
 				final String msg = "Service discovery failed for: " + input.getServiceDiscoveryQuery()
 						+ " . No records found.";
-			        logger.error(msg);
+				logger.error(msg);
 				task.setStatus(Status.FAILED);
 				task.setReasonForIncompletion(msg);
 				task.getOutputData().put("response",msg);
@@ -129,7 +127,6 @@ public class HttpTask extends GenericHttpTask {
 					+ ",service=" + input.getServiceDiscoveryQuery()
 					+ ",taskId=" + task.getTaskId()
 					+ ",url=" + input.getUri()
-					+ ",sdTimeMs=" + sd_lookup_time
 					+ ",correlationId=" + workflow.getCorrelationId()
 					+ ",traceId=" + workflow.getTraceId()
 					+ ",contextUser=" + workflow.getContextUser());
@@ -181,7 +178,6 @@ public class HttpTask extends GenericHttpTask {
 					+ ",service=" + input.getServiceDiscoveryQuery()
 					+ ",taskId=" + task.getTaskId()
 					+ ",url=" + input.getUri()
-					+ ",sdTimeMs=" + sd_lookup_time
 					+ ",executeTimeMs=" + exec_time
 					+ ",statusCode=" + response.statusCode
 					+ ",correlationId=" + workflow.getCorrelationId()
@@ -195,7 +191,6 @@ public class HttpTask extends GenericHttpTask {
 					+ ",service=" + input.getServiceDiscoveryQuery()
 					+ ",taskId=" + task.getTaskId()
 					+ ",url=" + input.getUri()
-					+ ",sdTimeMs=" + sd_lookup_time
 					+ ",executeTimeMs=" + exec_time
 					+ ",correlationId=" + workflow.getCorrelationId()
 					+ ",contextUser=" + workflow.getContextUser() + " with " + ex.getMessage(), ex);
