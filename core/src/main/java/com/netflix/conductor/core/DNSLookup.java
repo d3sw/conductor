@@ -1,30 +1,40 @@
 package com.netflix.conductor.core;
-import org.apache.commons.lang3.ArrayUtils;
+
+import com.netflix.conductor.service.MetricService;
 import org.xbill.DNS.*;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Arrays;
 
 /**
  * Created by hhwang on 6/15/2017.
  */
 public class DNSLookup {
-    public DNSLookup(){}
-
-    public static String lookup(String service) {
-        DNSLookup lookup = new DNSLookup();
-        DNSLookup.DNSResponses responses = lookup.lookupService(service);
-        if (responses != null && ArrayUtils.isNotEmpty(responses.getResponses())) {
-            String address = responses.getResponses()[0].getAddress();
-            int port = responses.getResponses()[0].getPort();
-            return "http://" + address + ":" + port;
-        }
-        return null;
+    public DNSLookup() {
     }
 
-    public DNSResponses lookupService(String query) {
-        DNSResponses responses = new DNSResponses();
+    public static String lookup(String service) {
+        long sd_start_time = System.currentTimeMillis();
+        long sd_lookup_time = -1;
+        try {
+            DNSLookup lookup = new DNSLookup();
+            DNSResponse dnsResponse = lookup.lookupService(service);
+            if (dnsResponse != null) {
+                String address = dnsResponse.getAddress();
+                int port = dnsResponse.getPort();
+                sd_lookup_time = System.currentTimeMillis() - sd_start_time;
+                return "http://" + address + ":" + port;
+            }
+            return null;
+        } finally {
+            // Service Discovery Metric
+            MetricService
+                    .getInstance()
+                    .serviceDiscovery(service, sd_lookup_time);
+        }
+    }
+
+    public DNSResponse lookupService(String query) {
         try {
             Lookup lookup = new Lookup(query, Type.SRV);
             Cache cache = Lookup.getDefaultCache(DClass.IN);
@@ -38,72 +48,36 @@ public class DNSLookup {
                     String hostname = srv.getTarget().toString().replaceFirst("\\.$", "");
                     InetAddress address = Address.getByName(hostname);
                     int port = srv.getPort();
-                    DNSResponse r = new DNSResponse(hostname, port);
-                    r.setAddress(address.getHostAddress());
-                    responses.addResponse(r);
+                    return new DNSResponse(hostname, port, address.getHostAddress());
                 }
             }
         } catch (TextParseException | UnknownHostException e) {
             e.printStackTrace();
         }
-        return responses;
+        return null;
     }
 
-    public class DNSResponse {
+    private static class DNSResponse {
+        private final String hostname;
+        private final String address;
+        private final int port;
 
-        String hostname;
-        String address;
-        int port;
-
-        public DNSResponse(String hostname, int port) {
+        public DNSResponse(String hostname, int port, String address) {
             this.hostname = hostname;
+            this.address = address;
             this.port = port;
         }
 
-        public void setHostName(String hostname) {
-            this.hostname = hostname;
-        }
         public String getHostName() {
             return this.hostname;
         }
 
-        public void setAddress(String address) {
-            this.address = address;
-        }
         public String getAddress() {
             return this.address;
         }
 
-
-        public void setPort(int port) {
-            this.port = port;
-        }
         public int getPort() {
             return this.port;
-        }
-    }
-
-    public class DNSResponses {
-
-        DNSResponse[] responses;
-
-        public DNSResponses() {};
-
-        public void setResponses(DNSResponse[] r) {
-            this.responses = r;
-        }
-        public DNSResponse[] getResponses() {
-            return this.responses;
-        }
-
-        public void addResponse(DNSResponse response) {
-            if (responses == null) {
-                responses = new DNSResponse[1];
-            }
-            else {
-                responses = Arrays.copyOf(responses, responses.length+1);
-            }
-            responses[responses.length-1] = response;
         }
     }
 }
