@@ -19,6 +19,7 @@
 package com.netflix.conductor.core.events;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.events.EventExecution.Status;
 import com.netflix.conductor.common.metadata.events.EventHandler;
@@ -113,6 +114,16 @@ public class EventProcessor {
 			activeHandlers.parallelStream().forEach(handler -> queuesMap.computeIfAbsent(handler.getEvent(), s -> {
 				ObservableQueue queue = EventQueues.getQueue(handler.getEvent(), false,
 					handler.isRetryEnabled(), handler.getPrefetchSize(), this::handle);
+				String condition = handler.getCondition();
+				String conditionClass = handler.getConditionClass();
+				ObjectNode payloadObj = om.createObjectNode();
+				if (isNotEmpty(condition) || isNotEmpty(conditionClass)) {
+					try {
+						boolean success = evalCondition(condition, conditionClass, payloadObj);
+					} catch (Exception ex) {
+						logger.error(handler.getName() + " event handler condition evaluation failed " + ex.getMessage(), ex);
+					}
+				}
 				if (queue == null) {
 					return null;
 				}

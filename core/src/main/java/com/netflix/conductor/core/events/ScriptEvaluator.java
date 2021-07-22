@@ -65,10 +65,15 @@ public class ScriptEvaluator {
 	}
 
 	public static Object eval(String script, Object input) throws ScriptException {
-		Bindings bindings = engine.createBindings();
-		bindings.put("$", input);
-		return engine.eval(script, bindings);
-
+		Object evaluate;
+		try {
+			Bindings bindings = engine.createBindings();
+			bindings.put("$", input);
+			evaluate = engine.eval(script, bindings);
+		} catch (ScriptException ex) {
+			throw new ScriptException(ex);
+		}
+		return evaluate;
 	}
 
 	public static String evalJq(String expression, Object payload) throws Exception {
