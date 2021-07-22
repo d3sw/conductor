@@ -495,7 +495,11 @@ public class EventProcessor {
 				logger.error(handler.getName() + " event handler condition evaluation failed " + ex.getMessage(), ex);
 			}
 		}
+		//Check handler action conditions
+		handlerActionConditionCheck(handler);
+	}
 
+	public void handlerActionConditionCheck(EventHandler handler) {
 		//Validate handler action conditions
 		int i = 0;
 		List<Action> actions = handler.getActions();
@@ -504,7 +508,7 @@ public class EventProcessor {
 			String actionCondition = action.getCondition();
 			String actionConditionClass = action.getConditionClass();
 			ObjectNode actionPayloadObj = om.createObjectNode();
-			if (isNotEmpty(condition) || isNotEmpty(conditionClass)) {
+			if (isNotEmpty(actionCondition) || isNotEmpty(actionConditionClass)) {
 				try {
 					boolean success = evalCondition(actionCondition, actionConditionClass, actionPayloadObj);
 				} catch (Exception ex) {
@@ -512,6 +516,5 @@ public class EventProcessor {
 				}
 			}
 		}
-
 	}
 }
