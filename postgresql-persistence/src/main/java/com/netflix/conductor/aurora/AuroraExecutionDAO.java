@@ -138,19 +138,20 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 
 		long current = getInProgressTaskCount(task.getTaskDefName());
 		if (current >= limit) {
-			logger.debug("Task execution count limited. {}, limit {}, current {}", task.getTaskDefName(), limit, current);
+			logger.debug("Task execution count limited(case1). {}, limit {}, current {}", task.getTaskDefName(), limit, current);
 			return true;
 		}
 
 		logger.debug("Task execution count for {}: limit={}, current={}", task.getTaskDefName(), limit, current);
 
+		// Find all tasks InProgress table in order of arrival
 		String SQL = "SELECT task_id FROM task_in_progress WHERE task_def_name = ? ORDER BY id LIMIT ?";
 		List<String> taskIds = queryWithTransaction(SQL,
 			q -> q.addParameter(task.getTaskDefName()).addParameter(limit).executeScalarList(String.class));
 
 		boolean rateLimited = !taskIds.contains(task.getTaskId());
 		if (rateLimited) {
-			logger.debug("Task execution count limited. {}, limit {}, current {}", task.getTaskDefName(), limit, current);
+			logger.debug("Task execution count limited(case2). {}, limit {}, current {}", task.getTaskDefName(), limit, current);
 		}
 
 		return rateLimited;
