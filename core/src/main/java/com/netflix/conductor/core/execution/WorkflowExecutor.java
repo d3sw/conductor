@@ -1436,14 +1436,8 @@ public class WorkflowExecutor {
 			}
 
 			if (task.getStatus().equals(Status.SCHEDULED)) {
-				int unpopOffset;
-				TaskDef taskDef = metadata.getTaskDef(task.getTaskDefName());
-				if (taskDef != null) {
-					unpopOffset = taskDef.getRetryDelaySeconds();
-				} else {
-					String propName = "workflow.system.task." + task.getTaskDefName().toLowerCase() + ".unpop.offset";
-					unpopOffset = config.getIntProperty(propName, 30);
-				}
+				String propName = "workflow.system.task." + task.getTaskDefName().toLowerCase() + ".unpop.offset";
+				int unpopOffset = config.getIntProperty(propName, 30);
 
 				if (edao.exceedsInProgressLimit(task)) {
 					MetricService.getInstance().taskRateLimited(task.getTaskType(), task.getReferenceTaskName(), task.getTaskDefName());
