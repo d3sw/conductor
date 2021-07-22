@@ -146,8 +146,9 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 
 		// Find all tasks InProgress table in order of arrival
 		String SQL = "SELECT task_id FROM task_in_progress WHERE task_def_name = ? ORDER BY id LIMIT ?";
-		List<String> taskIds = queryWithTransaction(SQL,
-			q -> q.addParameter(task.getTaskDefName()).addParameter(limit).executeScalarList(String.class));
+		List<String> taskIds = queryWithTransaction(SQL, q -> q.addParameter(task.getTaskDefName())
+				.addParameter(limit)
+				.executeScalarList(String.class));
 
 		boolean rateLimited = !taskIds.contains(task.getTaskId());
 		if (rateLimited) {
