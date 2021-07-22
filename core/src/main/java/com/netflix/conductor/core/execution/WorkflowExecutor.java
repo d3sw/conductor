@@ -1448,14 +1448,14 @@ public class WorkflowExecutor {
 				if (edao.exceedsInProgressLimit(task)) {
 					MetricService.getInstance().taskRateLimited(task.getTaskType(), task.getReferenceTaskName(), task.getTaskDefName());
 					logger.debug("Concurrent Execution limited for {}:{}:{}", task.getReferenceTaskName(), task.getTaskDefName(), taskId);
-					queue.unpop(queueName, task.getTaskId(), unpopOffset * 1000L); // unpop it back but with deliver offset
+					queue.unpop(queueName, task.getTaskId(), unpopOffset * 1000L);
 					return;
 				}
 
 				if (edao.exceedsRateLimitPerFrequency(task)) {
 					MetricService.getInstance().taskRateLimited(task.getTaskType(), task.getReferenceTaskName(), task.getTaskDefName());
 					logger.debug("RateLimit Execution limited for {}:{}:{}", task.getReferenceTaskName(), task.getTaskDefName(), taskId);
-					queue.unpop(queueName, task.getTaskId(), unpopOffset * 1000L); // unpop it back but with deliver offset
+					queue.unpop(queueName, task.getTaskId(), unpopOffset * 1000L);
 					return;
 				}
 			}
