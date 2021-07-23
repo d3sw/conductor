@@ -42,7 +42,7 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 				executorService.shutdown();
 				executorService.awaitTermination(5, TimeUnit.SECONDS);
 			} catch (Exception e) {
-`				logger.debug("Closing processAllUnacks pool failed " + e.getMessage(), e);
+				logger.debug("Closing processAllUnacks pool failed " + e.getMessage(), e);
 			}
 		}));
 	}
