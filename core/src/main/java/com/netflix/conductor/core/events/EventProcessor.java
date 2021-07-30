@@ -112,11 +112,11 @@ public class EventProcessor {
 
 			List<ObservableQueue> created = new LinkedList<>();
 			activeHandlers.parallelStream().forEach(handler -> queuesMap.computeIfAbsent(handler.getEvent(), s -> {
+				//validate handler/action conditions
+				validateHandlerConditions(handler);
+
 				ObservableQueue queue = EventQueues.getQueue(handler.getEvent(), false,
 						handler.isRetryEnabled(), handler.getPrefetchSize(), this::handle);
-
-				//validate handler/action conditions
-				handlerConditionCheck(handler);
 
 				if (queue == null) {
 					return null;
@@ -483,23 +483,18 @@ public class EventProcessor {
 		});
 	}
 
-	public void handlerConditionCheck(EventHandler handler) {
-		//Validate handler conditions
+	public void validateHandlerConditions(EventHandler handler) {
 		String condition = handler.getCondition();
 		String conditionClass = handler.getConditionClass();
 		ObjectNode payloadObj = om.createObjectNode();
 		if (isNotEmpty(condition) || isNotEmpty(conditionClass)) {
 			try {
-				boolean success = evalCondition(condition, conditionClass, payloadObj);
+				evalCondition(condition, conditionClass, payloadObj);
 			} catch (Exception ex) {
-				logger.error(handler.getName() + " event handler condition evaluation failed " + ex.getMessage(), ex);
+				logger.error(handler.getName() + " event handler condition validation failed " + ex.getMessage(), ex);
 			}
 		}
-		//Check handler action conditions
-		handlerActionConditionCheck(handler);
-	}
 
-	public void handlerActionConditionCheck(EventHandler handler) {
 		//Validate handler action conditions
 		int i = 0;
 		List<Action> actions = handler.getActions();
@@ -510,9 +505,9 @@ public class EventProcessor {
 			ObjectNode actionPayloadObj = om.createObjectNode();
 			if (isNotEmpty(actionCondition) || isNotEmpty(actionConditionClass)) {
 				try {
-					boolean success = evalCondition(actionCondition, actionConditionClass, actionPayloadObj);
+					evalCondition(actionCondition, actionConditionClass, actionPayloadObj);
 				} catch (Exception ex) {
-					logger.error(handler.getName() + " event handler action " + actionName + " condition evaluation failed " + ex.getMessage(), ex);
+					logger.error(handler.getName() + " event handler action " + actionName + " condition validation failed " + ex.getMessage(), ex);
 				}
 			}
 		}
