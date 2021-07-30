@@ -101,6 +101,14 @@ public interface ExecutionDAO {
 	public abstract void updateTasks(List<Task> tasks);
 
 	/**
+	 * Sets the in progress flag for the task
+	 *
+	 * @param task The task to set flag for
+	 */
+	default void updateInProgressStatus(Task task) {
+	}
+
+	/**
 	 * 
 	 * @param log Task Execution Log to be added
 	 *  
@@ -312,6 +320,10 @@ public interface ExecutionDAO {
 	}
 
 	public default void removeTask(Task task) {
+		throw new IllegalStateException("Not implemented");
+	}
+
+	public default void setWorkflowAttribute(String workflowId, String name, Object value) {
 		throw new IllegalStateException("Not implemented");
 	}
 }

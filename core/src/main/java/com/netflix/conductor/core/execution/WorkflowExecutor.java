@@ -29,6 +29,7 @@ import com.netflix.conductor.common.metadata.events.EventPublished;
 import com.netflix.conductor.common.metadata.tasks.PollData;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
+import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.tasks.TaskResult;
 import com.netflix.conductor.common.metadata.workflow.RerunWorkflowRequest;
 import com.netflix.conductor.common.metadata.workflow.SkipTaskRequest;
@@ -248,6 +249,7 @@ public class WorkflowExecutor {
 			wf.setUpdateTime(null);
 			wf.setEvent(event);
 			wf.setTaskToDomain(taskToDomain);
+			wf.setAttributes(exists.getAttributes());
 
 			if (StringUtils.isNotEmpty(exists.getTags())) {
 				Map<String, Map<String, Object>> inputMap = pu.getInputMap(null, wf, null, null);
@@ -649,6 +651,7 @@ public class WorkflowExecutor {
 		workflow.setOutput(wf.getOutput());
 		edao.updateWorkflow(workflow);
 		queue.remove(deciderQueue, workflow.getWorkflowId());	//remove from the sweep queue
+		queue.remove(sweeperQueue, workflow.getWorkflowId());
 
 		// If the following task, for some reason fails, the sweep will take
 		// care of this again!
@@ -684,12 +687,12 @@ public class WorkflowExecutor {
 		// If the following lines, for some reason fails, the sweep will take
 		// care of this again!
 		if (workflow.getParentWorkflowId() != null) {
-			Workflow parent = edao.getWorkflow(workflow.getParentWorkflowId(), false);
-			decide(parent.getWorkflowId());
+			wakeUpSweeper(workflow.getParentWorkflowId());
 		}
 
 		//remove from the sweep queue
 		queue.remove(deciderQueue, workflowId);
+		queue.remove(sweeperQueue, workflowId);
 
 		// metrics
 		MetricService.getInstance().workflowForceComplete(workflow.getWorkflowType());
@@ -743,8 +746,7 @@ public class WorkflowExecutor {
 		// If the following lines, for some reason fails, the sweep will take
 		// care of this again!
 		if (workflow.getParentWorkflowId() != null) {
-			Workflow parent = edao.getWorkflow(workflow.getParentWorkflowId(), false);
-			decide(parent.getWorkflowId());
+			wakeUpSweeper(workflow.getParentWorkflowId());
 		}
 
 		WorkflowDef def = metadata.get(workflow.getWorkflowType(), workflow.getVersion());
@@ -786,6 +788,7 @@ public class WorkflowExecutor {
 
 		//remove from the sweep queue
 		queue.remove(deciderQueue, workflowId);
+		queue.remove(sweeperQueue, workflowId);
 
 		// metrics
 		MetricService.getInstance().workflowCancel(workflow.getWorkflowType());
@@ -821,12 +824,12 @@ public class WorkflowExecutor {
 		// If the following lines, for some reason fails, the sweep will take
 		// care of this again!
 		if (workflow.getParentWorkflowId() != null) {
-			Workflow parent = edao.getWorkflow(workflow.getParentWorkflowId(), false);
-			decide(parent.getWorkflowId());
+			wakeUpSweeper(workflow.getParentWorkflowId());
 		}
 
 		//remove from the sweep queue
 		queue.remove(deciderQueue, workflow.getWorkflowId());
+		queue.remove(sweeperQueue, workflow.getWorkflowId());
 
 		// metrics
 		MetricService.getInstance().workflowReset(workflow.getWorkflowType());
@@ -878,6 +881,7 @@ public class WorkflowExecutor {
 				map.put("workflowVersion", workflow.getVersion());
 				map.put("workflowRestartCount", workflow.getRestartCount());
 				map.put("workflowRerunCount", workflow.getRerunCount());
+				map.put("attributes", workflow.getAttributes());
 				originalFailed = map;
 			}
 			workflow.getOutput().put("originalFailedTask", originalFailed);
@@ -906,12 +910,12 @@ public class WorkflowExecutor {
 
 		logger.debug("Removing decider record for " + workflow.getWorkflowId());
 		queue.remove(deciderQueue, workflow.getWorkflowId());	//remove from the sweep queue
+		queue.remove(sweeperQueue, workflow.getWorkflowId());
 
 		// If the following lines, for some reason fails, the sweep will take
 		// care of this again!
 		if (workflow.getParentWorkflowId() != null) {
-			Workflow parent = edao.getWorkflow(workflow.getParentWorkflowId(), false);
-			decide(parent.getWorkflowId());
+			wakeUpSweeper(workflow.getParentWorkflowId());
 		}
 
 		// Handle task timeout
@@ -1048,6 +1052,7 @@ public class WorkflowExecutor {
 		if (wf.getStatus().isTerminal()) {
 			// Workflow is in terminal state
 			queue.remove(deciderQueue, wf.getWorkflowId());	//remove from the sweep queue
+			queue.remove(sweeperQueue, wf.getWorkflowId());
 			queue.remove(QueueUtils.getQueueName(task), result.getTaskId());
 			if(!task.getStatus().isTerminal()) {
 				task.setStatus(Status.COMPLETED);
@@ -1096,6 +1101,7 @@ public class WorkflowExecutor {
 		if (task.isTerminal()) {
 			MetricService.getInstance().taskComplete(task.getTaskType(),
 				task.getReferenceTaskName(),
+				task.getTaskDefName(),
 				task.getStatus().name(),
 				task.getStartTime());
 		}
@@ -1203,6 +1209,7 @@ public class WorkflowExecutor {
 	 * @throws Exception If there was an error - caller should retry in this case.
 	 */
 	public Pair<Boolean, Integer> decide(String workflowId) throws Exception {
+		logger.debug("Invoked decide for workflow " + workflowId);
 		if (workflowId == null || workflowId.isEmpty()) {
 			logger.error("ONECOND-1106: Invoked decide() with an empty or null Workflow ID");
 			return Pair.of(false, config.getSweepFrequency());
@@ -1406,18 +1413,19 @@ public class WorkflowExecutor {
 	//Executes the async system task
 	public void executeSystemTask(WorkflowSystemTask systemTask, String taskId, int callbackSeconds) {
 		try {
-			logger.debug("Executing async taskId={}, callbackSeconds={}, unackTimeout={}", taskId, callbackSeconds, systemTask.getRetryTimeInSecond());
+			logger.debug("Executing async taskId={}, callbackSeconds={}, retryTimeIn={}", taskId, callbackSeconds, systemTask.getRetryTimeInSecond());
 
 			Task task = edao.getTask(taskId);
 			if (task == null) {
 				logger.debug("No task found for task id = " + taskId + ". System task is " + systemTask);
 				return;
 			}
+			String queueName = QueueUtils.getQueueName(task);
 
 			if (task.getStatus().isTerminal()) {
 				//Tune the SystemTaskWorkerCoordinator's queues - if the queue size is very big this can happen!
 				logger.debug("Task {}/{} was already completed.", task.getTaskType(), task.getTaskId());
-				queue.remove(QueueUtils.getQueueName(task), task.getTaskId());
+				queue.remove(queueName, task.getTaskId());
 				return;
 			}
 
@@ -1430,24 +1438,26 @@ public class WorkflowExecutor {
 					task.setStatus(Status.CANCELED);
 				}
 				edao.updateTask(task);
-				queue.remove(QueueUtils.getQueueName(task), task.getTaskId());
+				queue.remove(queueName, task.getTaskId());
 				taskStatusListener.onTaskFinished(task);
 				return;
 			}
 
 			if (task.getStatus().equals(Status.SCHEDULED)) {
+				String propName = "workflow.system.task." + task.getTaskDefName().toLowerCase() + ".unpop.offset";
+				int unpopOffset = config.getIntProperty(propName, 30);
 
 				if (edao.exceedsInProgressLimit(task)) {
-					MetricService.getInstance().taskRateLimited(task.getTaskType(), task.getReferenceTaskName());
-					logger.debug("Concurrent Execution limited for {}:{}", taskId, task.getTaskDefName());
-					queue.setUnackTimeout(QueueUtils.getQueueName(task), task.getTaskId(), systemTask.getRetryTimeInSecond() * 1000L);
+					MetricService.getInstance().taskRateLimited(task.getTaskType(), task.getReferenceTaskName(), task.getTaskDefName());
+					logger.debug("Concurrent Execution limited for {}:{}:{}", task.getReferenceTaskName(), task.getTaskDefName(), taskId);
+					queue.unpop(queueName, task.getTaskId(), unpopOffset * 1000L);
 					return;
 				}
 
 				if (edao.exceedsRateLimitPerFrequency(task)) {
-					MetricService.getInstance().taskRateLimited(task.getTaskType(), task.getReferenceTaskName());
-					logger.debug("RateLimit Execution limited for {}:{}", taskId, task.getTaskDefName());
-					queue.setUnackTimeout(QueueUtils.getQueueName(task), task.getTaskId(), systemTask.getRetryTimeInSecond() * 1000L);
+					MetricService.getInstance().taskRateLimited(task.getTaskType(), task.getReferenceTaskName(), task.getTaskDefName());
+					logger.debug("RateLimit Execution limited for {}:{}:{}", task.getReferenceTaskName(), task.getTaskDefName(), taskId);
+					queue.unpop(queueName, task.getTaskId(), unpopOffset * 1000L);
 					return;
 				}
 			}
@@ -1460,27 +1470,31 @@ public class WorkflowExecutor {
 			}
 
 			logger.debug("Executing {}/{}-{} for workflowId={},correlationId={},traceId={},contextUser={},clientId={}",
-				task.getTaskType(), task.getTaskId(), task.getStatus(), workflow.getWorkflowId(),
+				task.getTaskType(), task.getReferenceTaskName(), task.getTaskId(), workflow.getWorkflowId(),
 				workflow.getCorrelationId(), workflow.getTraceId(), workflow.getContextUser(), workflow.getClientId());
 
-			queue.setUnackTimeout(QueueUtils.getQueueName(task), task.getTaskId(), systemTask.getRetryTimeInSecond() * 1000L);
+			String propName = "workflow.system.task." + task.getTaskDefName().toLowerCase() + ".unack.timeout";
+			int unackTimeout = config.getIntProperty(propName, systemTask.getRetryTimeInSecond());
+
+			queue.setUnackTimeout(queueName, task.getTaskId(), unackTimeout * 1000L);
 			task.setStarted(true);
 			if (task.getStartTime() == 0) {
 				task.setStartTime(System.currentTimeMillis());
 			}
 			task.setPollCount(task.getPollCount() + 1);
+			edao.updateTask(task);
 
 			// Metrics
 			MetricService.getInstance().taskWait(task.getTaskType(),
 				task.getReferenceTaskName(),
+				task.getTaskDefName(),
 				task.getQueueWaitTime());
-
-			edao.updateTask(task);
 
 			switch (task.getStatus()) {
 
 				case SCHEDULED:
 					try {
+						edao.updateInProgressStatus(task);
 						taskStatusListener.onTaskStarted(task);
 						systemTask.start(workflow, task, this);
 					} catch (Exception ex) {
@@ -1503,7 +1517,7 @@ public class WorkflowExecutor {
 
 			updateTask(new TaskResult(task));
 			logger.debug("Done Executing {}/{}-{} for workflowId={},correlationId={},traceId={},contextUser={},clientId={}",
-				task.getTaskType(), task.getTaskId(), task.getStatus(), workflow.getWorkflowId(), workflow.getCorrelationId(),
+				task.getTaskType(), task.getReferenceTaskName(), task.getTaskId(), workflow.getWorkflowId(), workflow.getCorrelationId(),
 				workflow.getTraceId(), workflow.getContextUser(), workflow.getClientId());
 
 		} catch (Exception e) {
