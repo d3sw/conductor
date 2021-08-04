@@ -103,9 +103,6 @@ public class FindUpdateActionTest {
 
         boolean matches = findUpdateAction.matches(task, event, null);
         assertTrue(matches);
-
-        matches = findUpdateAction.matches(task, event, ".task.p == .event.p");
-        assertTrue(matches);
     }
 
     @Test
@@ -120,9 +117,7 @@ public class FindUpdateActionTest {
 
         boolean matches = findUpdateAction.matches(task, event, null);
         assertFalse(matches);
-
-        matches = findUpdateAction.matches(task, event, ".task.p == .event.p");
-        assertFalse(matches);
     }
+    
 
 }
