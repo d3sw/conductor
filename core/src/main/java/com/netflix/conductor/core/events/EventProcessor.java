@@ -57,6 +57,7 @@ public class EventProcessor {
 	private ParametersUtils pu = new ParametersUtils();
 	private volatile List<EventHandler> activeHandlers;
 	private ScheduledExecutorService refreshPool;
+	private boolean persistMessage;
 	private MetadataService ms;
 	private ExecutionService es;
 	private ActionProcessor ap;
@@ -80,6 +81,7 @@ public class EventProcessor {
 		} else {
 			logger.debug("Event processing is DISABLED");
 		}
+		this.persistMessage = Boolean.parseBoolean(config.getProperty("conductor.event.processor.persist.message", "false"));
 	}
 
 	/**
@@ -246,7 +248,10 @@ public class EventProcessor {
 				}
 			}
 
-			es.addMessage(queue.getName(), msg);
+			// Shall the system store (in tables) the event execution details
+			if (persistMessage) {
+				es.addMessage(queue.getName(), msg);
+			}
 
 			// Find event handlers by the event name considering variables in the handler's event
 			String event = queue.getType() + ":" + queue.getURI();
@@ -272,18 +277,21 @@ public class EventProcessor {
 					boolean success = evalCondition(condition, conditionClass, payloadObj);
 					if (!success) {
 						logger.debug("Handler did not match payload. Handler={}, condition={}", handler.getName(), condition);
-						EventExecution ee = new EventExecution(msg.getId() + "_0", msg.getId());
-						ee.setAccepted(msg.getAccepted());
-						ee.setCreated(System.currentTimeMillis());
-						ee.setReceived(msg.getReceived());
-						ee.setEvent(handler.getEvent());
-						ee.setName(handler.getName());
-						ee.setStatus(Status.SKIPPED);
-						ee.getOutput().put("msg", payload);
-						ee.setSubject(subject);
-						es.addEventExecution(ee);
 						MetricService.getInstance()
-							.eventExecutionSkipped(handler.getName(), queue.getSubject());
+								.eventExecutionSkipped(handler.getName(), queue.getSubject());
+						// Shall the system store (in tables) the event execution details
+						if (persistMessage) {
+							EventExecution ee = new EventExecution(msg.getId() + "_0", msg.getId());
+							ee.setAccepted(msg.getAccepted());
+							ee.setCreated(System.currentTimeMillis());
+							ee.setReceived(msg.getReceived());
+							ee.setEvent(handler.getEvent());
+							ee.setName(handler.getName());
+							ee.setStatus(Status.SKIPPED);
+							ee.getOutput().put("msg", payload);
+							ee.setSubject(subject);
+							es.addEventExecution(ee);
+						}
 						continue;
 					}
 				}
@@ -303,17 +311,20 @@ public class EventProcessor {
 							logger.debug("Handler did not find running workflows with tags. Handler={}, tags={}", handler.getName(), tags);
 							MetricService.getInstance()
 								.eventTagsMiss(handler.getName(), queue.getSubject());
-							EventExecution ee = new EventExecution(msg.getId() + "_0", msg.getId());
-							ee.setAccepted(msg.getAccepted());
-							ee.setCreated(System.currentTimeMillis());
-							ee.setReceived(msg.getReceived());
-							ee.setEvent(handler.getEvent());
-							ee.setName(handler.getName());
-							ee.setStatus(Status.SKIPPED);
-							ee.getOutput().put("msg", payload);
-							ee.setSubject(subject);
-							ee.setTags(tags);
-							es.addEventExecution(ee);
+							// Shall the system store (in tables) the event execution details
+							if (persistMessage) {
+								EventExecution ee = new EventExecution(msg.getId() + "_0", msg.getId());
+								ee.setAccepted(msg.getAccepted());
+								ee.setCreated(System.currentTimeMillis());
+								ee.setReceived(msg.getReceived());
+								ee.setEvent(handler.getEvent());
+								ee.setName(handler.getName());
+								ee.setStatus(Status.SKIPPED);
+								ee.getOutput().put("msg", payload);
+								ee.setSubject(subject);
+								ee.setTags(tags);
+								es.addEventExecution(ee);
+							}
 							tagsNotMatchCounter++;
 							continue;
 						} else {
@@ -337,20 +348,23 @@ public class EventProcessor {
 						boolean success = evalCondition(condition, conditionClass, payloadObj);
 						if (!success) {
 							logger.debug("Action did not match payload. Handler={}, action={}", handler.getName(), action);
-							EventExecution ee = new EventExecution(id, msg.getId());
-							ee.setAccepted(msg.getAccepted());
-							ee.setCreated(System.currentTimeMillis());
-							ee.setReceived(msg.getReceived());
-							ee.setEvent(handler.getEvent());
-							ee.setName(handler.getName());
-							ee.setAction(action.getAction());
-							ee.setStatus(Status.SKIPPED);
-							ee.getOutput().put("msg", payload);
-							ee.setSubject(subject);
-							ee.setTags(tags);
-							es.addEventExecution(ee);
 							MetricService.getInstance()
-								.eventActionSkipped(handler.getName(), queue.getSubject(), actionName);
+									.eventActionSkipped(handler.getName(), queue.getSubject(), actionName);
+							// Shall the system store (in tables) the event execution details
+							if (persistMessage) {
+								EventExecution ee = new EventExecution(id, msg.getId());
+								ee.setAccepted(msg.getAccepted());
+								ee.setCreated(System.currentTimeMillis());
+								ee.setReceived(msg.getReceived());
+								ee.setEvent(handler.getEvent());
+								ee.setName(handler.getName());
+								ee.setAction(action.getAction());
+								ee.setStatus(Status.SKIPPED);
+								ee.getOutput().put("msg", payload);
+								ee.setSubject(subject);
+								ee.setTags(tags);
+								es.addEventExecution(ee);
+							}
 							continue;
 						}
 					}
@@ -436,7 +450,8 @@ public class EventProcessor {
 			NDC.push("event-" + ee.getMessageId());
 			try {
 				logger.debug("Starting handler=" + ee.getName() + ", action=" + action);
-				if (!es.addEventExecution(ee)) {
+				// Shall the system store (in tables) the published message
+				if (persistMessage && !es.addEventExecution(ee)) {
 					logger.debug("Duplicate delivery/execution? {}", ee.getId());
 				}
 				ee.setStarted(System.currentTimeMillis());
@@ -447,7 +462,11 @@ public class EventProcessor {
 				}
 				ee.setStatus(Status.COMPLETED);
 				ee.setProcessed(System.currentTimeMillis());
-				es.updateEventExecution(ee);
+
+				// Shall the system store (in tables) the event execution details
+				if (persistMessage) {
+					es.updateEventExecution(ee);
+				}
 
 				// Wait for accepting by event processor
 				long waitTime = ee.getAccepted() - ee.getReceived();
@@ -470,12 +489,15 @@ public class EventProcessor {
 				return success;
 			} catch (Exception e) {
 				logger.debug("Execute failed handler=" + ee.getName() + ", action=" + action + ", reason=" + e.getMessage(), e);
-				ee.setStatus(Status.FAILED);
-				ee.getOutput().put("exception", e.getMessage());
-				ee.setProcessed(System.currentTimeMillis());
-				es.updateEventExecution(ee);
 				MetricService.getInstance()
-					.eventActionFailed(ee.getName(), ee.getSubject(), ee.getAction().name());
+						.eventActionFailed(ee.getName(), ee.getSubject(), ee.getAction().name());
+				// Shall the system store (in tables) the event execution details
+				if (persistMessage) {
+					ee.setStatus(Status.FAILED);
+					ee.getOutput().put("exception", e.getMessage());
+					ee.setProcessed(System.currentTimeMillis());
+					es.updateEventExecution(ee);
+				}
 				return success;
 			} finally {
 				NDC.remove();

@@ -61,6 +61,7 @@ public class StatusEventPublisher implements TaskStatusListener, WorkflowStatusL
 	private final ExecutionDAO edao;
 	private final ObjectMapper om;
 	private final boolean useGroupId;
+	private final boolean persistMessage;
 
 	@Inject
 	public StatusEventPublisher(MetadataDAO metadata, ExecutionDAO edao, ObjectMapper om, Configuration config) {
@@ -68,6 +69,7 @@ public class StatusEventPublisher implements TaskStatusListener, WorkflowStatusL
 		this.edao = edao;
 		this.om = om;
 		this.useGroupId = Boolean.parseBoolean(config.getProperty("io.shotgun.use.groupId.header", "false"));
+		this.persistMessage = Boolean.parseBoolean(config.getProperty("conductor.event.processor.persist.message", "false"));
 	}
 
 	@Override
@@ -192,7 +194,9 @@ public class StatusEventPublisher implements TaskStatusListener, WorkflowStatusL
 
 		queue.publish(Collections.singletonList(msg));
 
-		addEventPublished(queue, msg);
+		// Shall the system store (in tables) the published message
+		if (persistMessage)
+			addEventPublished(queue, msg);
 	}
 
 	private void addEventPublished(ObservableQueue queue, Message msg) {

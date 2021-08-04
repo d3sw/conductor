@@ -50,6 +50,7 @@ public class Event extends WorkflowSystemTask {
 	private final ObjectMapper om = new ObjectMapper();
 	private final ParametersUtils pu = new ParametersUtils();
 	private final boolean useGroupId;
+	private final boolean persistMessage;
 
 
 	public static final String NAME = "EVENT";
@@ -60,6 +61,7 @@ public class Event extends WorkflowSystemTask {
 	public Event(Configuration config) {
 		super(NAME);
 		this.useGroupId = Boolean.parseBoolean(config.getProperty("io.shotgun.use.groupId.header", "false"));
+		this.persistMessage = Boolean.parseBoolean(config.getProperty("conductor.event.processor.persist.message", "false"));
 	}
 
 	@Override
@@ -89,7 +91,9 @@ public class Event extends WorkflowSystemTask {
 				task.getOutputData().putAll(payload);
 				task.setStatus(Status.COMPLETED);
 
-				provider.addEventPublished(queue, message);
+				// Shall the system store (in tables) the published message
+				if (persistMessage)
+					provider.addEventPublished(queue, message);
 			} catch (Exception ex) {
 				logger.error(ex.getMessage(), ex);
 				task.setStatus(Status.FAILED);
