@@ -120,7 +120,7 @@ public class FindUpdateActionTest {
     }
 
     @Test
-    public void match_integer_params() throws Exception {
+    public void match_integer_params_with_string() throws Exception {
         FindUpdateAction findUpdateAction = new FindUpdateAction(mock(WorkflowExecutor.class));
 
         Map<String, Object> task = new HashMap<>();
