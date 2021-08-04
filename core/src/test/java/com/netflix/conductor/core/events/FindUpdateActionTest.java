@@ -91,4 +91,38 @@ public class FindUpdateActionTest {
         assertTrue(matches);
     }
 
+    @Test
+    public void match_integer_params_true() throws Exception {
+        FindUpdateAction findUpdateAction = new FindUpdateAction(mock(WorkflowExecutor.class));
+
+        Map<String, Object> task = new HashMap<>();
+        task.put("p", 1);
+
+        Map<String, Object> event = new HashMap<>();
+        event.put("p", 1);
+
+        boolean matches = findUpdateAction.matches(task, event, null);
+        assertTrue(matches);
+
+        matches = findUpdateAction.matches(task, event, ".task.p == .event.p");
+        assertTrue(matches);
+    }
+
+    @Test
+    public void match_integer_params_false() throws Exception {
+        FindUpdateAction findUpdateAction = new FindUpdateAction(mock(WorkflowExecutor.class));
+
+        Map<String, Object> task = new HashMap<>();
+        task.put("p", 1);
+
+        Map<String, Object> event = new HashMap<>();
+        event.put("p", 2);
+
+        boolean matches = findUpdateAction.matches(task, event, null);
+        assertFalse(matches);
+
+        matches = findUpdateAction.matches(task, event, ".task.p == .event.p");
+        assertFalse(matches);
+    }
+
 }
