@@ -132,4 +132,18 @@ public class FindUpdateActionTest {
         boolean matches = findUpdateAction.matches(task, event, null);
         assertTrue(matches);
     }
+
+    @Test
+    public void match_integer_params_with_string1() throws Exception {
+        FindUpdateAction findUpdateAction = new FindUpdateAction(mock(WorkflowExecutor.class));
+
+        Map<String, Object> task = new HashMap<>();
+        task.put("p", 1);
+
+        Map<String, Object> event = new HashMap<>();
+        event.put("p", "2");
+
+        boolean matches = findUpdateAction.matches(task, event, null);
+        assertFalse(matches);
+    }
 }
