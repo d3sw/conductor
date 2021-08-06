@@ -26,6 +26,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ImmutableMap;
 import com.netflix.conductor.common.run.CommonParams;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.contribs.correlation.Correlator;
@@ -52,6 +53,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Singleton
 public class AuthManager {
@@ -69,6 +71,8 @@ public class AuthManager {
 	private final String authService;
 	private String authEndpoint;
 	private boolean traceIdEnabled;
+
+	private final AtomicReference<Map<String, Object>> cachedAuthDataRef = new AtomicReference<>();
 
 	@Inject
 	public AuthManager(Configuration config) {
@@ -97,6 +101,23 @@ public class AuthManager {
 	}
 
 	public AuthResponse authorize(Workflow workflow) throws Exception {
+		synchronized (this) {
+			Map<String, Object> cachedAuthData = cachedAuthDataRef.get();
+			if (isNotExpiredAuthData(cachedAuthData)) {
+				return (AuthResponse) cachedAuthData.get("authResponse");
+			}
+		}
+
+		AuthResponse authResponse = executeAuthorization(workflow);
+
+		if (authResponse.getError() == null && authResponse.getErrorDescription() == null) {
+			cacheAuthData(authResponse);
+		}
+
+		return authResponse;
+	}
+
+	AuthResponse executeAuthorization(Workflow workflow) throws Exception {
 		Client client = Client.create();
 		MultivaluedMap<String, String> data = new MultivaluedMapImpl();
 		data.add("grant_type", "client_credentials");
@@ -209,4 +230,22 @@ public class AuthManager {
 		};
 		return CacheBuilder.newBuilder().expireAfterWrite(1, TimeUnit.HOURS).maximumSize(1000).build(loader);
 	}
+
+	private void cacheAuthData(AuthResponse authResponse) {
+		Map<String, Object> decoded = decode(authResponse.getAccessToken());
+		Object expValue = decoded.get("exp");
+
+		Long expiration = expValue != null ? Long.parseLong(expValue.toString()) * 1000 : TimeUnit.MINUTES.toMillis(3);
+
+		Map<String, Object> authData = ImmutableMap.of(
+				"authResponse", authResponse,
+				"expiration", expiration
+		);
+		cachedAuthDataRef.set(authData);
+	}
+
+	private boolean isNotExpiredAuthData(Map<String, Object> authData) {
+		return authData != null && System.currentTimeMillis() <= (long) authData.get("expiration");
+	}
+
 }

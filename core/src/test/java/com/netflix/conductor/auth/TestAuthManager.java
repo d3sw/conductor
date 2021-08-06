@@ -1,11 +1,9 @@
-package com.netflix.conductor.core.auth;
+package com.netflix.conductor.auth;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.netflix.conductor.auth.AuthManager;
-import com.netflix.conductor.auth.AuthResponse;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.config.Configuration;
 import org.eclipse.jetty.server.Request;
@@ -15,6 +13,7 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -25,8 +24,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class TestAuthManager {
 	private static Server server;
@@ -155,6 +153,82 @@ public class TestAuthManager {
 		} catch (Exception ex) {
 			assertEquals("Invalid token. Token is expired", ex.getMessage());
 		}
+	}
+
+	@Test
+	public void testAuthorizeCache() throws Exception {
+		AuthManager manager = spy(new AuthManager(config));
+
+		String token = JWT.create()
+				.withClaim("exp", new Date(System.currentTimeMillis() + 60_000))
+				.withClaim("access", "foo").sign(Algorithm.none());
+
+		AuthResponse authResponse = new AuthResponse();
+		authResponse.setAccessToken(token);
+
+		doReturn(authResponse).when(manager).executeAuthorization(workflow);
+		manager.authorize(workflow);
+		Mockito.verify(manager).executeAuthorization(workflow);
+
+		Mockito.reset(manager);
+		AuthResponse cachedAuthResponse = manager.authorize(workflow);
+		Mockito.verify(manager, never()).executeAuthorization(workflow);
+
+		assertEquals(authResponse, cachedAuthResponse);
+	}
+
+	@Test
+	public void testAuthorizeCacheWithExpiredToken() throws Exception {
+		AuthManager manager = spy(new AuthManager(config));
+
+		// expired token
+		String token = JWT.create()
+				.withClaim("exp", new Date(System.currentTimeMillis() - 60_000))
+				.withClaim("access", "foo").sign(Algorithm.none());
+
+		AuthResponse firstAuthResponse = new AuthResponse();
+		firstAuthResponse.setAccessToken(token);
+
+		doReturn(firstAuthResponse).when(manager).executeAuthorization(workflow);
+		manager.authorize(workflow);
+		Mockito.verify(manager).executeAuthorization(workflow);
+
+		AuthResponse secondAuthResponse = new AuthResponse();
+		secondAuthResponse.setAccessToken(token);
+
+		Mockito.reset(manager);
+		doReturn(secondAuthResponse).when(manager).executeAuthorization(workflow);
+		secondAuthResponse = manager.authorize(workflow);
+		Mockito.verify(manager).executeAuthorization(workflow);
+
+		assertNotSame(firstAuthResponse, secondAuthResponse);
+	}
+
+	@Test
+	public void testAuthorizeCacheWithErrorResponse() throws Exception {
+		AuthManager manager = spy(new AuthManager(config));
+
+		String token = JWT.create()
+				.withClaim("exp", new Date(System.currentTimeMillis() + 60_000))
+				.withClaim("access", "foo").sign(Algorithm.none());
+
+		AuthResponse firstAuthResponse = new AuthResponse();
+		firstAuthResponse.setAccessToken(token);
+		firstAuthResponse.setError("error");
+
+		doReturn(firstAuthResponse).when(manager).executeAuthorization(workflow);
+		manager.authorize(workflow);
+		Mockito.verify(manager).executeAuthorization(workflow);
+
+		AuthResponse secondAuthResponse = new AuthResponse();
+		secondAuthResponse.setAccessToken(token);
+
+		Mockito.reset(manager);
+		doReturn(secondAuthResponse).when(manager).executeAuthorization(workflow);
+		secondAuthResponse = manager.authorize(workflow);
+		Mockito.verify(manager).executeAuthorization(workflow);
+
+		assertNotSame(firstAuthResponse, secondAuthResponse);
 	}
 
 	private static class EchoHandler extends AbstractHandler {
