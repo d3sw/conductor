@@ -69,7 +69,7 @@ public class StatusEventPublisher implements TaskStatusListener, WorkflowStatusL
 		this.edao = edao;
 		this.om = om;
 		this.useGroupId = Boolean.parseBoolean(config.getProperty("io.shotgun.use.groupId.header", "false"));
-		this.persistMessage = Boolean.parseBoolean(config.getProperty("conductor.event.processor.persist.message", "false"));
+		this.persistMessage = Boolean.parseBoolean(config.getProperty("conductor.event.persist.message", "false"));
 	}
 
 	@Override

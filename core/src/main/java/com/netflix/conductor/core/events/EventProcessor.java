@@ -81,7 +81,7 @@ public class EventProcessor {
 		} else {
 			logger.debug("Event processing is DISABLED");
 		}
-		this.persistMessage = Boolean.parseBoolean(config.getProperty("conductor.event.processor.persist.message", "false"));
+		this.persistMessage = Boolean.parseBoolean(config.getProperty("conductor.event.persist.message", "false"));
 	}
 
 	/**
