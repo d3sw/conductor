@@ -162,15 +162,15 @@ job "conductor" {
         db = "aurora"
 
         // Workflow settings
-        workflow_lazy_decider                        = "true"
-        workflow_failure_expandInline                = "false"
-        workflow_system_task_worker_thread_count     = 0
-        workflow_system_task_worker_queue_size       = 1
-        workflow_sweeper_thread_count                = 0
-        workflow_sweeper_batch_names                 = ""
-        workflow_batch_sherlock_worker_count         = 1
+        workflow_lazy_decider                        = "true" # Both api/server must use this
+        workflow_system_task_worker_thread_count     = 0  # Disable http polling
+        workflow_system_task_worker_queue_size       = 1  # See SystemTaskWorkerCoordinator.java, line #89
+        workflow_sweeper_thread_count                = 0  # Disable workflow sweeper
+        workflow_sweeper_batch_names                 = "" # Disable batch sweeper
+        workflow_batch_sherlock_worker_count         = 1  # See SherlockBatchProcessor.java, line# 82
         workflow_batch_sherlock_enabled              = "true"  # Must be enabled as this is used by Workflow definition
-        workflow_event_processor_disabled            = "true"
+        workflow_event_processor_disabled            = "true"  # Disable Event Processing including initializing handlers
+        workflow_failure_expandInline                = "false"
 
         // Elasticsearch settings.
         workflow_elasticsearch_mode = "none"
