@@ -160,6 +160,8 @@ job "conductor" {
 
         // Database settings
         db = "aurora"
+        aurora_pool_core_name  = "api"
+        aurora_pool_log4j_name = "log4j_api"
 
         // Workflow settings
         workflow_lazy_decider                        = "true" # Both api/server must use this
@@ -303,6 +305,8 @@ job "conductor" {
 
         // Database settings
         db = "aurora"
+        aurora_pool_core_name  = "server"
+        aurora_pool_log4j_name = "log4j_server"
 
         // Workflow settings
         workflow_failure_expandInline                = "false"

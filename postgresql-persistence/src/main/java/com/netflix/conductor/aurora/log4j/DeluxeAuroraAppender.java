@@ -86,14 +86,14 @@ public class DeluxeAuroraAppender extends AppenderSkeleton {
 	public void init() {
 		try {
 			if (dataSource == null) {
-				String pool_name = getStrEnv("aurora_log4j_pool_name", "log4j");
+				String pool_name = getStrEnv("aurora_pool_log4j_name", "log4j");
 				HikariConfig poolConfig = new HikariConfig();
 				poolConfig.setJdbcUrl(url);
 				poolConfig.setUsername(user);
 				poolConfig.setPassword(password);
 				poolConfig.setAutoCommit(true);
 				poolConfig.setPoolName(pool_name);
-				poolConfig.setMaximumPoolSize(getIntEnv("aurora_log4j_pool_size",1));
+				poolConfig.setMaximumPoolSize(getIntEnv("aurora_pool_" + pool_name + "_size",1));
 				poolConfig.addDataSourceProperty("ApplicationName", pool_name + "-" + hostname);
 				poolConfig.addDataSourceProperty("cachePrepStmts", "true");
 				poolConfig.addDataSourceProperty("prepStmtCacheSize", "250");
