@@ -138,21 +138,10 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 
 		long current = getInProgressTaskCount(task.getTaskDefName());
 		if (current >= limit) {
+			logger.debug("Task execution count limited(case1). {}, limit {}, current {}", task.getTaskDefName(), limit, current);
 			return true;
 		}
-
-		logger.debug("Task execution count for {}: limit={}, current={}", task.getTaskDefName(), limit, current);
-
-		String SQL = "SELECT task_id FROM task_in_progress WHERE task_def_name = ? ORDER BY id LIMIT ?";
-		List<String> taskIds = queryWithTransaction(SQL,
-			q -> q.addParameter(task.getTaskDefName()).addParameter(limit).executeScalarList(String.class));
-
-		boolean rateLimited = !taskIds.contains(task.getTaskId());
-		if (rateLimited) {
-			logger.debug("Task execution count limited. {}, limit {}, current {}", task.getTaskDefName(), limit, current);
-		}
-
-		return rateLimited;
+		return false;
 	}
 
 	@Override
@@ -207,6 +196,11 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 		logger.debug("Task: {} with rateLimitPerFrequency: {} and rateLimitFrequencyInSeconds: {} is out of bounds of rate limit with current count {}",
 			task, rateLimitPerFrequency, rateLimitFrequencyInSeconds, currentBucketCount);
 		return true;
+	}
+
+	@Override
+	public void updateInProgressStatus(Task task) {
+		withTransaction(tx -> updateInProgressStatus(tx, task));
 	}
 
 	@Override
@@ -462,7 +456,7 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 	 */
 	@Override
 	public boolean anyRunningWorkflowsByTags(Set<String> tags) {
-		String SQL = "SELECT COUNT(*) FROM workflow WHERE workflow_status = 'RUNNING' AND tags && ?";
+		String SQL = "SELECT COUNT(*) FROM workflow WHERE workflow_status IN ('RUNNING','RESET','PAUSED') AND tags && ?";
 		return queryWithTransaction(SQL, q -> q.addParameter(tags).executeScalar(Long.class) > 0);
 	}
 
@@ -480,6 +474,20 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 			.addJsonParameter(payload)
 			.addParameter(task.getTaskId())
 			.executeUpdate());
+	}
+
+	@Override
+	public void setWorkflowAttribute(String workflowId, String name, Object value) {
+		Map<String, Object> payload = new HashMap<>();
+		payload.put(name, value);
+
+		String SQL = "UPDATE workflow " +
+				"SET json_data=jsonb_set(json_data::jsonb, '{attributes}', coalesce(json_data::jsonb->'attributes','{}')::jsonb || ?::jsonb)::text " +
+				"WHERE workflow_id = ?";
+		executeWithTransaction(SQL, q -> q
+				.addJsonParameter(payload)
+				.addParameter(workflowId)
+				.executeUpdate());
 	}
 
 	private List<String> getRunningWorkflowIds(Connection tx, String workflowName) {
@@ -541,7 +549,9 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 
 		TaskDef taskDef = metadata.getTaskDef(task.getTaskDefName());
 		if (taskDef != null && taskDef.concurrencyLimit() > 0) {
-			updateInProgressStatus(tx, task);
+			if (Task.Status.IN_PROGRESS.equals(task.getStatus())) {
+				updateInProgressStatus(tx, task);
+			}
 		}
 
 		if (update) {
@@ -573,7 +583,7 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 				.executeUpdate());
 		}
 
-		if (task.getStatus() != null && task.getStatus().isTerminal()) {
+		if (task.isTerminal()) {
 			removeTaskInProgress(tx, task);
 		}
 	}
@@ -624,7 +634,7 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 
 		// We must not delete tags for RESET as it must be restarted right away
 		Set<String> tags;
-		if (workflow.getStatus().isTerminal() && workflow.getStatus() != Workflow.WorkflowStatus.RESET) {
+		if (workflow.getResetTags() || (workflow.getStatus().isTerminal() && workflow.getStatus() != Workflow.WorkflowStatus.RESET)) {
 			tags = Collections.emptySet();
 		} else {
 			tags = workflow.getTags();
@@ -670,13 +680,10 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 	}
 
 	private void updateInProgressStatus(Connection tx, Task task) {
-		boolean inProgress = Task.Status.IN_PROGRESS.equals(task.getStatus());
-
-		String SQL = "UPDATE task_in_progress SET in_progress = ?, modified_on = now() "
+		String SQL = "UPDATE task_in_progress SET in_progress = true, modified_on = now() "
 			+ "WHERE task_def_name = ? AND task_id = ?";
 
-		execute(tx, SQL, q -> q.addParameter(inProgress)
-			.addParameter(task.getTaskDefName()).addParameter(task.getTaskId()).executeUpdate());
+		execute(tx, SQL, q -> q.addParameter(task.getTaskDefName()).addParameter(task.getTaskId()).executeUpdate());
 	}
 
 	private void removeScheduledTask(Connection tx, Task task, String taskKey) {
