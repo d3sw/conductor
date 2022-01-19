@@ -25,8 +25,10 @@ import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
 import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.common.run.WorkflowError;
+import com.netflix.conductor.common.run.TaskDetails;
 import com.netflix.conductor.core.events.queue.Message;
-
+import com.netflix.conductor.common.run.WorkflowErrorRegistry;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -296,6 +298,12 @@ public interface ExecutionDAO {
 
 	public abstract List<PollData> getPollData(String taskDefName);
 
+	public abstract void addErrorRegistry(WorkflowErrorRegistry workflowErrorRegistry);
+
+	public abstract List<WorkflowError> searchWorkflowErrorRegistry(WorkflowErrorRegistry  workflowErrorRegistry);
+
+	public abstract List<WorkflowErrorRegistry> searchWorkflowErrorRegistryList(WorkflowErrorRegistry  workflowErrorRegistry);
+
 	/**
 	 * Returns list of the in progress tasks associated with tags
 
@@ -326,4 +334,6 @@ public interface ExecutionDAO {
 	public default void setWorkflowAttribute(String workflowId, String name, Object value) {
 		throw new IllegalStateException("Not implemented");
 	}
+
+	public abstract List<TaskDetails> searchTaskDetails(String jobId, String workflowId, String workflowType, String taskName, Boolean includeOutput);
 }

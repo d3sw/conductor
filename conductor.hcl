@@ -3,6 +3,10 @@ job "conductor" {
   region      = "us-west-2"
   datacenters = ["us-west-2"]
 
+  spread {
+    attribute = "${unique.network.ip-address}"
+  }
+
   meta {
     service-class = "platform"
   }
@@ -71,6 +75,9 @@ job "conductor" {
         WF_SERVICE  = "${NOMAD_JOB_NAME}-server.service.${meta.tld}"
         AUTH_SERVICE_NAME    = "auth.service.${meta.tld}"
         KEYCLOAK_SERVICE_URL = "http://keycloak.service.${meta.tld}"
+
+        //Mitigate CVE-2021-44228
+        LOG4J_FORMAT_MSG_NO_LOOKUPS = "true"
       }
 
       service {
@@ -111,7 +118,7 @@ job "conductor" {
   } // end ui group
 
   group "server" {
-    count = 5
+    count = 10
 
     # vault declaration
     vault {
@@ -207,6 +214,9 @@ job "conductor" {
         log4j_logger_io_grpc_netty = "INFO"
         log4j_logger_io_swagger = "OFF"
         log4j_logger_tracer = "OFF"
+
+        //Mitigate CVE-2021-44228
+        LOG4J_FORMAT_MSG_NO_LOOKUPS = "true"
 
         // DataDog Integration
         DD_AGENT_HOST = "datadog-apm.service.${meta.tld}"

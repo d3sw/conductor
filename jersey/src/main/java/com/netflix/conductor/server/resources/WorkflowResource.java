@@ -24,6 +24,7 @@ import com.netflix.conductor.common.metadata.workflow.SkipTaskRequest;
 import com.netflix.conductor.common.metadata.workflow.StartWorkflowRequest;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.run.Error;
+import com.netflix.conductor.common.run.TaskDetails;
 import com.netflix.conductor.common.run.*;
 import com.netflix.conductor.contribs.correlation.Correlator;
 import com.netflix.conductor.core.config.Configuration;
@@ -866,6 +867,51 @@ public class WorkflowResource {
 		return service.search(query, freeText, start, size, convert(sort), from, end);
 	}
 
+	@POST
+	@Path("/errorRegistrySearch")
+	@ApiOperation("Search error registry")
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiImplicitParams({
+			@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
+	public List<WorkflowError>  searchErrorRegistry(WorkflowErrorRegistry workflowErrorRegistry,@Context HttpHeaders headers) throws Exception{
+		if (!bypassAuth(headers)) {
+			String primarRole = executor.checkUserRoles(headers);
+			if (!primarRole.endsWith("admin")) {
+				throw new ApplicationException(Code.UNAUTHORIZED, "User does not have access privileges");
+			}
+			return executor.searchErrorRegistry(workflowErrorRegistry);
+		} else {
+			return executor.searchErrorRegistry(workflowErrorRegistry);
+		}
+	}
+
+	@POST
+	@Path("/errorRegistryList")
+	@ApiOperation("Get error registry list")
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiImplicitParams({
+			@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
+	public List<WorkflowErrorRegistry>  searchErrorRegistryList(WorkflowErrorRegistry workflowErrorRegistry,@Context HttpHeaders headers) throws Exception{
+		if (!bypassAuth(headers)) {
+			String primarRole = executor.checkUserRoles(headers);
+			if (!primarRole.endsWith("admin")) {
+				throw new ApplicationException(Code.UNAUTHORIZED, "User does not have access privileges");
+			}
+			return executor.searchErrorRegistryList(workflowErrorRegistry);
+		} else {
+			return executor.searchErrorRegistryList(workflowErrorRegistry);
+		}
+	}
+
+
+	@Path("/getTaskDetails")
+	@Consumes(MediaType.TEXT_PLAIN)
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Search for a particular task details")
+	public List<TaskDetails> searchTaskDetails(@QueryParam("jobId") String jobId, @QueryParam("workflowId") String workflowId, @QueryParam("workflowType") String workflowType, @QueryParam("taskName") String taskName, @DefaultValue("false") @QueryParam("includeOutput") Boolean includeOutput) throws Exception {
+		return executor.searchTaskDetails(jobId, workflowId, workflowType, taskName, includeOutput);
+	}
+
 	private List<String> convert(String sortStr) {
 		List<String> list = new ArrayList<String>();
 		if (sortStr != null && sortStr.length() != 0) {
@@ -883,4 +929,6 @@ public class WorkflowResource {
 			return false;
 		return strings.get(0).contains("/docs");
 	}
+
+
 }
