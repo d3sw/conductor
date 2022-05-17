@@ -324,7 +324,9 @@ class GenericHttpTask extends WorkflowSystemTask {
 			String condition = entry.getKey();
 			Task.Status status = entry.getValue();
 			try {
+				logger.info("Task: " + task.getTaskId() + " Evaluation for status " + status + " using " + condition + " with response " + response);
 				Boolean success = ScriptEvaluator.evalBool(condition, response);
+				logger.info("Task: " + task.getTaskId() + " Result" + success );
 				if (success) {
 					task.setStatus(status);
 					return true;
