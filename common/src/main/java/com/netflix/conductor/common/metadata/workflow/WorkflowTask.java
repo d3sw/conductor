@@ -18,21 +18,31 @@
  */
 package com.netflix.conductor.common.metadata.workflow;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author Viren
  *
  */
 public class WorkflowTask {
+
+	public List<String> getLoopOver() {
+		return loopOver;
+	}
+
+	public void setLoopOver(List<String> loopOver) {
+		this.loopOver = loopOver;
+	}
+
+	public String getExpression() {
+		return expression;
+	}
+
+	public void setExpression(String expression) {
+		this.expression = expression;
+	}
+
+
 
 	public static enum Type {
 		SIMPLE, DYNAMIC, FORK_JOIN, FORK_JOIN_DYNAMIC, DECISION, JOIN, SUB_WORKFLOW, EVENT, WAIT, BATCH, USER_DEFINED;
@@ -113,6 +123,21 @@ public class WorkflowTask {
 	private Long timeoutSeconds;
 
 	private Boolean resetTags;
+
+
+	private String expression;
+
+	private List<String> loopOver = new LinkedList<>();
+
+	private String loopCondition;
+
+	public String getLoopCondition() {
+		return loopCondition;
+	}
+
+	public void setLoopCondition(String loopCondition) {
+		this.loopCondition = loopCondition;
+	}
 
 	/**
 	 * @return the name

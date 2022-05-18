@@ -22,10 +22,11 @@ import com.google.inject.AbstractModule;
 import com.netflix.conductor.core.events.ActionProcessor;
 import com.netflix.conductor.core.events.EventProcessor;
 import com.netflix.conductor.core.events.queue.dyno.DynoEventQueueProvider;
-import com.netflix.conductor.core.execution.batch.BatchSweeper;
 import com.netflix.conductor.core.execution.WorkflowSweeper;
+import com.netflix.conductor.core.execution.batch.BatchSweeper;
 import com.netflix.conductor.core.execution.batch.SherlockBatchProcessor;
 import com.netflix.conductor.core.execution.tasks.*;
+import com.netflix.conductor.core.execution.tasks.temp.DoWhileTaskMapper;
 
 
 /**
@@ -59,6 +60,15 @@ public class CoreModule extends AbstractModule {
 		bind(GetConfig.class).asEagerSingleton();
 		bind(ErrorLookupTask.class).asEagerSingleton();
 		bind(PriorityLookupTask.class).asEagerSingleton();
+		bind(DoWhileTaskMapper.class).asEagerSingleton();
 	}
+
+//	@Provides
+//	@StringMapKey(TASK_TYPE_DO_WHILE)
+//	@Singleton
+//	@Named(TASK_MAPPERS_QUALIFIER)
+//	public TaskMapper getDoWhileTaskMapper() {
+//		return new DoWhileTaskMapper();
+//	}
 	
 }

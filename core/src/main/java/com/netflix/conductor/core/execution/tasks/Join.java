@@ -20,15 +20,14 @@ package com.netflix.conductor.core.execution.tasks;
 
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
+import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.common.run.Workflow;
-import com.netflix.conductor.core.events.ScriptEvaluator;
-import com.netflix.conductor.core.execution.ParametersUtils;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
-import com.netflix.conductor.core.utils.QueueUtils;
-import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -37,82 +36,97 @@ import java.util.Map;
  *
  */
 public class Join extends WorkflowSystemTask {
-	private static Logger logger = LoggerFactory.getLogger(Join.class);
-	private ParametersUtils pu = new ParametersUtils();
 
 	public Join() {
 		super("JOIN");
 	}
 
+	Logger logger = LoggerFactory.getLogger(Join.class);
+	Map<String, Integer> iterations = new HashMap<>();
+
 	@Override
 	@SuppressWarnings("unchecked")
-	public boolean execute(Workflow workflow, Task task, WorkflowExecutor provider) throws Exception {
+	public boolean execute(Workflow workflow, Task task, WorkflowExecutor provider) {
 
 		boolean allDone = true;
 		boolean hasFailures = false;
-		String failureReason = "";
+		StringBuilder failureReason = new StringBuilder();
 		List<String> joinOn = (List<String>) task.getInputData().get("joinOn");
-		for (String joinOnRef : joinOn) {
+
+		int iteration = iterations.get(task.getReferenceTaskName()) == null ? 0 : iterations.get(task.getReferenceTaskName());
+
+		for(String joinOnRef : joinOn){
+			if (iteration > 0) {
+				joinOnRef += "_" + (iteration);
+			}
 			Task forkedTask = workflow.getTaskByRefName(joinOnRef);
-			if (forkedTask == null) {
+			if(forkedTask == null){
 				//Task is not even scheduled yet
 				allDone = false;
 				break;
 			}
 			Status taskStatus = forkedTask.getStatus();
 			hasFailures = !taskStatus.isSuccessful();
-			if (hasFailures) {
-				failureReason += forkedTask.getReasonForIncompletion() + " ";
+			if(hasFailures){
+				failureReason.append(forkedTask.getReasonForIncompletion()).append(" ");
 			}
 			task.getOutputData().put(joinOnRef, forkedTask.getOutputData());
 			allDone = taskStatus.isTerminal();
-			if (!allDone || hasFailures) {
+			if(!allDone || hasFailures){
 				break;
 			}
 		}
-		if (allDone || hasFailures) {
-			if (hasFailures) {
-				task.setReasonForIncompletion(failureReason);
-				task.setStatus(Status.FAILED);
-			} else {
-				task.setStatus(Status.COMPLETED);
+		if (hasFailures) {
+			task.setReasonForIncompletion(failureReason.toString());
+			task.setStatus(Status.FAILED);
+			task.setSeq(task.getSeq()+ iteration * joinOn.size());
+			iterations.remove(task.getReferenceTaskName());
+			return true;
+		} else if (!allDone) {
+			return false;
+		}
+		boolean shouldExit = getEvaluatedCaseValue(task.getWorkflowTask(), task.getInputData());
+		if (!shouldExit){
+			joinOn = (List<String>) task.getInputData().get("joinOn");
+			List<Task> taskToBeScheduled = new ArrayList<>();
+			iteration++;
+			for(String joinOnRef : joinOn){
+				Task existingTask = workflow.getTaskByRefName(joinOnRef);
+				existingTask.setRetried(true);
+				Task newTask = provider.taskToBeRescheduled(existingTask);
+				newTask.setReferenceTaskName(existingTask.getReferenceTaskName() + "_" + iteration);
+				newTask.setRetryCount(existingTask.getRetryCount());
+				newTask.setScheduledTime(System.currentTimeMillis());
+				taskToBeScheduled.add(newTask);
 			}
+			iterations.put(task.getReferenceTaskName(), iteration);
+			provider.scheduleTask(workflow, taskToBeScheduled);
+			return false;
+		} else {
+			task.setSeq(task.getSeq() + iteration * joinOn.size());
+			iterations.remove(task.getReferenceTaskName());
+			task.setStatus(Status.COMPLETED);
 			return true;
 		}
-		// Otherwise execute conditional join
-		List<String> joinConditions = (List<String>) task.getInputData().get("joinOnConditions");
-		if (CollectionUtils.isNotEmpty(joinConditions)) {
-			Map<String, Object> inputParameters = (Map<String, Object>) task.getInputData().get("inputParameters");
-			Map<String, Object> payload = pu.getTaskInputV2(inputParameters, workflow, null, null);
-			boolean allSuccess = false;
-			for (String condition : joinConditions) {
-				String evaluated = ScriptEvaluator.evalJq(condition, payload);
-				allSuccess = "true".equalsIgnoreCase(evaluated);
-				if (!allSuccess) {
-					break;
-				}
-			}
-			if (allSuccess) {
-				for (String joinOnRef : joinOn) {
-					Task forkedTask = workflow.getTaskByRefName(joinOnRef);
-					if (forkedTask == null)
-						continue;
 
-					// Cancel the task if that still running
-					if (!forkedTask.getStatus().isTerminal()) {
-						forkedTask.setStatus(Status.COMPLETED);
-						provider.updateTask(forkedTask);
+	}
 
-						String queueName = QueueUtils.getQueueName(task);
-						provider.getQueueDao().remove(queueName, forkedTask.getTaskId());
-					}
-					task.getOutputData().put(joinOnRef, forkedTask.getOutputData());
-				}
-				task.setStatus(Status.COMPLETED);
-				return true;
-			}
-		}
-		return false;
+	boolean getEvaluatedCaseValue(WorkflowTask taskToSchedule, Map<String, Object> taskInput) {
+		String expression = taskToSchedule.getExpression();
+		boolean caseValue = false;
+//		if (expression != null) {
+//			logger.debug("Case being evaluated using decision expression: {}", expression);
+//			try {
+//				//Evaluate the expression by using the Nashhorn based script evaluator
+//				Object returnValue = ScriptEvaluator.eval(expression, taskInput);
+//				caseValue = (returnValue == null) ? false : true;
+//			} catch (ScriptException e) {
+//				logger.error(e.getMessage(), e);
+//				throw new RuntimeException("Error while evaluating the script " + expression, e);
+//			}
+//
+//		}
+		return caseValue;
 	}
 
 }

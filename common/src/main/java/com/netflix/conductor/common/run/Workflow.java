@@ -17,11 +17,30 @@ package com.netflix.conductor.common.run;
 
 import com.netflix.conductor.common.metadata.Auditable;
 import com.netflix.conductor.common.metadata.tasks.Task;
+import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 
 import java.util.*;
 
 public class Workflow extends Auditable {
-	
+
+	public WorkflowDef getWorkflowDefinition() {
+		return workflowDefinition;
+	}
+
+	/**
+	 * Convenience method for accessing the workflow definition name.
+	 * @return the workflow definition name.
+	 */
+	public String getWorkflowName() {
+		return getWorkflowDefinition() != null ?
+				getWorkflowDefinition().getName() :
+				workflowType;
+	}
+
+	public void setWorkflowDefinition(WorkflowDef workflowDefinition) {
+		this.workflowDefinition = workflowDefinition;
+	}
+
 	public enum  WorkflowStatus {
 		RUNNING(false, false), COMPLETED(true, true), FAILED(true, false), TIMED_OUT(true, false), TERMINATED(true, false), CANCELLED(true, false), PAUSED(false, true), RESET(true, false);
 		
@@ -102,6 +121,8 @@ public class Workflow extends Auditable {
 	private boolean resetTags;
 
 	private int jobPriority = 5;
+
+	private WorkflowDef workflowDefinition;
 
 	public Workflow(){
 		

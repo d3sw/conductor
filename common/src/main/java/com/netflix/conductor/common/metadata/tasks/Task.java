@@ -21,7 +21,15 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Task {
-	
+
+	public String getWorkflowType() {
+		return workflowType;
+	}
+
+	public void setWorkflowType(String workflowType) {
+		this.workflowType = workflowType;
+	}
+
 	public enum Status {
 		
 		IN_PROGRESS(false, true, true), 
@@ -126,6 +134,8 @@ public class Task {
 	private String domain;
 
 	private Boolean started;
+
+	private String workflowType;
 	
 	public Task(){
 		
