@@ -126,6 +126,8 @@ public class Task {
 	private String domain;
 
 	private Boolean started;
+
+	private int iteration;
 	
 	public Task(){
 		
@@ -554,6 +556,26 @@ public class Task {
 
 	public boolean isTerminal() {
 		return status != null && status.isTerminal();
+	}
+
+	public int getIteration() {
+		return iteration;
+	}
+
+	public void setIteration(int iteration) {
+		this.iteration = iteration;
+	}
+
+	public boolean isLoopOverTask() {
+		return iteration > 0;
+	}
+
+	public void addOutput(String key, Object value) {
+		this.outputData.put(key, value);
+	}
+
+	public void addOutput(Map<String, Object> outputData) {
+		this.outputData.putAll(outputData);
 	}
 
 	public Task copy() {

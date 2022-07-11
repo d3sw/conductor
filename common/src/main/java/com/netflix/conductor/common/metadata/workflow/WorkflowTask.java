@@ -18,15 +18,7 @@
  */
 package com.netflix.conductor.common.metadata.workflow;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author Viren
@@ -35,7 +27,7 @@ import java.util.Set;
 public class WorkflowTask {
 
 	public static enum Type {
-		SIMPLE, DYNAMIC, FORK_JOIN, FORK_JOIN_DYNAMIC, DECISION, JOIN, SUB_WORKFLOW, EVENT, WAIT, BATCH, USER_DEFINED;
+		SIMPLE, DYNAMIC, FORK_JOIN, FORK_JOIN_DYNAMIC, DECISION, JOIN, SUB_WORKFLOW, EVENT, WAIT, BATCH, USER_DEFINED, DO_WHILE;
 		
 		private static Set<String> systemTasks = new HashSet<>();
 		static {
@@ -49,6 +41,7 @@ public class WorkflowTask {
 			systemTasks.add(Type.EVENT.name());
 			systemTasks.add(Type.WAIT.name());
 			systemTasks.add(Type.BATCH.name());
+			systemTasks.add(Type.DO_WHILE.name());
 			//Do NOT add USER_DEFINED here...
 		}
 		
@@ -113,6 +106,10 @@ public class WorkflowTask {
 	private Long timeoutSeconds;
 
 	private Boolean resetTags;
+
+	private String loopCondition;
+
+	private List<WorkflowTask> loopOver = new LinkedList<>();
 
 	/**
 	 * @return the name
@@ -460,6 +457,22 @@ public class WorkflowTask {
 		this.resetTags = resetTags;
 	}
 
+	public String getLoopCondition() {
+		return loopCondition;
+	}
+
+	public void setLoopCondition(String loopCondition) {
+		this.loopCondition = loopCondition;
+	}
+
+	public List<WorkflowTask> getLoopOver() {
+		return loopOver;
+	}
+
+	public void setLoopOver(List<WorkflowTask> loopOver) {
+		this.loopOver = loopOver;
+	}
+
 	private Collection<List<WorkflowTask>> children(){
 		Collection<List<WorkflowTask>> v1 = new LinkedList<>();
 		Type tt = Type.USER_DEFINED;
@@ -474,6 +487,9 @@ public class WorkflowTask {
 				break;
 			case FORK_JOIN:
 				v1.addAll(forkTasks);
+				break;
+			case DO_WHILE:
+				v1.add(loopOver);
 				break;
 			default:
 				break;
@@ -500,6 +516,7 @@ public class WorkflowTask {
 		}
 		
 		switch(tt){
+			case DO_WHILE:
 			case DECISION:
 				for (List<WorkflowTask> wfts : children() ){
 					Iterator<WorkflowTask> it = wfts.iterator();
@@ -517,6 +534,15 @@ public class WorkflowTask {
 						}
 					}
 					if(it.hasNext()) { return it.next(); }
+				}
+				if (tt == Type.DO_WHILE && this.has(taskReferenceName)) {
+					// come here means this is DO_WHILE task and `taskReferenceName` is the last
+					// task in
+					// this DO_WHILE task, because DO_WHILE task need to be executed to decide
+					// whether to
+					// schedule next iteration, so we just return the DO_WHILE task, and then ignore
+					// generating this task again in deciderService.getNextTask()
+					return this;
 				}
 				break;
 			case FORK_JOIN:
@@ -563,7 +589,7 @@ public class WorkflowTask {
 		}
 		
 		switch(tt){
-			
+			case DO_WHILE:
 			case DECISION:
 			case FORK_JOIN:	
 				for(List<WorkflowTask> childx : children()){

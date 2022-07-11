@@ -436,7 +436,7 @@ public class DeciderService {
 		return;
 	}
 
-	private List<Task> getTasksToBeScheduled(WorkflowDef def, Workflow workflow, WorkflowTask taskToSchedule, int retryCount)  {
+	public List<Task> getTasksToBeScheduled(WorkflowDef def, Workflow workflow, WorkflowTask taskToSchedule, int retryCount)  {
 		return getTasksToBeScheduled(def, workflow, taskToSchedule, retryCount, null);
 	}
 	
