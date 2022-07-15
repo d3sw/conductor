@@ -1,6 +1,6 @@
 # Local Shotgun setup for testing
-Shotgun is a MQ service which handles messages in Conductor.
-The main class with MQ configuration is
+Shotgun is a MQ service that process messages in Conductor.
+The main class with Shotgun MQ configuration is
 **com.netflix.conductor.contribs.queue.shotgun.SharedShotgunQueue**
 Queue name in conductor has following pattern :
 ***{queue.name}:{group.id}*** 
@@ -27,7 +27,7 @@ public class SharedShotgunQueue implements ObservableQueue {
     }
 }
 ```
-With this config the local conductor application will be listening to all the messages from
+The above code configures local conductor application to subscribe on all the messages from
 **deluxe.one-packaging.package.progress** topic in parallel to other consumers (in separate consumer group).
 
         
