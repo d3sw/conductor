@@ -89,31 +89,34 @@ CREATE TABLE IF NOT EXISTS meta_priority
 
 CREATE TABLE IF NOT EXISTS workflow
 (
-    id bigserial                        NOT NULL,
-    created_on timestamp DEFAULT now()  NOT NULL,
-    modified_on timestamp DEFAULT now() NOT NULL,
+    id bigint default nextval('public.workflow_id_seq'::regclass) not null
+        primary key,
+    created_on timestamp default now() not null,
+    modified_on timestamp default now() not null,
     start_time timestamp,
     end_time timestamp,
     parent_workflow_id varchar(255),
-    workflow_id varchar(255) NOT NULL,
-    workflow_type varchar(255) NOT NULL,
-    workflow_status varchar(255) NOT NULL,
-    date_str integer NOT NULL,
-    json_data text NOT NULL,
+    workflow_id varchar(255) not null
+        constraint workflow_workflow_id
+            unique,
+    workflow_type varchar(255) not null,
+    workflow_status varchar(255) not null,
+    date_str integer not null,
+    json_data text not null,
     input text,
     output text,
     correlation_id text,
     tags text[],
-    json_data_workflow_ids jsonb NULL,
-    CONSTRAINT workflow_pkey PRIMARY KEY (id),
-    CONSTRAINT workflow_workflow_id UNIQUE (workflow_id)    
+    json_data_workflow_ids jsonb
 );
-CREATE INDEX IF NOT EXISTS workflow_end_time ON workflow (end_time);
+
+CREATE INDEX IF NOT EXISTS workflow_type_status_date ON workflow (workflow_type, workflow_status, date_str);
 CREATE INDEX IF NOT EXISTS workflow_parent_workflow_id ON workflow (parent_workflow_id);
 CREATE INDEX IF NOT EXISTS workflow_start_time ON workflow (start_time);
+CREATE INDEX IF NOT EXISTS workflow_end_time ON workflow (end_time);
 CREATE INDEX IF NOT EXISTS workflow_tags ON workflow USING gin (tags);
-CREATE INDEX IF NOT EXISTS workflow_type_status_date ON workflow (workflow_type, workflow_status, date_str);
 CREATE INDEX IF NOT EXISTS workflow_workflow_status_idx ON workflow (workflow_status);
+CREATE INDEX IF NOT EXISTS workflow_json_data_workflow_ids_gin_idx ON workflow USING gin (json_data_workflow_ids jsonb_path_ops);
 
 CREATE TABLE IF NOT EXISTS task_in_progress
 (
