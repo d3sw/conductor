@@ -274,6 +274,7 @@ public class ConductorServer {
     private void runMigrations() throws IOException {
         boolean doMigration = "true".equalsIgnoreCase(cc.getProperty(FLYWAY_MIGRATE,"false"));
         if (doMigration) {
+            logger.info("Flyway migraton enabled.");
             FlywayService.migrate(cc);
         } else {
             logger.info("Skipping Flyway migration (not enabled)");
