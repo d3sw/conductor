@@ -29,7 +29,6 @@ public class FlywayService {
                 .locations(PATH_TO_MIGRATIONS)
                 .baselineOnMigrate(true)
                 .baselineVersion(baselineVersion)
-                .loggers("slf4j2", "log4j2")
                 .load();
         MigrateResult result = flyway.migrate();
         logger.info("Flyway result.success " + result.success);
