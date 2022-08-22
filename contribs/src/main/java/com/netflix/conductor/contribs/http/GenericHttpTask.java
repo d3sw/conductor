@@ -11,7 +11,6 @@ import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.run.CommonParams;
 import com.netflix.conductor.contribs.correlation.Correlator;
-import com.netflix.conductor.core.DNSLookup;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.ScriptEvaluator;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
@@ -25,7 +24,6 @@ import com.sun.jersey.oauth.client.OAuthClientFilter;
 import com.sun.jersey.oauth.signature.OAuthParameters;
 import com.sun.jersey.oauth.signature.OAuthSecrets;
 import org.apache.commons.collections.MapUtils;
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,12 +37,16 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import static java.util.Objects.isNull;
 
 class GenericHttpTask extends WorkflowSystemTask {
 	private static final Logger logger = LoggerFactory.getLogger(HttpTask.class);
 	static final String GET_ACCESS_TOKEN_FAILED = "Generate access token failed. %s: %s";
 	static final String REQUEST_PARAMETER_NAME = "http_request";
 	static final String RESPONSE_PARAMETER_NAME = "http_response";
+    static final String CUSTOM_FAILURE_REASON_PARAMETER_NAME = "failure_reason_field";
 	static final String STATUS_MAPPING_PARAMETER_NAME = "status_mapping";
 	static final String RESPONSE_MAPPING_PARAMETER_NAME = "response_mapping";
 	static final String RESET_START_TIME_PARAMETER_NAME = "reset_startTime";
