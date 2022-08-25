@@ -1,4 +1,4 @@
-FROM openjdk:8u121-jdk as builder
+FROM amazoncorretto:8 as builder
 WORKDIR /stage
 ADD . /stage
 
@@ -7,7 +7,7 @@ RUN ./gradlew build -x test
 #
 # conductor:archiver - Deluxe conductor archiver
 #
-FROM openjdk:8u121-jdk
+FROM amazoncorretto:8
 
 # Make app folders
 RUN mkdir -p /app
