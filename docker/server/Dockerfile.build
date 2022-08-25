@@ -1,7 +1,7 @@
 #
 # conductor:server - Netflix conductor server
 #
-FROM openjdk:8u121-jdk
+FROM amazoncorretto:8
 
 MAINTAINER Netflix OSS <conductor@netflix.com>
 
