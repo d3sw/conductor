@@ -1,4 +1,4 @@
-FROM java:8-jdk as builder
+FROM openjdk:8u121-jdk as builder
 WORKDIR /stage
 ADD . /stage
 RUN ./gradlew build -x test
@@ -6,7 +6,7 @@ RUN ./gradlew build -x test
 #
 # conductor:server - Netflix conductor server
 #
-FROM java:8-jre
+FROM openjdk:8u121-jdk
 
 MAINTAINER Netflix OSS <conductor@netflix.com>
 
