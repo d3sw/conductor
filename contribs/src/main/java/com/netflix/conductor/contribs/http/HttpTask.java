@@ -42,6 +42,9 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import static java.util.Objects.isNull;
+
 /**
  * @author Viren Task that enables calling another http endpoint as part of its
  *         execution
@@ -176,7 +179,12 @@ public class HttpTask extends GenericHttpTask {
 			if (task.getStatus() == Status.COMPLETED) {
 				checkHttpResponseValidation(task, response);
 			} else {
-				setReasonForIncompletion(response, task);
+				ResponseFailureReason failureReasonParam = getResponseFailureField(task);
+				if (isNull(failureReasonParam)) {
+					setReasonForIncompletion(response, task);
+				} else {
+					setCustomFailureReasonForIncompletion(task, failureReasonParam, response);
+				}
 			}
 			handleResetStartTime(task, executor);
 
@@ -249,6 +257,82 @@ public class HttpTask extends GenericHttpTask {
 			taskOutput.put(CONDITIONS_PARAMETER, conditions);
 		}
 		conditions.put(condition, result);
+	}
+
+	/**
+	 * Retrieves response reason failure configuration
+	 * @param task the task being executed
+	 * @return the failure reason configuration field
+	 */
+	private ResponseFailureReason getResponseFailureField(Task task) {
+		Object responseParam = task.getInputData().get(RESPONSE_PARAMETER_NAME);
+		// Check http_response object is present or not
+		if (isNull(responseParam)) return null;
+
+		Output output = om.convertValue(responseParam, Output.class);
+		return isNull(output) ? null : output.getResponseFailureReason();
+	}
+
+	/**
+	 * Allows systems to provision a custom failure reason based of the HTTP response body
+	 * <p>
+	 * This is specifically to provide flexibility and prevent large failure payload
+	 * @param task the task being executed
+	 * @param failureReasonParam the configured field to retrieve failure reason from
+	 * @param response the HTTP response from the remote server
+	 */
+	private void setCustomFailureReasonForIncompletion(Task task, ResponseFailureReason failureReasonParam, HttpResponse response) {
+		String failureReasonField = failureReasonParam.getField();
+		if (StringUtils.isEmpty(failureReasonField)) { // for cases of missing reason field, we'll default back to the full response body
+			logger.error(String.format("the response custom failure reason field is missing for this workflow, see details: task id = %s, workflow id = %s",
+					task.getTaskId(), task.getWorkflowInstanceId())); // log this so we can track bad configuration (possibly emit a statsD metric for datadog alerts)
+			setReasonForIncompletion(response, task);
+			return;
+		}
+
+		// Get the response map with details of the failure reason or default to full response body if non exists
+		Map<String, Object> responseMap = response.asMap();
+		if (isNull(responseMap) || responseMap.isEmpty()) {
+			logger.warn(String.format("no response body from remote server to evaluate failure reason, see details: task id = %s, workflow id = %s",
+					task.getTaskId(), task.getWorkflowInstanceId()));
+			setReasonForIncompletion(response, task);
+			return;
+		}
+
+		// evaluate the provided script and set reason
+		String reason = "";
+		try {
+			reason = (String) ScriptEvaluator.eval(failureReasonField, responseMap);
+			addCustomFailureEvalResult(task, reason);
+		} catch (Exception e) {
+			logger.error(String.format("failed to evaluate failure reason for script = %s", failureReasonField), e);
+
+			// Set the error message instead of false
+			addCustomFailureEvalResult(task, e.getMessage());
+		}
+
+		processCustomFailureReasonResponse(task, response, failureReasonField, reason);
+	}
+
+	private void processCustomFailureReasonResponse(Task task, HttpResponse response, String failureReason, String reason) {
+		// show full response body if the provided field for failure reason does not exist
+		if (StringUtils.isEmpty(reason)) {
+			logger.error(String.format("unable to retrieve failure reason from the provided custom field, see details: field = %s, task id = %s, workflow id = %s",
+					failureReason, task.getTaskId(), task.getWorkflowInstanceId())); // log this so we can track how often this happens
+			setReasonForIncompletion(response, task);
+			return;
+		}
+		task.setReasonForIncompletion(reason);
+	}
+
+	private void addCustomFailureEvalResult(Task task, String result) {
+		Map<String, Object> taskOutput = task.getOutputData();
+		Map<String, Object> customFailureReason = (Map<String, Object>) taskOutput.get(CUSTOM_FAILURE_REASON_PARAMETER_NAME);
+		if (isNull(customFailureReason)) {
+			customFailureReason = new HashMap<>();
+			taskOutput.put(CUSTOM_FAILURE_REASON_PARAMETER_NAME, customFailureReason);
+		}
+		customFailureReason.put("reason", result);
 	}
 
 	private void checkHttpResponseValidation(Task task, HttpResponse response) {
