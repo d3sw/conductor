@@ -50,6 +50,8 @@ import java.io.PrintWriter;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.netflix.conductor.contribs.http.GenericHttpTask.CUSTOM_FAILURE_REASON_PARAMETER_NAME;
+import static com.netflix.conductor.contribs.http.GenericHttpTask.RESPONSE_PARAMETER_NAME;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -140,6 +142,66 @@ public class TestHttpTask {
 		Set<String> responseKeys = map.keySet();
 		inputKeys.containsAll(responseKeys);
 		responseKeys.containsAll(inputKeys);
+	}
+
+	@Test
+	public void testPostWithCustomFailureReason() throws Exception {
+		// Arrange: set up task, mock handler input
+		Task task = new Task();
+		Input input = new Input();
+		input.setUri("http://localhost:7009/failure_reason");
+		String expectedFailureReason = "some failure reason message";
+		Map<String, Object> body = new HashMap<>();
+		body.put("input_key1", "value1");
+		body.put("input_key2", 45.3d);
+		input.setBody(body);
+		input.setMethod("POST");
+		Map<String, String> failureReason = new HashMap<>();
+		failureReason.put("field", "$.body.failureReason");
+		Map<String, Object> httpResponse = new HashMap<>();
+		httpResponse.put(CUSTOM_FAILURE_REASON_PARAMETER_NAME, failureReason);
+		task.getInputData().put(HttpTask.REQUEST_PARAMETER_NAME, input);
+
+		// sample JSON overview of the data structure represented here
+		// "http_response": {
+		//   "response_failure_reason": {
+		//       "field": "$.body.failureReason"
+		//   }
+		//},
+		task.getInputData().put(RESPONSE_PARAMETER_NAME, httpResponse);
+
+		// Act: invoke an HTTP task
+		httpTask.start(workflow, task, executor);
+
+		// Assert: Ensure that the in-completion failure reason for this task is as configured
+		assertEquals(task.getReasonForIncompletion(), Status.FAILED, task.getStatus());
+		assertEquals(expectedFailureReason, task.getReasonForIncompletion());
+	}
+
+	@Test
+	public void testPostWithCustomFailureReason_whenBadConfiguration() throws Exception {
+		// Arrange: set up task, mock handler input
+		Task task = new Task();
+		Input input = new Input();
+		input.setUri("http://localhost:7009/failure_reason");
+		Map<String, Object> body = new HashMap<>();
+		body.put("input_key1", "value1");
+		body.put("input_key2", 45.3d);
+		input.setBody(body);
+		input.setMethod("POST");
+		Map<String, String> failureReason = new HashMap<>();
+		failureReason.put("field", "$.body.badField"); // using a bad field
+		Map<String, Object> httpResponse = new HashMap<>();
+		httpResponse.put(CUSTOM_FAILURE_REASON_PARAMETER_NAME, failureReason);
+		task.getInputData().put(HttpTask.REQUEST_PARAMETER_NAME, input);
+		task.getInputData().put(RESPONSE_PARAMETER_NAME, httpResponse);
+
+		// Act: invoke an HTTP task
+		httpTask.start(workflow, task, executor);
+
+		// Assert: Ensure that the in-completion failure reason for this task is the full response body because of the bad configuration
+		assertEquals(task.getReasonForIncompletion(), Status.FAILED, task.getStatus());
+		assertEquals("{input_key1=input_key1, input_key2=input_key2, failureReason=some failure reason message}", task.getReasonForIncompletion());
 	}
 	
 
@@ -363,6 +425,20 @@ public class TestHttpTask {
 				response.setStatus(500);
 				PrintWriter writer = response.getWriter();
 				writer.print(ERROR_RESPONSE);
+				writer.flush();
+				writer.close();
+			} else if(request.getMethod().equals("POST") && request.getRequestURI().equals("/failure_reason")) {
+				response.addHeader("Content-Type", "application/json");
+				response.setStatus(404);
+				BufferedReader reader = request.getReader();
+				Map<String, Object> input = om.readValue(reader, mapOfObj);
+				Set<String> keys = input.keySet();
+				for(String key : keys) {
+					input.put(key, key);
+				}
+				input.put("failureReason", "some failure reason message");
+				PrintWriter writer = response.getWriter();
+				writer.print(om.writeValueAsString(input));
 				writer.flush();
 				writer.close();
 			} else if(request.getMethod().equals("POST") && request.getRequestURI().equals("/post")) {
