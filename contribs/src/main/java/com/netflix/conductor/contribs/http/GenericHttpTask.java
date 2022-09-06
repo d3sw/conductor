@@ -46,7 +46,7 @@ class GenericHttpTask extends WorkflowSystemTask {
 	static final String GET_ACCESS_TOKEN_FAILED = "Generate access token failed. %s: %s";
 	static final String REQUEST_PARAMETER_NAME = "http_request";
 	static final String RESPONSE_PARAMETER_NAME = "http_response";
-    static final String CUSTOM_FAILURE_REASON_PARAMETER_NAME = "failure_reason_field";
+    static final String CUSTOM_FAILURE_REASON_PARAMETER_NAME = "response_failure_reason";
 	static final String STATUS_MAPPING_PARAMETER_NAME = "status_mapping";
 	static final String RESPONSE_MAPPING_PARAMETER_NAME = "response_mapping";
 	static final String RESET_START_TIME_PARAMETER_NAME = "reset_startTime";
