@@ -220,6 +220,7 @@ public class ConductorServer {
             logger.error("Error during flyway migration " + ex.getMessage(), ex);
             System.exit(-1);
         }
+
         // Holds handlers
         final HandlerList handlers = new HandlerList();
 
