@@ -286,9 +286,9 @@ job "conductor" {
         workflow_sweeper_frequency                   = "0"
         workflow_sweeper_thread_count                = "0"
         workflow_sweeper_pool_timeout                = "0"
-        workflow_sweeper_batch_names                 = "sherlock"
+        workflow_sweeper_batch_names                 = ""
         workflow_batch_sherlock_service              = "sherlock.service.${meta.tld}"
-        workflow_batch_sherlock_worker_count         = "0"
+        workflow_batch_sherlock_worker_count         = "1" //Setting this to 0 will cause IllegalArgException
         workflow_batch_sherlock_enabled              = "true"
         workflow_event_processor_disabled            = "true"
         workflow_lazy_decider                        = "true"
