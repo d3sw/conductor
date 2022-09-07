@@ -289,7 +289,8 @@ job "conductor" {
         workflow_sweeper_batch_names                 = "sherlock"
         workflow_batch_sherlock_service              = "sherlock.service.${meta.tld}"
         workflow_batch_sherlock_worker_count         = "0"
-        workflow_batch_sherlock_enabled              = "false"
+        workflow_batch_sherlock_enabled              = "true"
+        workflow_event_processor_disabled            = "true"
         workflow_lazy_decider                        = "true"
 
         // Elasticsearch settings.
