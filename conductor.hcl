@@ -109,48 +109,6 @@ job "conductor" {
     repository = "git@github.com:d3sw/conductor.git"
     job_file = "conductor.hcl"
     service-class = "platform"
-
-    // Elasticsearch settings.
-    workflow_elasticsearch_mode = "none"
-
-    // Auth settings. Rest settings are in vault
-    conductor_auth_service  = "auth.service.${meta.tld}"
-    conductor_auth_endpoint = "/v1/tenant/deluxe/auth/token"
-
-    // One MQ settings
-    io_shotgun_dns            = "shotgun.service.${meta.tld}"
-    io_shotgun_service        = "${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}-${meta.tld}"
-    io_shotgun_publishRetryIn = "5,10,15"
-    io_shotgun_shared         = "false"
-    com_bydeluxe_onemq_log    = "false"
-
-    // Additional modules
-    conductor_additional_modules = "com.netflix.conductor.contribs.ShotgunModule"
-
-    // Exclude demo workflows
-    loadSample = "false"
-
-    // Disable system-level loggers by default
-    log4j_logger_com_jayway_jsonpath = "OFF"
-    log4j_logger_com_zaxxer_hikari = "INFO"
-    log4j_logger_org_eclipse_jetty = "INFO"
-    log4j_logger_org_apache_http = "INFO"
-    log4j_logger_io_grpc_netty = "INFO"
-    log4j_logger_io_swagger = "OFF"
-    log4j_logger_tracer = "OFF"
-
-    //Mitigate CVE-2021-44228
-    LOG4J_FORMAT_MSG_NO_LOOKUPS = "true"
-
-    // DataDog Integration
-    DD_AGENT_HOST = "datadog-apm.service.${meta.tld}"
-    DD_SERVICE_NAME = "conductor.server.webapi"
-    DD_SERVICE_MAPPING = "postgresql:conductor.server.postgresql"
-    DD_TRACE_GLOBAL_TAGS = "env:${meta.tld}"
-    DD_LOGS_INJECTION = "true"
-
-    FLYWAY_MIGRATE = "true"
-
   }
 
   constraint {
@@ -336,45 +294,45 @@ job "conductor" {
         workflow_lazy_decider                        = "true"
 
         // Elasticsearch settings.
-        workflow_elasticsearch_mode = "${meta.workflow_elasticsearch_mode}"
+        workflow_elasticsearch_mode = "none"
 
         // Auth settings. Rest settings are in vault
-        conductor_auth_service  = "${meta.conductor_auth_service}"
-        conductor_auth_endpoint = "${meta.conductor_auth_endpoint}"
+        conductor_auth_service  = "auth.service.${meta.tld}"
+        conductor_auth_endpoint = "/v1/tenant/deluxe/auth/token"
 
         // One MQ settings
-        io_shotgun_dns            = "${meta.io_shotgun_dns}"
-        io_shotgun_service        = "${meta.io_shotgun_service}"
-        io_shotgun_publishRetryIn = "${meta.io_shotgun_publishRetryIn}"
-        io_shotgun_shared         = "${meta.io_shotgun_shared}"
-        com_bydeluxe_onemq_log    = "${meta.com_bydeluxe_onemq_log}"
+        io_shotgun_dns            = "shotgun.service.${meta.tld}"
+        io_shotgun_service        = "${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}-${meta.tld}"
+        io_shotgun_publishRetryIn = "5,10,15"
+        io_shotgun_shared         = "false"
+        com_bydeluxe_onemq_log    = "false"
 
         // Additional modules
-        conductor_additional_modules = "${meta.conductor_additional_modules}"
+        conductor_additional_modules = "com.netflix.conductor.contribs.ShotgunModule"
 
         // Exclude demo workflows
-        loadSample = "${meta.loadSample}"
+        loadSample = "false"
 
         // Disable system-level loggers by default
-        log4j_logger_com_jayway_jsonpath = "${meta.log4j_logger_com_jayway_jsonpath}"
-        log4j_logger_com_zaxxer_hikari = "${meta.log4j_logger_com_zaxxer_hikari}"
-        log4j_logger_org_eclipse_jetty = "${meta.log4j_logger_org_eclipse_jetty}"
-        log4j_logger_org_apache_http = "${meta.log4j_logger_org_apache_http}"
-        log4j_logger_io_grpc_netty = "${meta.log4j_logger_io_grpc_netty}"
-        log4j_logger_io_swagger = "${meta.log4j_logger_io_swagger}"
-        log4j_logger_tracer = "${meta.log4j_logger_tracer}"
+        log4j_logger_com_jayway_jsonpath = "OFF"
+        log4j_logger_com_zaxxer_hikari = "INFO"
+        log4j_logger_org_eclipse_jetty = "INFO"
+        log4j_logger_org_apache_http = "INFO"
+        log4j_logger_io_grpc_netty = "INFO"
+        log4j_logger_io_swagger = "OFF"
+        log4j_logger_tracer = "OFF"
 
         //Mitigate CVE-2021-44228
-        LOG4J_FORMAT_MSG_NO_LOOKUPS = "${meta.LOG4J_FORMAT_MSG_NO_LOOKUPS}"
+        LOG4J_FORMAT_MSG_NO_LOOKUPS = "true"
 
         // DataDog Integration
-        DD_AGENT_HOST = "${meta.DD_AGENT_HOST}"
-        DD_SERVICE_NAME = "${meta.DD_SERVICE_NAME}"
-        DD_SERVICE_MAPPING = "${meta.DD_SERVICE_MAPPING}"
-        DD_TRACE_GLOBAL_TAGS = "${meta.DD_TRACE_GLOBAL_TAGS}"
-        DD_LOGS_INJECTION = "${meta.DD_LOGS_INJECTION}"
+        DD_AGENT_HOST = "datadog-apm.service.${meta.tld}"
+        DD_SERVICE_NAME = "conductor.server.webapi"
+        DD_SERVICE_MAPPING = "postgresql:conductor.server.postgresql"
+        DD_TRACE_GLOBAL_TAGS = "env:${meta.tld}"
+        DD_LOGS_INJECTION = "true"
 
-        FLYWAY_MIGRATE = "${meta.FLYWAY_MIGRATE}"
+        FLYWAY_MIGRATE = "true"
       }
 
       service {
@@ -488,45 +446,45 @@ job "conductor" {
         workflow_lazy_decider                        = "true"
 
         // Elasticsearch settings.
-        workflow_elasticsearch_mode = "${meta.workflow_elasticsearch_mode}"
+        workflow_elasticsearch_mode = "none"
 
         // Auth settings. Rest settings are in vault
-        conductor_auth_service  = "${meta.conductor_auth_service}"
-        conductor_auth_endpoint = "${meta.conductor_auth_endpoint}"
+        conductor_auth_service  = "auth.service.${meta.tld}"
+        conductor_auth_endpoint = "/v1/tenant/deluxe/auth/token"
 
         // One MQ settings
-        io_shotgun_dns            = "${meta.io_shotgun_dns}"
-        io_shotgun_service        = "${meta.io_shotgun_service}"
-        io_shotgun_publishRetryIn = "${meta.io_shotgun_publishRetryIn}"
-        io_shotgun_shared         = "${meta.io_shotgun_shared}"
-        com_bydeluxe_onemq_log    = "${meta.com_bydeluxe_onemq_log}"
+        io_shotgun_dns            = "shotgun.service.${meta.tld}"
+        io_shotgun_service        = "${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}-${meta.tld}"
+        io_shotgun_publishRetryIn = "5,10,15"
+        io_shotgun_shared         = "false"
+        com_bydeluxe_onemq_log    = "false"
 
         // Additional modules
-        conductor_additional_modules = "${meta.conductor_additional_modules}"
+        conductor_additional_modules = "com.netflix.conductor.contribs.ShotgunModule"
 
         // Exclude demo workflows
-        loadSample = "${meta.loadSample}"
+        loadSample = "false"
 
         // Disable system-level loggers by default
-        log4j_logger_com_jayway_jsonpath = "${meta.log4j_logger_com_jayway_jsonpath}"
-        log4j_logger_com_zaxxer_hikari = "${meta.log4j_logger_com_zaxxer_hikari}"
-        log4j_logger_org_eclipse_jetty = "${meta.log4j_logger_org_eclipse_jetty}"
-        log4j_logger_org_apache_http = "${meta.log4j_logger_org_apache_http}"
-        log4j_logger_io_grpc_netty = "${meta.log4j_logger_io_grpc_netty}"
-        log4j_logger_io_swagger = "${meta.log4j_logger_io_swagger}"
-        log4j_logger_tracer = "${meta.log4j_logger_tracer}"
+        log4j_logger_com_jayway_jsonpath = "OFF"
+        log4j_logger_com_zaxxer_hikari = "INFO"
+        log4j_logger_org_eclipse_jetty = "INFO"
+        log4j_logger_org_apache_http = "INFO"
+        log4j_logger_io_grpc_netty = "INFO"
+        log4j_logger_io_swagger = "OFF"
+        log4j_logger_tracer = "OFF"
 
         //Mitigate CVE-2021-44228
-        LOG4J_FORMAT_MSG_NO_LOOKUPS = "${meta.LOG4J_FORMAT_MSG_NO_LOOKUPS}"
+        LOG4J_FORMAT_MSG_NO_LOOKUPS = "true"
 
         // DataDog Integration
-        DD_AGENT_HOST = "${meta.DD_AGENT_HOST}"
-        DD_SERVICE_NAME = "${meta.DD_SERVICE_NAME}"
-        DD_SERVICE_MAPPING = "${meta.DD_SERVICE_MAPPING}"
-        DD_TRACE_GLOBAL_TAGS = "${meta.DD_TRACE_GLOBAL_TAGS}"
-        DD_LOGS_INJECTION = "${meta.DD_LOGS_INJECTION}"
+        DD_AGENT_HOST = "datadog-apm.service.${meta.tld}"
+        DD_SERVICE_NAME = "conductor.server.webapi"
+        DD_SERVICE_MAPPING = "postgresql:conductor.server.postgresql"
+        DD_TRACE_GLOBAL_TAGS = "env:${meta.tld}"
+        DD_LOGS_INJECTION = "true"
 
-        FLYWAY_MIGRATE = "${meta.FLYWAY_MIGRATE}"
+        FLYWAY_MIGRATE = "true"
       }
 
       service {
