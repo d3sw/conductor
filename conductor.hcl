@@ -281,7 +281,7 @@ job "conductor" {
         workflow_system_task_worker_poll_count       = "0"
         workflow_system_task_worker_poll_timeout     = "0"
         workflow_system_task_worker_poll_frequency   = "0"
-        workflow_system_task_worker_queue_size       = "0"
+        workflow_system_task_worker_queue_size       = "1" //Setting this to 0 will cause IllegalArgException
         workflow_system_task_http_unack_timeout      = "0"
         workflow_sweeper_frequency                   = "0"
         workflow_sweeper_thread_count                = "0"
