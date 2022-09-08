@@ -335,6 +335,7 @@ job "conductor" {
         DD_LOGS_INJECTION = "true"
 
         FLYWAY_MIGRATE = "true"
+
       }
 
       service {

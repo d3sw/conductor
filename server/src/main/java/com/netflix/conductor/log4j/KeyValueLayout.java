@@ -22,7 +22,7 @@ public class KeyValueLayout extends Layout {
         hostname = getHostName();
         fromhost = getHostIp();
         allocId = System.getenv("NOMAD_ALLOC_ID");
-        stackRole = System.getenv("STACK_ROLE");
+        stackRole = System.getenv("STACK_ROLE" );
     }
 
     @Override
