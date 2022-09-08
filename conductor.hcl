@@ -435,7 +435,7 @@ job "conductor" {
 
         // Database settings
         db = "aurora"
-        aurora_app_pool_name  = "core"
+        aurora_app_pool_name  = "worker"
         aurora_log4j_pool_name = "log4j"
 
         // Workflow settings
