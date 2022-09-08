@@ -28,7 +28,7 @@ public class AuroraDataSourceProvider implements Provider<HikariDataSource> {
 		String options = config.getProperty("aurora.options", "");
 		String url = String.format("jdbc:postgresql://%s:%s/%s?%s", host, port, db, options);
 
-		String pool_name = config.getProperty("aurora.app.pool.name", "core");
+		String pool_name = config.getProperty("aurora.app.pool.name", "worker");
 
 		HikariConfig poolConfig = new HikariConfig();
 		poolConfig.setJdbcUrl(url);
