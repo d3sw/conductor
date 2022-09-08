@@ -221,18 +221,6 @@ public class ConductorServer {
             System.exit(-1);
         }
 
-        logger.info("Reading Variables " +
-                        " SYS workflow_traceid_enabled " + System.getenv("workflow_traceid_enabled") +
-                        " SYS workflow.traceid.enabled " + System.getenv("workflow.traceid.enabled") +
-                        " CNF workflow_traceid_enabled " + cc.getProperty("workflow_traceid_enabled", "def_underscore") +
-                        " CNF workflow.traceid.enabled " + cc.getProperty("workflow.traceid.enabled", "def_dot") +
-                        " SYS STACK_ROLE " + System.getenv("STACK_ROLE") +
-                        " SYS test_key " + System.getenv("test_key") +
-                        " CNF test_key " + cc.getProperty("test_key", "NONE") +
-                        " SYS test.key " + System.getenv("test_key") +
-                        " CNF test.key " + cc.getProperty("test_key", "NONE")
-                        );
-
         // Holds handlers
         final HandlerList handlers = new HandlerList();
 
