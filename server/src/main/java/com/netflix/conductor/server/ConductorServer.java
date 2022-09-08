@@ -220,6 +220,30 @@ public class ConductorServer {
             logger.error("Error during flyway migration " + ex.getMessage(), ex);
             System.exit(-1);
         }
+
+        logger.info("Reading Variables " +
+                        "SYS workflow_traceid_enabled %s " +
+                        "SYS workflow.traceid.enabled %s " +
+                        "CNF workflow_traceid_enabled %s " +
+                        "CNF workflow.traceid.enabled %s " +
+                        "SYS STACK_ROLE %s " +
+                        "SYS test_key %s " +
+                        "CNF test_key %s " +
+                        "SYS test.key %s " +
+                        "CNF test.key %s " +
+                        "",
+                System.getenv("workflow_traceid_enabled"),
+                System.getenv("workflow.traceid.enabled"),
+                cc.getProperty("workflow_traceid_enabled", "def_underscore"),
+                cc.getProperty("workflow.traceid.enabled", "def_dot"),
+                System.getenv("STACK_ROLE"),
+                System.getenv("test_key"),
+                cc.getProperty("test_key", "NONE"),
+                System.getenv("test_key"),
+                cc.getProperty("test_key", "NONE")
+        );
+
+
         // Holds handlers
         final HandlerList handlers = new HandlerList();
 
