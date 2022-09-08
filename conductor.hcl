@@ -176,6 +176,7 @@ job "conductor" {
       env {
         TLD = "${meta.tld}"
         APP_VERSION = "${var.app_version}"
+        STACK_ROLE  = "ui"
         WF_SERVICE  = "${NOMAD_JOB_NAME}-server.service.${meta.tld}"
         AUTH_SERVICE_NAME    = "auth.service.${meta.tld}"
         KEYCLOAK_SERVICE_URL = "http://keycloak.service.${meta.tld}"
@@ -269,6 +270,7 @@ job "conductor" {
         TLD         = "${meta.tld}"
         STACK       = "${meta.env}"
         APP_VERSION = "${var.app_version}"
+        STACK_ROLE  = "server"
 
         // Database settings
         db = "aurora"
@@ -423,6 +425,7 @@ job "conductor" {
         TLD         = "${meta.tld}"
         STACK       = "${meta.env}"
         APP_VERSION = "${var.app_version}"
+        STACK_ROLE  = "worker"
 
         // Database settings
         db = "aurora"
