@@ -274,6 +274,8 @@ job "conductor" {
 
         // Database settings
         db = "aurora"
+        aurora_app_pool_name  = "server"
+        aurora_log4j_pool_name = "log4j_server"
 
         // Workflow settings
         workflow_failure_expandInline                = "false"
@@ -361,6 +363,8 @@ job "conductor" {
         data = <<EOF
         {{ with printf "kv/conductor" | secret }}{{ range $k, $v := .Data.data }}{{ $k }}={{ $v }}
         {{ end }}{{ end }}
+        {{ with printf "kv/conductor/api" | secret }}{{ range $k, $v := .Data.data }}{{ $k }}={{ $v }}
+        {{ end }}{{ end }}
         EOF
 
         destination   = "local/secrets/conductor-server.env"
@@ -405,7 +409,7 @@ job "conductor" {
         image = "583623634344.dkr.ecr.us-west-2.amazonaws.com/conductor:${var.app_version}-server"
 
         volumes = [
-          "local/secrets/conductor-server.env:/app/config/secrets.env",
+          "local/secrets/conductor-worker.env:/app/config/secrets.env",
         ]
 
         labels {
@@ -431,6 +435,8 @@ job "conductor" {
 
         // Database settings
         db = "aurora"
+        aurora_app_pool_name  = "core"
+        aurora_log4j_pool_name = "log4j"
 
         // Workflow settings
         workflow_failure_expandInline                = "false"
@@ -517,7 +523,7 @@ job "conductor" {
         {{ end }}{{ end }}
         EOF
 
-        destination   = "local/secrets/conductor-server.env"
+        destination   = "local/secrets/conductor-worker.env"
         change_mode   = "signal"
         change_signal = "SIGINT"
       }
