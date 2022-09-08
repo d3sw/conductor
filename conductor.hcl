@@ -427,6 +427,7 @@ job "conductor" {
         STACK       = "${meta.env}"
         APP_VERSION = "${var.app_version}"
         STACK_ROLE  = "worker"
+        test_key    = "ENV"
 
         // Database settings
         db = "aurora"
