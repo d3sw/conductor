@@ -100,7 +100,7 @@ public class Join extends WorkflowSystemTask {
 
 					// Cancel the task if that still running
 					if (!forkedTask.getStatus().isTerminal()) {
-						forkedTask.setStatus(Status.COMPLETED);
+						forkedTask.setStatus(Status.SKIPPED);
 						provider.updateTask(forkedTask);
 
 						String queueName = QueueUtils.getQueueName(task);
