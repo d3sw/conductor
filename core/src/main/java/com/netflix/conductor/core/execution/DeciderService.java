@@ -255,11 +255,12 @@ public class DeciderService {
 		});
 
 		boolean noPendingTasks = taskStatusMap.values().stream().allMatch(st -> st.isTerminal());
-		
-		boolean noPendingSchedule = workflow.getTasks().stream().parallel().filter(wftask -> {
+
+		List<Task> pendingScheduleTasks = workflow.getTasks().stream().filter(wftask -> {
 			String next = getNextTasksToBeScheduled(def, workflow, wftask);
 			return next != null && !taskStatusMap.containsKey(next);
-		}).collect(Collectors.toList()).isEmpty();
+		}).collect(Collectors.toList());
+		boolean noPendingSchedule = pendingScheduleTasks.stream().allMatch(Task::isTerminal);
 		
 		if (allCompletedSuccessfully && noPendingTasks && noPendingSchedule) {
 			return true;
