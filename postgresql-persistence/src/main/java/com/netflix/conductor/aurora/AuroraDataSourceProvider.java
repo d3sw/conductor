@@ -28,19 +28,21 @@ public class AuroraDataSourceProvider implements Provider<HikariDataSource> {
 		String options = config.getProperty("aurora.options", "");
 		String url = String.format("jdbc:postgresql://%s:%s/%s?%s", host, port, db, options);
 
+		String pool_name = config.getProperty("aurora.app.pool.name", "worker");
+
 		HikariConfig poolConfig = new HikariConfig();
 		poolConfig.setJdbcUrl(url);
 		poolConfig.setUsername(user);
 		poolConfig.setPassword(pwd);
 		poolConfig.setAutoCommit(false);
-		poolConfig.setPoolName("core");
-		poolConfig.addDataSourceProperty("ApplicationName", "core-" + getHostName());
+		poolConfig.setPoolName(pool_name);
+		poolConfig.addDataSourceProperty("ApplicationName", pool_name + "-" + getHostName());
 		poolConfig.addDataSourceProperty("cachePrepStmts", "true");
 		poolConfig.addDataSourceProperty("prepStmtCacheSize", "250");
 		poolConfig.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
-		poolConfig.setMaximumPoolSize(config.getIntProperty("aurora.core.pool.size", 10));
-		poolConfig.setConnectionTimeout(config.getIntProperty("aurora.core.connect.timeout", 30) * 1000L);
-		poolConfig.setLeakDetectionThreshold(config.getIntProperty("aurora.core.leakDetection.timeout", 0) * 1000L);
+		poolConfig.setMaximumPoolSize(config.getIntProperty("aurora." + pool_name + ".pool.size", 10));
+		poolConfig.setConnectionTimeout(config.getIntProperty("aurora." + pool_name + ".connect.timeout", 30) * 1000L);
+		poolConfig.setLeakDetectionThreshold(config.getIntProperty("aurora." + pool_name + ".leakDetection.timeout", 0) * 1000L);
 
 		return new HikariDataSource(poolConfig);
 	}
