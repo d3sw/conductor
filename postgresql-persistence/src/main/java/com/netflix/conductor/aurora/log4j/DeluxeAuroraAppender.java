@@ -86,15 +86,14 @@ public class DeluxeAuroraAppender extends AppenderSkeleton {
 	public void init() {
 		try {
 			if (dataSource == null) {
-				String pool_name = getStrEnv("aurora_log4j_pool_name", "log4j");
 				HikariConfig poolConfig = new HikariConfig();
 				poolConfig.setJdbcUrl(url);
 				poolConfig.setUsername(user);
 				poolConfig.setPassword(password);
 				poolConfig.setAutoCommit(true);
-				poolConfig.setPoolName(pool_name);
-				poolConfig.setMaximumPoolSize(getIntEnv("aurora_" + pool_name + "_pool_size",1));
-				poolConfig.addDataSourceProperty("ApplicationName", pool_name + "-" + hostname);
+				poolConfig.setPoolName("log4j");
+				poolConfig.setMaximumPoolSize(getIntEnv("aurora_log4j_pool_size",1));
+				poolConfig.addDataSourceProperty("ApplicationName", "log4j-" + hostname);
 				poolConfig.addDataSourceProperty("cachePrepStmts", "true");
 				poolConfig.addDataSourceProperty("prepStmtCacheSize", "250");
 				poolConfig.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
@@ -232,10 +231,6 @@ public class DeluxeAuroraAppender extends AppenderSkeleton {
 		return StringUtils.isEmpty(value) ? defValue : Integer.parseInt(value);
 	}
 
-	private String getStrEnv(String name, String defValue) {
-		String value = System.getenv(name);
-		return StringUtils.isEmpty(value) ? defValue : value;
-	}
 	private static class LogEntry {
 		Timestamp timestamp;
 		String level;
