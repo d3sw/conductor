@@ -312,9 +312,9 @@ public class WorkflowExecutor {
 			return workflowId;
 
 		}catch (Exception e) {
-            logger.debug("Attempt to remove failed to start workflow with id " + workflowId + " and error message " + e.getMessage());
+            logger.warn("Attempt to remove failed to start workflow with id " + workflowId + " and error message " + e.getMessage());
 			removeQuietly(workflowId);
-            logger.debug("Successfully removed failed to start workflow with id " + workflowId);
+            logger.warn("Successfully removed failed to start workflow with id " + workflowId);
 			MetricService.getInstance().workflowStartFailed(name);
 			throw e;
 		}
