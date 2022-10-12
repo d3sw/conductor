@@ -46,8 +46,8 @@ import com.netflix.conductor.core.execution.DeciderService.DeciderOutcome;
 import com.netflix.conductor.core.execution.tasks.SubWorkflow;
 import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask;
 import com.netflix.conductor.core.utils.IDGenerator;
-import com.netflix.conductor.core.utils.QueueUtils;
 import com.netflix.conductor.core.utils.JobUtils;
+import com.netflix.conductor.core.utils.QueueUtils;
 import com.netflix.conductor.dao.ErrorLookupDAO;
 import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.MetadataDAO;
@@ -312,7 +312,9 @@ public class WorkflowExecutor {
 			return workflowId;
 
 		}catch (Exception e) {
+            logger.warn("Attempt to remove failed to start workflow with id " + workflowId + " and error message " + e.getMessage());
 			removeQuietly(workflowId);
+            logger.warn("Successfully removed failed to start workflow with id " + workflowId);
 			MetricService.getInstance().workflowStartFailed(name);
 			throw e;
 		}
