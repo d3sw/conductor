@@ -16,11 +16,13 @@ public class KeyValueLayout extends Layout {
     private String hostname;
     private String fromhost;
     private String allocId;
+    private String stackRole;
 
     public KeyValueLayout() {
         hostname = getHostName();
         fromhost = getHostIp();
         allocId = System.getenv("NOMAD_ALLOC_ID");
+        stackRole = System.getenv("STACK_ROLE" );
     }
 
     @Override
@@ -33,6 +35,7 @@ public class KeyValueLayout extends Layout {
         buf.append("log-level=").append(event.getLevel().toString().toLowerCase()).append(" ");
         buf.append("severity=").append(event.getLevel().toString().toLowerCase()).append(" ");
         buf.append("logger=").append(event.getLoggerName()).append(" ");
+        buf.append("stack-role=").append(stackRole).append(" ");
         buf.append("owner=").append(event.getNDC()).append(" ");
         buf.append("allocId=").append(allocId).append(" ");
         buf.append("dd-trace-id=").append(event.getMDC("dd.trace_id")).append(" ");
