@@ -1,0 +1,94 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+autonumber
+
+participant "Conductor\nEventProcessor.java" as evpr
+participant "Conductor\nSharedShotgunQueue.java" as ssqq
+participant "Conductor\nMetricService.java" as msj
+participant "External Service\ndatadog.service.{env}" as dds
+participant "SaaS\nData Dog" as saas
+
+alt Process received message (EventProcessor.java)
+evpr -> evpr: handle invoked with received message
+evpr -> evpr: Evaluate handler's condition
+evpr -> evpr: Skip execution ?
+activate evpr
+evpr -> msj: Invokes eventExecutionSkipped(handler, subject)
+msj -> dds: Increment counter value (metric:deluxe.conductor.event.execution.skipped)
+dds -> saas: Pushes metrics
+deactivate evpr
+
+evpr -> evpr: Evaluate tags and find any running workflows
+activate evpr
+evpr -> msj: No running workflows - invokes eventTagsMiss(handler, subject)
+msj -> dds: Increment counter value (metric:deluxe.conductor.event.tags.miss)
+dds -> saas: Pushes metrics
+evpr -> msj: Otherwise - invokes eventTagsHit(handler, subject)
+msj -> dds: Increment counter value (metric:deluxe.conductor.event.tags.hit)
+dds -> saas: Pushes metrics
+deactivate evpr
+
+evpr -> evpr: Proceed to evaluate actions
+loop For all handler's actions
+evpr -> evpr: Evaluate action condition
+evpr -> evpr: Skip execution ?
+activate evpr
+evpr -> msj: Invokes eventActionSkipped(handler, subject, action)
+msj -> dds: Increment counter value (metric:deluxe.conductor.event.action.skipped)
+dds -> saas: Pushes metrics
+deactivate evpr
+end
+
+evpr -> evpr: Execute actions
+loop For all handler's actions
+evpr -> evpr: Execute action
+evpr -> evpr: Action success ?
+activate evpr
+evpr -> msj: Invokes eventActionExecuted(handler, subject, action, execTime)
+msj -> dds: Increment counter value (metric:deluxe.conductor.event.action.executed)
+dds -> saas: Pushes metrics
+msj -> dds: Record time (metric:deluxe.conductor.event.action.executed.time)
+dds -> saas: Pushes metrics
+deactivate evpr
+evpr -> evpr: Action failed ?
+activate evpr
+evpr -> msj: Invokes eventActionFailed(handler, subject, action)
+msj -> dds: Increment counter value (metric:deluxe.conductor.event.action.failed)
+dds -> saas: Pushes metrics
+deactivate evpr
+end
+
+evpr -> evpr: Evaluate action's result
+
+evpr -> evpr: Redelivery requested ?
+activate evpr
+evpr -> msj: Invokes eventRedeliveryRequested(handler, subject)
+msj -> dds: Increment counter value (metric:deluxe.conductor.event.redelivery.requested)
+dds -> saas: Pushes metrics
+deactivate evpr
+
+evpr -> evpr: Execution failed ?
+activate evpr
+evpr -> msj: Invokes eventExecutionFailed(handler, subject)
+msj -> dds: Increment counter value (metric:deluxe.conductor.event.execution.failed)
+dds -> saas: Pushes metrics
+deactivate evpr
+
+end
+
+alt Messages received (SharedShotgunQueue.java)
+ssqq -> ssqq: onMessage invoked for received message
+ssqq -> msj: Invokes eventReceived (subject)
+msj -> dds: Increment counter value (metric:deluxe.conductor.event.received)
+dds -> saas: Pushes metrics
+end
+
+alt Messages published (SharedShotgunQueue.java)
+ssqq -> ssqq: publish invoked for publishing message
+ssqq -> msj: Invokes eventPublished (subject)
+msj -> dds: Increment counter value (metric:deluxe.conductor.event.published)
+dds -> saas: Pushes metrics
+end
+
+@enduml

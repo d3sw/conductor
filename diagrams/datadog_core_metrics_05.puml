@@ -1,0 +1,48 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+autonumber
+
+participant "Conductor\nWorkflowExecutor.java" as wfe
+participant "Conductor\nMetricService.java" as msj
+participant "External Service\ndatadog.service.{env}" as dds
+participant "SaaS\nData Dog" as saas
+
+alt Workflow start/fail/complete/restart/other actions
+note over wfe
+The block shows start workflow only.
+The rest workflow related push metrics are similar
+end note
+wfe -> wfe: startWorkflow invoked
+wfe -> msj: Invokes workflowStart (workflow)
+msj -> dds: Increment counter value (metric:deluxe.conductor.workflow.start)
+dds -> saas: Pushes metrics
+end
+
+alt Async task execution requested
+wfe -> wfe: executeSystemTask invoked
+wfe -> wfe: Checks exceeding InProgressLimit/RateLimitPerFrequency
+wfe -> wfe: Is InProgressLimit or RateLimitPerFrequency exceeded ?
+activate wfe
+wfe -> msj: Invokes taskRateLimited (task type, task ref name, task def name)
+msj -> dds: Increment counter value (metric:deluxe.conductor.task.rate.limit)
+dds -> saas: Pushes metrics
+deactivate wfe
+wfe -> msj: Invokes taskWait (task type, task ref name, task def name, queue wait time)
+msj -> dds: Records execution time (metric:deluxe.conductor.task.queue.wait.time)
+dds -> saas: Pushes metrics
+end
+
+alt Task update requested
+wfe -> wfe: updateTask invoked
+wfe -> wfe: Is task in terminal status ?
+activate wfe
+wfe -> msj: Invokes taskComplete (task type, task ref name, task def name, status, start time)
+msj -> dds: Increment counter value (metric:deluxe.conductor.task.complete)
+dds -> saas: Pushes metrics
+msj -> dds: Records time (metric:deluxe.conductor.task.complete.time)
+dds -> saas: Pushes metrics
+deactivate wfe
+end
+
+@enduml
