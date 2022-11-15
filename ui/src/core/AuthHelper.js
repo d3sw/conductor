@@ -1,3 +1,4 @@
+import { local } from 'd3';
 import {
   authAuthorizationError,
   authAuthorizationPending,
@@ -11,22 +12,17 @@ import {
   authLogoutSucceeded,
   authRedirectFailed,
   authRedirectSucceeded,
-  authRefreshFailed,
-  authRefreshSucceeded,
-  userIsDev
 } from '../actions/AuthActions';
 
 const authTokenKey = "AUTH_TOKEN";
-const refreshTokenKey = "REFRESH_TOKEN";
+const idTokenKey = "ID_TOKEN";
 const authExpirationDateKey = "AUTH_EXPIRATION_DATE";
-const refreshExpirationDateKey = "REFRESH_EXPIRATION_DATE";
 
 const ROOT_REDIRECT_URL = '#/';
 
 export const USER_AUTHORIZED_ROLES = [
-  'deluxe.conductor-ui.admin',
-  'deluxe.conductor-ui.developer',
-  'deluxe.conductor-ui.viewer'
+  'dlx.conductor.admin',
+  'dlx.conductor.user'
 ];
 
 export const USER_AUTHORIZED_ROLES_SET = new Set(USER_AUTHORIZED_ROLES);
@@ -52,15 +48,23 @@ const saveRedirectURI = () => {
 
 export const authLogin = (isAuthenticated) => {
   return (dispatch) => {
+    // check if the validation of this user failed
+    const error = getURLParams('error');
+    if (typeof error !== 'undefined' && error === 'access_denied') {
+      removeTokensLocally();
+      dispatch(authRedirectFailed(error));
+      window.location.href = '/Unauthorized.html';
+      return;
+    }
+
     const code = getURLParams('code');
     if (code === null && !isAuthenticated) {
       const authTokenVal = getLocalAuthToken();
-      const refreshTokenVal = getLocalRefreshToken();
+      const idTokenVal = getLocalIdAuthToken();
 
-      if (authTokenVal && refreshTokenVal) {
-        authUserInfo(authTokenVal)(dispatch);
-        setupAuthCheck(refreshTokenVal, getRefreshTokenExpiration())(dispatch);
-        dispatch(authLoginSucceeded(authTokenVal, 0, refreshTokenVal, 0));
+      if (authTokenVal && idTokenVal && idTokenVal !== undefined) {
+        authUserInfo(idTokenVal, authTokenVal)(dispatch);
+        dispatch(authLoginSucceeded(authTokenVal, 0, authTokenVal, 0));
         var redirectURI = sessionStorage.getItem('redirectURI');
         if (redirectURI != null) {
           window.location.href = '/' + redirectURI;
@@ -124,10 +128,9 @@ const authToken = (code) => (dispatch) => {
     }
   }).then(data => {
     if (!!data && !!data.access_token) {
-      saveTokensLocally(data.access_token, data.expires_in, data.refresh_token, data.refresh_expires_in);
-      authUserInfo(data.access_token)(dispatch);
-      setupAuthCheck(data.refresh_token, data.expires_in)(dispatch);
-      dispatch(authLoginSucceeded(data.access_token, data.expires_in, data.refresh_token, data.refresh_expires_in));
+      saveTokensLocally(data.access_token, data.expires_in, data.id_token);
+      authUserInfo(data.id_token, data.access_token)(dispatch);
+      dispatch(authLoginSucceeded(data.access_token, data.expires_in, data.access_token, data.expires_in));
       window.history.replaceState({}, document.title, "/");
       var redirectURI = sessionStorage.getItem('redirectURI');
       window.location.href = '/' + (redirectURI == null ? '#/' : redirectURI);
@@ -141,13 +144,14 @@ const authToken = (code) => (dispatch) => {
   });
 };
 
-export const authLogout = (refreshToken) => (dispatch) => {
-  if (!refreshToken) {
-    refreshToken = localStorage.getItem(refreshTokenKey);
+export const authLogout = (accessToken) => (dispatch) => {
+  if (accessToken === undefined) {
+    accessToken = localStorage.getItem(authTokenKey);
   }
 
   let params = {
-    refresh_token: refreshToken
+    access_token: accessToken,
+    redirect_uri: window.location.origin
   };
 
   fetch('/api/auth/logout', {
@@ -162,7 +166,10 @@ export const authLogout = (refreshToken) => (dispatch) => {
       if (response.ok) {
         return response.json();
       } else {
-        throw new Error("Error while trying to logout");
+        removeTokensLocally();
+        dispatch(authLogoutSucceeded());
+        dispatch(authAuthorizationReset());
+        window.location.href = '/Logout.html';
       }
     })
     .then(data => {
@@ -170,7 +177,7 @@ export const authLogout = (refreshToken) => (dispatch) => {
         removeTokensLocally();
         dispatch(authLogoutSucceeded());
         dispatch(authAuthorizationReset());
-        window.location.href = '/Logout.html';
+        window.location.assign(data.url);
       }
     })
     .catch(error => {
@@ -179,7 +186,7 @@ export const authLogout = (refreshToken) => (dispatch) => {
     });
 };
 
-export const setupInactivityTimer = (refreshToken) => (dispatch) => {
+export const setupInactivityTimer = (accessToken) => (dispatch) => {
   let timeout = 30 * 60 * 1000;  // after 30 mins of inactivity
 
   var inactivityTimer;
@@ -190,7 +197,7 @@ export const setupInactivityTimer = (refreshToken) => (dispatch) => {
 
     inactivityTimer = setTimeout(() => {
       saveRedirectURI();
-      authLogout(refreshToken)(dispatch);
+      authLogout(accessToken)(dispatch);
     }, timeout);
   };
 
@@ -217,9 +224,9 @@ export const getLocalAuthToken = () => {
   return null;
 };
 
-const getLocalRefreshToken = () => {
-  var token = localStorage.getItem(refreshTokenKey);
-  var expDate = localStorage.getItem(refreshExpirationDateKey);
+export const getLocalIdAuthToken = () => {
+  var token = localStorage.getItem(idTokenKey);
+  var expDate = localStorage.getItem(authExpirationDateKey);
 
   if (token && expDate) {
     var expDateParsed = Date.parse(expDate);
@@ -230,68 +237,23 @@ const getLocalRefreshToken = () => {
   return null;
 };
 
-const getRefreshTokenExpiration = () => {
-  var expDate = localStorage.getItem(refreshExpirationDateKey);
-  var expDateParsed = Date.parse(expDate);
-
-  return (expDateParsed - Date.now()) / 1000;
-};
-
-const saveTokensLocally = (authToken, authExp, refreshToken, refreshExp) => {
+const saveTokensLocally = (authToken, authExp, idToken) => {
   var authExpire = new Date(Date.now());
-  var refreshExpire = new Date(Date.now());
   authExpire.setSeconds(authExpire.getSeconds() + authExp * 0.9);
-  refreshExpire.setSeconds(refreshExpire.getSeconds() + refreshExp * 0.9);
   localStorage.setItem(authTokenKey, authToken);
-  localStorage.setItem(refreshTokenKey, refreshToken);
+  localStorage.setItem(idTokenKey, idToken);
   localStorage.setItem(authExpirationDateKey, authExpire.toISOString());
-  localStorage.setItem(refreshExpirationDateKey, refreshExpire.toISOString());
 };
 
 const removeTokensLocally = () => {
   localStorage.removeItem(authTokenKey);
-  localStorage.removeItem(refreshTokenKey);
+  localStorage.removeItem(idTokenKey);
   localStorage.removeItem(authExpirationDateKey);
-  localStorage.removeItem(refreshExpirationDateKey);
 };
 
-const authRefresh = (refreshToken) => (dispatch) => {
+const authUserInfo = (idToken, accessToken) => (dispatch) => {
   let params = {
-    refresh_token: refreshToken
-  };
-
-  fetch('/api/auth/refresh', {
-    method: 'POST',
-    headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(params)
-  }).then(response => {
-    if (response.ok) {
-      return response.json();
-    } else {
-      throw new Error("Error while trying to refresh token");
-    }
-  }).then(data => {
-    if (!!data && !!data.access_token) {
-      saveTokensLocally(data.access_token, data.expires_in, data.refresh_token, data.refresh_expires_in);
-      authUserInfo(data.access_token)(dispatch);
-      setupAuthCheck(data.refresh_token, data.expires_in)(dispatch);
-      dispatch(authRefreshSucceeded(data.access_token, data.expires_in, data.refresh_token, data.refresh_expires_in));
-    } else {
-      throw new Error("Unknown data received");
-    }
-  }).catch(error => {
-    dispatch(authRefreshFailed(error));
-    dispatch(authAuthorizationReset());
-    setTimeout(() => authLogout(refreshToken)(dispatch), 3000);
-  });
-};
-
-const authUserInfo = (token) => (dispatch) => {
-  let params = {
-    accessToken: token
+    idToken: idToken
   };
 
   dispatch(authAuthorizationPending());
@@ -301,7 +263,7 @@ const authUserInfo = (token) => (dispatch) => {
     headers: {
       'Accept': 'application/json',
       'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + token
+      'Authorization': 'Bearer ' + accessToken
     },
     body: JSON.stringify(params)
   })
@@ -322,9 +284,9 @@ const authUserInfo = (token) => (dispatch) => {
             if (userRolesIntersection.length > 0) {
                 let primary_role;
                 for (let item of userRolesSet) {
-                    if (item == "deluxe.conductor-ui.admin") {
+                    if (item == "dlx.conductor.admin") {
                         primary_role = "ADMIN";
-                    } else if (item == "deluxe.conductor-ui.developer" || item == "deluxe.conductor-ui.viewer") {
+                    } else if (item == "dlx.conductor.user") {
                         primary_role = "VIEWER";
                     }
                 }
@@ -350,10 +312,5 @@ const authUserInfo = (token) => (dispatch) => {
       dispatch(authAuthorizationReset());
       window.location.href= '/Unauthorized.html';
     });
-};
-
-const setupAuthCheck = (refreshToken, expiresIn) => (dispatch) => {
-  let timeout = expiresIn * 1000 * 0.9;  // check before the token expires
-  setTimeout(() => authRefresh(refreshToken)(dispatch), timeout);
 };
 
