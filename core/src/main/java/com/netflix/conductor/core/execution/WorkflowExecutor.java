@@ -107,13 +107,14 @@ public class WorkflowExecutor {
 
 	private ParametersUtils pu = new ParametersUtils();
 
-	private final Map<String, String> props;
+	private final PropertiesLoader propertiesLoader;
 
 	@Inject
 	public WorkflowExecutor(MetadataDAO metadata, ExecutionDAO edao, QueueDAO queue, ErrorLookupDAO errorLookupDAO,ObjectMapper om,
 							AuthManager auth, Configuration config,
 							TaskStatusListener taskStatusListener,
-							WorkflowStatusListener workflowStatusListener) {
+							WorkflowStatusListener workflowStatusListener,
+							PropertiesLoader propertiesLoader) {
 		this.metadata = metadata;
 		this.edao = edao;
 		this.queue = queue;
@@ -129,12 +130,7 @@ public class WorkflowExecutor {
 		this.traceIdEnabled = Boolean.parseBoolean(config.getProperty("workflow.traceid.enabled", "false"));
 		this.authContextEnabled = Boolean.parseBoolean(config.getProperty("workflow.authcontext.enabled", "false"));
 		this.lazyDecider = Boolean.parseBoolean(config.getProperty("workflow.lazy.decider", "false"));
-		props = new HashMap<>();
-	}
-
-	@Inject
-	public void init(){
-		metadata.getConfigsByIsPreloaded(true).forEach(it -> props.put(it.getLeft(), it.getRight()));
+		this.propertiesLoader = propertiesLoader;
 	}
 
 	public String startWorkflow(String name, int version, String correlationId, Map<String, Object> input) throws Exception {
@@ -194,7 +190,7 @@ public class WorkflowExecutor {
 		try {
 			Optional.ofNullable(input)
 					.orElseThrow(() -> new ApplicationException(Code.INVALID_INPUT, "NULL input passed when starting workflow"))
-					.putAll(props);
+					.putAll(propertiesLoader.getProperties());
 
 			WorkflowDef workflowDef = metadata.get(name, version);
 			String validWorkflowsOps = config.getProperty("workflow.ops.auth.bypass", null);

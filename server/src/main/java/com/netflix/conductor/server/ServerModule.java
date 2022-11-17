@@ -20,6 +20,7 @@ package com.netflix.conductor.server;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+import com.google.inject.name.Named;
 import com.netflix.conductor.aurora.*;
 import com.netflix.conductor.contribs.*;
 import com.netflix.conductor.contribs.json.JsonJqTransform;
@@ -28,8 +29,6 @@ import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.config.CoreModule;
 import com.netflix.conductor.core.execution.TaskStatusListener;
 import com.netflix.conductor.core.execution.WorkflowStatusListener;
-import com.netflix.conductor.core.execution.WorkflowSweeper;
-import com.netflix.conductor.core.utils.PriorityLookup;
 import com.netflix.conductor.dao.*;
 import com.netflix.conductor.dao.dynomite.DynoProxy;
 import com.netflix.conductor.dao.dynomite.RedisExecutionDAO;
@@ -44,7 +43,9 @@ import com.netflix.spectator.api.Registry;
 import com.netflix.spectator.api.Spectator;
 import redis.clients.jedis.JedisCommands;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -147,6 +148,12 @@ public class ServerModule extends AbstractModule {
 	@Provides
 	public ExecutorService getExecutorService() {
 		return this.es;
+	}
+
+	@Provides
+	@Named("properties")
+	public Map<String, String> getProperties() {
+		return new HashMap<>();
 	}
 
 	private void configureExecutorService() {
