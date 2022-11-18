@@ -41,6 +41,8 @@ import com.netflix.dyno.queues.redis.DynoShardSupplier;
 import com.netflix.spectator.api.DefaultRegistry;
 import com.netflix.spectator.api.Registry;
 import com.netflix.spectator.api.Spectator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import redis.clients.jedis.JedisCommands;
 
 import java.util.HashMap;
@@ -71,6 +73,10 @@ public class ServerModule extends AbstractModule {
 	private ConductorConfig config;
 
 	private ConductorServer.DB db;
+
+	private static final String FLYWAY_MIGRATE = "FLYWAY_MIGRATE";
+
+	private static final Logger logger = LoggerFactory.getLogger(ServerModule.class);
 
 	public ServerModule(JedisCommands jedis, HostSupplier hs, ConductorConfig config, ConductorServer.DB db) {
 		this.dynoConn = jedis;
@@ -103,6 +109,15 @@ public class ServerModule extends AbstractModule {
 		} else if (ConductorServer.DB.aurora.equals(db)) {
 			install(new AuroraModule());
 
+			//Run migrations
+			try {
+				runMigrations();
+			}catch(Exception ex){
+				logger.error("Error during flyway migration " + ex.getMessage(), ex);
+				System.exit(-1);
+			}
+
+
 			bind(ExecutionDAO.class).to(AuroraExecutionDAO.class).asEagerSingleton();;
 			bind(MetadataDAO.class).to(AuroraMetadataDAO.class).asEagerSingleton();;
 			bind(QueueDAO.class).to(AuroraQueueDAO.class).asEagerSingleton();;
@@ -110,6 +125,7 @@ public class ServerModule extends AbstractModule {
 			bind(IndexDAO.class).to(AuroraIndexDAO.class).asEagerSingleton();;
 			bind(ErrorLookupDAO.class).to(AuroraErrorLookupDAO.class).asEagerSingleton();;
 			bind(PriorityLookupDAO.class).to(AuroraPriorityLookupDAO.class).asEagerSingleton();;
+
 		} else {
 			String localDC = localRack.replaceAll(region, "");
 			DynoShardSupplier ss = new DynoShardSupplier(hs, region, localDC);
@@ -168,4 +184,16 @@ public class ServerModule extends AbstractModule {
 			}
 		});
 	}
+
+	private void runMigrations() throws Exception {
+		boolean doMigration = "true".equalsIgnoreCase(config.getProperty(FLYWAY_MIGRATE,"false"));
+		if (doMigration) {
+			logger.info("Flyway migraton enabled.");
+			FlywayService.migrate(config);
+		} else {
+			logger.info("Skipping Flyway migration (not enabled)");
+		}
+	}
+
+
 }
