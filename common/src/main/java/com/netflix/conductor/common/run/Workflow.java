@@ -106,6 +106,8 @@ public class Workflow extends Auditable {
 
     private Map<String, Object> variables = new HashMap<>();
 
+	private Map<String, String> metaConfigs = new HashMap<>();
+
 	private PGobject jsonDataWorkflowIds;
 
 	public Workflow(){
@@ -498,4 +500,12 @@ public class Workflow extends Auditable {
     public void setVariables(Map<String, Object> variables) {
         this.variables = variables;
     }
+
+	public Map<String, String> getMetaConfigs() {
+		return metaConfigs;
+	}
+
+	public void setMetaConfigs(Map<String, String> metaConfigs) {
+		this.metaConfigs = metaConfigs;
+	}
 }
