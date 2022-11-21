@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.netflix.conductor.dao.MetadataDAO;
+import org.apache.commons.lang.text.StrSubstitutor;
 
 import java.util.Map;
 
@@ -21,7 +22,8 @@ public class PropertiesLoader {
 
     @Inject
     public void init() {
-        metadata.getConfigsByIsPreloaded(true).forEach(it -> properties.put(it.getLeft(), it.getRight()));
+        metadata.getConfigsByIsPreloaded(true)
+                .forEach(it -> properties.put(it.getLeft(), StrSubstitutor.replace(it.getRight(), System.getenv())));
     }
 
     public Map<String, String> getProperties() {
