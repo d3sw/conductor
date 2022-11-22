@@ -107,11 +107,14 @@ public class WorkflowExecutor {
 
 	private ParametersUtils pu = new ParametersUtils();
 
+	private final PropertiesLoader propertiesLoader;
+
 	@Inject
 	public WorkflowExecutor(MetadataDAO metadata, ExecutionDAO edao, QueueDAO queue, ErrorLookupDAO errorLookupDAO,ObjectMapper om,
 							AuthManager auth, Configuration config,
 							TaskStatusListener taskStatusListener,
-							WorkflowStatusListener workflowStatusListener) {
+							WorkflowStatusListener workflowStatusListener,
+							PropertiesLoader propertiesLoader) {
 		this.metadata = metadata;
 		this.edao = edao;
 		this.queue = queue;
@@ -127,6 +130,7 @@ public class WorkflowExecutor {
 		this.traceIdEnabled = Boolean.parseBoolean(config.getProperty("workflow.traceid.enabled", "false"));
 		this.authContextEnabled = Boolean.parseBoolean(config.getProperty("workflow.authcontext.enabled", "false"));
 		this.lazyDecider = Boolean.parseBoolean(config.getProperty("workflow.lazy.decider", "false"));
+		this.propertiesLoader = propertiesLoader;
 	}
 
 	public String startWorkflow(String name, int version, String correlationId, Map<String, Object> input) throws Exception {
@@ -184,9 +188,8 @@ public class WorkflowExecutor {
 		}
 
 		try {
-			if(input == null){
-				throw new ApplicationException(Code.INVALID_INPUT, "NULL input passed when starting workflow");
-			}
+			Optional.ofNullable(input)
+					.orElseThrow(() -> new ApplicationException(Code.INVALID_INPUT, "NULL input passed when starting workflow"));
 
 			WorkflowDef workflowDef = metadata.get(name, version);
 			String validWorkflowsOps = config.getProperty("workflow.ops.auth.bypass", null);
@@ -242,6 +245,7 @@ public class WorkflowExecutor {
 			wf.setClientId(clientId);
 			wf.setContextUser(contextUser);
 			wf.setVariables(workflowDef.getVariables());
+			wf.setMetaConfigs(propertiesLoader.getProperties());
 			if (jobPriority == null) {
 				Object priority = input.get("jobPriority"); // Backward compatible
 				if (priority instanceof String) {
@@ -920,6 +924,7 @@ public class WorkflowExecutor {
 				map.put("workflowRerunCount", workflow.getRerunCount());
 				map.put("attributes", workflow.getAttributes());
 				map.put("variables", workflow.getVariables());
+				map.put("metaConfigs", workflow.getMetaConfigs());
 				originalFailed = map;
 			}
 			workflow.getOutput().put("originalFailedTask", originalFailed);
@@ -988,6 +993,7 @@ public class WorkflowExecutor {
 				input.put("taskRefName", failedTask.getReferenceTaskName());
 				input.put("taskRetryCount", failedTask.getRetryCount());
 				input.put("variables", workflow.getVariables());
+                input.put("metaConfigs", workflow.getMetaConfigs());
 
 				try {
 					startWorkflow(workflowName, workflowVersion, input, workflow.getCorrelationId(),
@@ -1010,6 +1016,7 @@ public class WorkflowExecutor {
 			} else {
 				input.put("workflowInput", workflow.getInput());
 				input.put("variables", workflow.getVariables());
+                input.put("metaConfigs", workflow.getMetaConfigs());
 			}
 			input.put("workflowId", workflowId);
 			input.put("workflowType", workflow.getWorkflowType());

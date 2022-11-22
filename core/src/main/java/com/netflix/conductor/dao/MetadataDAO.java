@@ -173,6 +173,10 @@ public interface MetadataDAO {
 		return Collections.emptyList();
 	}
 
+	public default List<Pair<String, String>> getConfigsByIsPreloaded(boolean isPreloaded) {
+		return Collections.emptyList();
+	}
+
 	public default void addConfig(String name, String value) {
 	}
 
