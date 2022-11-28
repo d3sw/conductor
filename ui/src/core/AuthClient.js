@@ -150,7 +150,10 @@ const AuthClient = {
     var client_roles = null;
     if (client_access) {
       client_roles = client_access.roles;
+      // TODO: Remove in the next sprint
+      console.log(`Get user role - the user (${payload["email"]}) has the roles ${client_roles}`);
     }
+  
     var result = {
       name: payload["name"],
       preferred_username: payload["preferred_username"],
