@@ -282,7 +282,7 @@ public class AuroraMetadataDAO extends AuroraBaseDAO implements MetadataDAO {
 	}
 
 	public List<Pair<String, String>> getConfigsByIsPreloaded(boolean isPreloaded) {
-		final String SQL = "SELECT name, value FROM meta_config where is_preloaded = ?";
+		final String SQL = "SELECT name, value FROM config_store where is_preloaded = ?";
 		return queryWithTransaction(SQL, q -> q.addParameter(isPreloaded).executeAndFetch(rs -> {
 			List<Pair<String, String>> configs = new ArrayList<>();
 			while (rs.next()) {
