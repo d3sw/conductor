@@ -58,142 +58,152 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class ServerModule extends AbstractModule {
 
-	private int maxThreads = 50;
+    private int maxThreads = 50;
 
-	private ExecutorService es;
+    private ExecutorService es;
 
-	private JedisCommands dynoConn;
+    private JedisCommands dynoConn;
 
-	private HostSupplier hs;
+    private HostSupplier hs;
 
-	private String region;
+    private String region;
 
-	private String localRack;
+    private String localRack;
 
-	private ConductorConfig config;
+    private ConductorConfig config;
 
-	private ConductorServer.DB db;
+    private ConductorServer.DB db;
 
-	private static final String FLYWAY_MIGRATE = "FLYWAY_MIGRATE";
+    private static final String FLYWAY_MIGRATE = "FLYWAY_MIGRATE";
 
-	private static final Logger logger = LoggerFactory.getLogger(ServerModule.class);
+    private static final Logger logger = LoggerFactory.getLogger(ServerModule.class);
 
-	public ServerModule(JedisCommands jedis, HostSupplier hs, ConductorConfig config, ConductorServer.DB db) {
-		this.dynoConn = jedis;
-		this.hs = hs;
-		this.config = config;
-		this.region = config.getRegion();
-		this.localRack = config.getAvailabilityZone();
-		this.db = db;
-	}
+    public ServerModule(JedisCommands jedis, HostSupplier hs, ConductorConfig config, ConductorServer.DB db) {
+        this.dynoConn = jedis;
+        this.hs = hs;
+        this.config = config;
+        this.region = config.getRegion();
+        this.localRack = config.getAvailabilityZone();
+        this.db = db;
+    }
 
-	@Override
-	protected void configure() {
-		Registry registry = new DefaultRegistry();
-		Spectator.globalRegistry().add(registry);
+    @Override
+    protected void configure() {
+        runMigrations();
 
-		configureExecutorService();
-		bind(Configuration.class).toInstance(config);
-		bind(Registry.class).toInstance(registry);
+        Registry registry = new DefaultRegistry();
+        Spectator.globalRegistry().add(registry);
+        configureExecutorService();
+        bind(Configuration.class).toInstance(config);
+        bind(Registry.class).toInstance(registry);
 
-		if (ConductorServer.DB.elasticsearch.equals(db)) {
-			install(new Elasticsearch6RestModule());
+        switch (db) {
+            case aurora:
+                configureAuroraContext();
+                break;
+            case elasticsearch:
+                configureElasticsearchContext();
+                break;
+            default:
+                configureDefaultContext();
+        }
 
-			bind(ExecutionDAO.class).to(Elasticsearch6RestExecutionDAO.class);
-			bind(MetadataDAO.class).to(Elasticsearch6RestMetadataDAO.class);
-			bind(QueueDAO.class).to(Elasticsearch6RestQueueDAO.class);
-			bind(MetricsDAO.class).to(Elasticsearch6RestMetricsDAO.class);
-			bind(IndexDAO.class).to(Elasticsearch6RestIndexDAO.class);
-			bind(ErrorLookupDAO.class).to(Elasticsearch6ErrorLookupDAO.class);
-			bind(PriorityLookupDAO.class).to(ElasticSearch6PriorityLookupDAO.class);
-		} else if (ConductorServer.DB.aurora.equals(db)) {
-			install(new AuroraModule());
+        List<AbstractModule> additionalModules = config.getAdditionalModules();
+        if (additionalModules != null) {
+            for (AbstractModule additionalModule : additionalModules) {
+                install(additionalModule);
+            }
+        }
+        install(new CoreModule());
+        install(new JerseyModule());
+        install(new HttpModule());
+        install(new AuthModule());
+        install(new AssetModule());
+        install(new ProgressModule());
+        install(new StatusModule());
+        install(new TaskUpdateModule());
+        new JsonJqTransform();
+        new ValidationTask();
+        bind(TaskStatusListener.class).to(StatusEventPublisher.class).asEagerSingleton();
+        bind(WorkflowStatusListener.class).to(StatusEventPublisher.class).asEagerSingleton();
+        bind(ServerShutdown.class).asEagerSingleton();
 
-			//Run migrations
-			try {
-				runMigrations();
-			}catch(Exception ex){
-				logger.error("Error during flyway migration " + ex.getMessage(), ex);
-				System.exit(-1);
-			}
+    }
 
+    private void configureDefaultContext() {
+        String localDC = localRack.replaceAll(region, "");
+        DynoShardSupplier ss = new DynoShardSupplier(hs, region, localDC);
+        DynoQueueDAO queueDao = new DynoQueueDAO(dynoConn, dynoConn, ss, config);
 
-			bind(ExecutionDAO.class).to(AuroraExecutionDAO.class).asEagerSingleton();;
-			bind(MetadataDAO.class).to(AuroraMetadataDAO.class).asEagerSingleton();;
-			bind(QueueDAO.class).to(AuroraQueueDAO.class).asEagerSingleton();;
-			bind(MetricsDAO.class).to(AuroraMetricsDAO.class).asEagerSingleton();;
-			bind(IndexDAO.class).to(AuroraIndexDAO.class).asEagerSingleton();;
-			bind(ErrorLookupDAO.class).to(AuroraErrorLookupDAO.class).asEagerSingleton();;
-			bind(PriorityLookupDAO.class).to(AuroraPriorityLookupDAO.class).asEagerSingleton();;
+        DynoProxy proxy = new DynoProxy(dynoConn);
+        bind(DynoProxy.class).toInstance(proxy);
 
-		} else {
-			String localDC = localRack.replaceAll(region, "");
-			DynoShardSupplier ss = new DynoShardSupplier(hs, region, localDC);
-			DynoQueueDAO queueDao = new DynoQueueDAO(dynoConn, dynoConn, ss, config);
+        bind(ExecutionDAO.class).to(RedisExecutionDAO.class);
+        bind(MetadataDAO.class).to(RedisMetadataDAO.class);
+        bind(DynoQueueDAO.class).toInstance(queueDao);
+        bind(QueueDAO.class).to(DynoQueueDAO.class);
+    }
 
-			DynoProxy proxy = new DynoProxy(dynoConn);
-			bind(DynoProxy.class).toInstance(proxy);
+    private void configureElasticsearchContext() {
+        install(new Elasticsearch6RestModule());
 
-			bind(ExecutionDAO.class).to(RedisExecutionDAO.class);
-			bind(MetadataDAO.class).to(RedisMetadataDAO.class);
-			bind(DynoQueueDAO.class).toInstance(queueDao);
-			bind(QueueDAO.class).to(DynoQueueDAO.class);
-		}
+        bind(ExecutionDAO.class).to(Elasticsearch6RestExecutionDAO.class);
+        bind(MetadataDAO.class).to(Elasticsearch6RestMetadataDAO.class);
+        bind(QueueDAO.class).to(Elasticsearch6RestQueueDAO.class);
+        bind(MetricsDAO.class).to(Elasticsearch6RestMetricsDAO.class);
+        bind(IndexDAO.class).to(Elasticsearch6RestIndexDAO.class);
+        bind(ErrorLookupDAO.class).to(Elasticsearch6ErrorLookupDAO.class);
+        bind(PriorityLookupDAO.class).to(ElasticSearch6PriorityLookupDAO.class);
+    }
 
-		List<AbstractModule> additionalModules = config.getAdditionalModules();
-		if (additionalModules != null) {
-			for (AbstractModule additionalModule : additionalModules) {
-				install(additionalModule);
-			}
-		}
-		install(new CoreModule());
-		install(new JerseyModule());
-		install(new HttpModule());
-		install(new AuthModule());
-		install(new AssetModule());
-		install(new ProgressModule());
-		install(new StatusModule());
-		install(new TaskUpdateModule());
-		new JsonJqTransform();
-		new ValidationTask();
-		bind(TaskStatusListener.class).to(StatusEventPublisher.class).asEagerSingleton();
-		bind(WorkflowStatusListener.class).to(StatusEventPublisher.class).asEagerSingleton();
-		bind(ServerShutdown.class).asEagerSingleton();
-	}
+    private void configureAuroraContext() {
+        install(new AuroraModule());
 
-	@Provides
-	public ExecutorService getExecutorService() {
-		return this.es;
-	}
+        bind(ExecutionDAO.class).to(AuroraExecutionDAO.class).asEagerSingleton();
+        bind(MetadataDAO.class).to(AuroraMetadataDAO.class).asEagerSingleton();
+        bind(QueueDAO.class).to(AuroraQueueDAO.class).asEagerSingleton();
+        bind(MetricsDAO.class).to(AuroraMetricsDAO.class).asEagerSingleton();
+        bind(IndexDAO.class).to(AuroraIndexDAO.class).asEagerSingleton();
+        bind(ErrorLookupDAO.class).to(AuroraErrorLookupDAO.class).asEagerSingleton();
+        bind(PriorityLookupDAO.class).to(AuroraPriorityLookupDAO.class).asEagerSingleton();
+    }
 
-	@Provides
-	@Named("properties")
-	public Map<String, String> getProperties() {
-		return new HashMap<>();
-	}
+    @Provides
+    public ExecutorService getExecutorService() {
+        return this.es;
+    }
 
-	private void configureExecutorService() {
-		AtomicInteger count = new AtomicInteger(0);
-		this.es = java.util.concurrent.Executors.newFixedThreadPool(maxThreads, new ThreadFactory() {
+    @Provides
+    @Named("properties")
+    public Map<String, String> getProperties() {
+        return new HashMap<>();
+    }
 
-			@Override
-			public Thread newThread(Runnable r) {
-				Thread t = new Thread(r);
-				t.setName("conductor-worker-" + count.getAndIncrement());
-				return t;
-			}
-		});
-	}
+    private void configureExecutorService() {
+        AtomicInteger count = new AtomicInteger(0);
+        this.es = java.util.concurrent.Executors.newFixedThreadPool(maxThreads, new ThreadFactory() {
 
-	private void runMigrations() throws Exception {
-		boolean doMigration = "true".equalsIgnoreCase(config.getProperty(FLYWAY_MIGRATE,"false"));
-		if (doMigration) {
-			logger.info("Flyway migraton enabled.");
-			FlywayService.migrate(config);
-		} else {
-			logger.info("Skipping Flyway migration (not enabled)");
-		}
-	}
+            @Override
+            public Thread newThread(Runnable r) {
+                Thread t = new Thread(r);
+                t.setName("conductor-worker-" + count.getAndIncrement());
+                return t;
+            }
+        });
+    }
 
-
+    private void runMigrations() {
+        try {
+            boolean doMigration = "true".equalsIgnoreCase(config.getProperty(FLYWAY_MIGRATE, "false"));
+            if (doMigration) {
+                logger.info("Flyway migraton enabled.");
+                FlywayService.migrate(config);
+            } else {
+                logger.info("Skipping Flyway migration (not enabled)");
+            }
+        } catch (Exception ex) {
+            logger.error("Error during flyway migration " + ex.getMessage(), ex);
+            System.exit(-1);
+        }
+    }
 }
