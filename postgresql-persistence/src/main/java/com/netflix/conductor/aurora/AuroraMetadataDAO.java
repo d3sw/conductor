@@ -13,7 +13,10 @@ import org.apache.commons.lang3.tuple.Pair;
 import javax.inject.Inject;
 import javax.sql.DataSource;
 import java.sql.Connection;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -274,6 +277,18 @@ public class AuroraMetadataDAO extends AuroraBaseDAO implements MetadataDAO {
 				configs.add(entry);
 			}
 
+			return configs;
+		}));
+	}
+
+	public List<Pair<String, String>> getConfigsByIsPreloaded(boolean isPreloaded) {
+		final String SQL = "SELECT name, value FROM config_store where is_preloaded = ?";
+		return queryWithTransaction(SQL, q -> q.addParameter(isPreloaded).executeAndFetch(rs -> {
+			List<Pair<String, String>> configs = new ArrayList<>();
+			while (rs.next()) {
+				Pair<String, String> entry = Pair.of(rs.getString(1), rs.getString(2));
+				configs.add(entry);
+			}
 			return configs;
 		}));
 	}
