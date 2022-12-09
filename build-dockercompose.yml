@@ -7,17 +7,17 @@ services:
       dockerfile: docker/ui/Dockerfile
       args:
         APP_VERSION: ${APP_VERSION:-latest}
-  archiver:
-    image: 583623634344.dkr.ecr.us-west-2.amazonaws.com/conductor:${APP_VERSION:-latest}-archiver
-    build:
-      context: .
-      dockerfile: docker/archiver/Dockerfile
-      args:
-        APP_VERSION: ${APP_VERSION:-latest}
-  server:
-    image: 583623634344.dkr.ecr.us-west-2.amazonaws.com/conductor:${APP_VERSION:-latest}-server
-    build:
-      context: .
-      dockerfile: docker/server/Dockerfile
-      args:
-        APP_VERSION: ${APP_VERSION:-latest}
+#  archiver:
+#    image: 583623634344.dkr.ecr.us-west-2.amazonaws.com/conductor:${APP_VERSION:-latest}-archiver
+#    build:
+#      context: .
+#      dockerfile: docker/archiver/Dockerfile
+#      args:
+#        APP_VERSION: ${APP_VERSION:-latest}
+#  server:
+#    image: 583623634344.dkr.ecr.us-west-2.amazonaws.com/conductor:${APP_VERSION:-latest}-server
+#    build:
+#      context: .
+#      dockerfile: docker/server/Dockerfile
+#      args:
+#        APP_VERSION: ${APP_VERSION:-latest}
