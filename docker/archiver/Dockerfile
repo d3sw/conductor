@@ -2,7 +2,8 @@ FROM amazoncorretto:8 as builder
 WORKDIR /stage
 ADD . /stage
 
-RUN ./gradlew build -x test
+RUN ./gradlew --version
+RUN ./gradlew --info build -x test
 
 #
 # conductor:archiver - Deluxe conductor archiver
