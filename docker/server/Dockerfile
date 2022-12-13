@@ -3,7 +3,7 @@ WORKDIR /stage
 ADD . /stage
 
 RUN ./gradlew --version
-RUN ./gradlew --info build -x test
+RUN ./gradlew --debug --info build -x test
 
 #
 # conductor:server - Netflix conductor server
