@@ -6,8 +6,6 @@ import org.flywaydb.core.api.output.MigrateResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-
 public class FlywayService {
 
     public static final String PATH_TO_MIGRATIONS = "classpath:db/migrations";
@@ -28,6 +26,8 @@ public class FlywayService {
                 .locations(PATH_TO_MIGRATIONS)
                 .baselineOnMigrate(true)
                 .baselineVersion(baselineVersion)
+                .placeholderReplacement(true)
+                .placeholders(System.getenv())
                 .load();
         MigrateResult result = flyway.migrate();
 

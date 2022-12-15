@@ -57,7 +57,7 @@ const AuthClient = {
       console.error(error)
       return { status: false, error: error };
     }
-      
+
     let oktaUrl = `${oktaServiceUrl}/oauth2/${oktaAuthServerCode}`;
     if (tokenPayload.iss !== oktaUrl) {
       let error = `Invalid issuer detected: ${tokenPayload.iss}`;
