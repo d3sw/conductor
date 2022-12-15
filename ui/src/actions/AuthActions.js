@@ -11,9 +11,6 @@ export const AUTH_INFO_FAILED = 'AUTH_INFO_FAILED';
 export const AUTH_LOGOUT_SUCCEEDED = 'AUTH_LOGOUT_SUCCEEDED';
 export const AUTH_LOGOUT_FAILED = 'AUTH_LOGOUT_FAILED';
 
-export const AUTH_REFRESH_SUCCEEDED = 'AUTH_REFRESH_SUCCEEDED';
-export const AUTH_REFRESH_FAILED = 'AUTH_REFRESH_SUCCEEDED';
-
 export const AUTH_USER_INACTIVE = 'AUTH_USER_INACTIVE';
 export const AUTH_USER_DEV = 'AUTH_USER_DEVELOPER';
 
@@ -38,14 +35,12 @@ export function authRedirectFailed(message) {
   };
 }
 
-export function authLoginSucceeded(authToken, expiresIn, refreshToken, refreshExpiresIn) {
+export function authLoginSucceeded(authToken, expiresIn) {
   return {
     type: AUTH_LOGIN_SUCCEEDED,
     payload: {
       authToken: authToken,
-      expiresIn: expiresIn,
-      refreshToken: refreshToken,
-      refreshExpiresIn: refreshExpiresIn
+      expiresIn: expiresIn
     }
   };
 }
@@ -111,30 +106,6 @@ export function authLogoutFailed(message) {
   };
 }
 
-export function authRefreshSucceeded(authToken, expiresIn, refreshToken, refreshExpiresIn) {
-  return {
-    type: AUTH_REFRESH_SUCCEEDED,
-    payload: {
-      authToken: authToken,
-      expiresIn: expiresIn,
-      refreshToken: refreshToken,
-      refreshExpiresIn: refreshExpiresIn
-    }
-  };
-}
-
-export function authRefreshFailed(message) {
-  return {
-    type: AUTH_REFRESH_FAILED,
-    payload: {
-      error: {
-        severity: "Error",
-        message: message
-      }
-    }
-  };
-}
-
 export function userInactiveState(inActiveTime) {
   return {
     type: AUTH_USER_INACTIVE,
@@ -181,8 +152,6 @@ export function authAuthorizationReset() {
       code: null,
       authToken: null,
       expiresIn: null,
-      refreshToken: null,
-      refreshExpiresIn: null,
       authorizationStatus: 'forbidden',
       isAuthenticated: false,
       isAuthorized: false,

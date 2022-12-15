@@ -42,8 +42,7 @@ const App = React.createClass({
   },
 
   componentWillReceiveProps(nextProps) {
-    let refreshToken = this.props.refreshToken;
-    let accessToken = this.props.accessToken;
+    let accessToken = this.props.authToken;
     if (this.isAuthenticated() && this.isAuthorized() && !!accessToken && !this.inactivityTimerSet) {
       this.props.dispatch(authHelper.setupInactivityTimer(accessToken));
       this.inactivityTimerSet = true;

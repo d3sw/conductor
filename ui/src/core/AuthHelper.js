@@ -1,4 +1,3 @@
-import { local } from 'd3';
 import {
   authAuthorizationError,
   authAuthorizationPending,
@@ -64,7 +63,7 @@ export const authLogin = (isAuthenticated) => {
 
       if (authTokenVal && idTokenVal && idTokenVal !== undefined) {
         authUserInfo(idTokenVal, authTokenVal)(dispatch);
-        dispatch(authLoginSucceeded(authTokenVal, 0, authTokenVal, 0));
+        dispatch(authLoginSucceeded(authTokenVal, 0));
         var redirectURI = sessionStorage.getItem('redirectURI');
         if (redirectURI != null) {
           window.location.href = '/' + redirectURI;
@@ -130,7 +129,7 @@ const authToken = (code) => (dispatch) => {
     if (!!data && !!data.access_token) {
       saveTokensLocally(data.access_token, data.expires_in, data.id_token);
       authUserInfo(data.id_token, data.access_token)(dispatch);
-      dispatch(authLoginSucceeded(data.access_token, data.expires_in, data.access_token, data.expires_in));
+      dispatch(authLoginSucceeded(data.access_token, data.expires_in));
       window.history.replaceState({}, document.title, "/");
       var redirectURI = sessionStorage.getItem('redirectURI');
       window.location.href = '/' + (redirectURI == null ? '#/' : redirectURI);
