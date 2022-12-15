@@ -144,7 +144,7 @@ const AuthClient = {
   },
 
   user(token, success, error) {
-    if (token === 'undefined') {
+    if (token === undefined) {
         error({ status: 400, data: `unable to retrieve user details because of invalid token [${token}]` });
         return;
     }
