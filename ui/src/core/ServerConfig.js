@@ -1,16 +1,12 @@
 export const serverConfig = {
   port() { return process.env.PORT || 5000; },
 
-  authServiceName() {
-    return process.env.AUTH_SERVICE_NAME;
+  oktaServiceUrl() {
+    return process.env.OKTA_SERVICE_URL;
   },
 
-  keycloakServiceUrl() {
-    return process.env.KEYCLOAK_SERVICE_URL;
-  },
-
-  keycloakServiceName() {
-    return process.env.KEYCLOAK_SERVICE_NAME;
+  oktaAuthServerCode() {
+    return process.env.OKTA_AUTH_SERVER_CODE;
   },
 
   clientId() {

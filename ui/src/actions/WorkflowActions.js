@@ -59,7 +59,7 @@ export function terminateWorkflow(workflowId) {
       workflowId
     });
 
-    const token = authHelper.getLocalAuthToken();
+    const token = authHelper.getLocalIdAuthToken();
     return http.delete('/api/wfe/terminate/' + workflowId, null, token).then((data) => {
       dispatch({
         type: 'RECEIVED_TERMINATE_WORKFLOW',
@@ -81,7 +81,7 @@ export function cancelWorkflow(workflowId) {
       workflowId
     });
 
-    const token = authHelper.getLocalAuthToken();
+    const token = authHelper.getLocalIdAuthToken();
     return http.post('/api/wfe/cancel/' + workflowId, null, token).then((data) => {
       dispatch({
         type: 'RECEIVED_CANCEL_WORKFLOW',
@@ -103,7 +103,7 @@ export function restartWorfklow(workflowId) {
       workflowId
     });
 
-    const token = authHelper.getLocalAuthToken();
+    const token = authHelper.getLocalIdAuthToken();
     return http.post('/api/wfe/restart/' + workflowId, null, token).then((data) => {
       dispatch({
         type: 'RECEIVED_RESTART_WORKFLOW',
@@ -125,7 +125,7 @@ export function cloneWorkflow(workflowId) {
       workflowId
     });
 
-    const token = authHelper.getLocalAuthToken();
+    const token = authHelper.getLocalIdAuthToken();
     return http.post('/api/wfe/clone/' + workflowId, null, token).then((data) => {
       dispatch({
         type: 'RECEIVED_CLONE_WORKFLOW',
@@ -147,7 +147,7 @@ export function retryWorfklow(workflowId) {
       workflowId
     });
 
-    const token = authHelper.getLocalAuthToken();
+    const token = authHelper.getLocalIdAuthToken();
     return http.post('/api/wfe/retry/' + workflowId, null, token).then((data) => {
       dispatch({
         type: 'RECEIVED_RETRY_WORKFLOW',
@@ -169,7 +169,7 @@ export function pauseWorfklow(workflowId) {
       workflowId
     });
 
-    const token = authHelper.getLocalAuthToken();
+    const token = authHelper.getLocalIdAuthToken();
     return http.post('/api/wfe/pause/' + workflowId, null, token).then((data) => {
       dispatch({
         type: 'RECEIVED_PAUSE_WORKFLOW',
@@ -191,7 +191,7 @@ export function resumeWorfklow(workflowId) {
       workflowId
     });
 
-    const token = authHelper.getLocalAuthToken();
+    const token = authHelper.getLocalIdAuthToken();
     return http.post('/api/wfe/resume/' + workflowId, null, token).then((data) => {
       dispatch({
         type: 'RECEIVED_RESUME_WORKFLOW',
@@ -385,7 +385,7 @@ export function getErrorData(inputData) {
     dispatch({
       type: 'REQUESTED_ERROR_DATA'
     });
-    const token = authHelper.getLocalAuthToken();
+    const token = authHelper.getLocalIdAuthToken();
     if(inputData.searchString=="")
     {
     inputData.searchString=undefined;
@@ -409,7 +409,7 @@ export function getErrorCountDay(inputData) {
     dispatch({
       type: 'REQUESTED_ERROR_DAY_DATA'
     });
-    const token = authHelper.getLocalAuthToken();
+    const token = authHelper.getLocalIdAuthToken();
     if(inputData.searchString=="")
     {
     inputData.searchString=undefined;
@@ -433,7 +433,7 @@ export function getErrorCountWeek(inputData) {
     dispatch({
       type: 'REQUESTED_ERROR_WEEK_DATA'
     });
-    const token = authHelper.getLocalAuthToken();
+    const token = authHelper.getLocalIdAuthToken();
     if(inputData.searchString=="")
     {
     inputData.searchString=undefined;
@@ -457,7 +457,7 @@ export function getErrorDataMonth(inputData) {
     dispatch({
       type: 'REQUESTED_ERROR_DATA_MONTH'
     });
-    const token = authHelper.getLocalAuthToken();
+    const token = authHelper.getLocalIdAuthToken();
     if(inputData.searchString=="")
     {
     inputData.searchString=undefined;
@@ -481,7 +481,7 @@ export function getErrorDataList(inputData) {
     dispatch({
       type: 'REQUESTED_ERRORLIST_DATA'
     });
-    const token = authHelper.getLocalAuthToken();
+    const token = authHelper.getLocalIdAuthToken();
     return http.post('/api/wfe/errorRegistrySearchList/getlist/'+inputData.range+ '?frmDate=' + inputData.frmDate + '&toDate=' + inputData.toDate+ '&searchString=' + inputData.searchString+ '&errorLookupId=' + inputData.errorLookupId, null, token).then((data) => {
       dispatch({
         type: 'RECEIVED_ERRORLIST_DATA',

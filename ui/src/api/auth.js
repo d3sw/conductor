@@ -25,29 +25,20 @@ router.post('/auth/token', (req, res) => {
 });
 
 router.post('/auth/logout', (req, res) => {
-  authClient.logout(req.body.refresh_token, data => {
-    res.send(data);
+  authClient.logout(req.body.access_token, req.body.redirect_uri, data => {
+    res.send({url: data});
   }, error => {
     logger.error(`in route /auth/logout error: ${error}`);
     res.status(error.response.status).send(error.response.data);
   });
 });
 
-router.post('/auth/refresh', (req, res) => {
-  authClient.refresh(req.body.refresh_token, data => {
-    res.send(data);
-  }, error => {
-    logger.error(`in route /auth/refresh error: ${error}`);
-    res.status(error.response.status).send(error.response.data);
-  });
-});
-
 router.post('/auth/user', (req, res) => {
-  authClient.user(req.body.accessToken, data => {
+  authClient.user(req.body.idToken, data => {
     res.json(data);
   }, error => {
-    logger.error(`in route /auth/user error: ${error}`);
-    res.status(error.response.status).send(error.response.data);
+    logger.error(`in route /auth/user error: ${JSON.stringify(error)}`);
+    res.status(error.status).send(error.data);
   });
 });
 

@@ -178,15 +178,13 @@ job "conductor" {
         APP_VERSION = "${var.app_version}"
         STACK_ROLE  = "ui"
         WF_SERVICE  = "${NOMAD_JOB_NAME}-server.service.${meta.tld}"
-        AUTH_SERVICE_NAME    = "auth.service.${meta.tld}"
-        KEYCLOAK_SERVICE_URL = "http://keycloak.service.${meta.tld}"
 
         //Mitigate CVE-2021-44228
         LOG4J_FORMAT_MSG_NO_LOOKUPS = "true"
       }
 
       service {
-        tags = ["urlprefix-${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}.dmlib.${meta.public_tld}/ auth=true", "urlprefix-${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}.service.${meta.tld}/"]
+        tags = ["urlprefix-${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}.service.${meta.tld}/"]
         name = "${JOB}-${TASK}"
         port = "default"
 
@@ -341,7 +339,7 @@ job "conductor" {
       }
 
       service {
-        tags = ["urlprefix-${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}.dmlib.${meta.public_tld}/ auth=true trace=true", "urlprefix-${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}.service.${meta.tld}/ trace=true", "metrics=${NOMAD_JOB_NAME}"]
+        tags = ["urlprefix-${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}.service.${meta.tld}/ trace=true", "metrics=${NOMAD_JOB_NAME}"]
         name = "${JOB}-${TASK}"
         port = "default"
 
@@ -499,7 +497,7 @@ job "conductor" {
       }
 
       service {
-        tags = ["urlprefix-${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}.dmlib.${meta.public_tld}/ auth=true trace=true", "urlprefix-${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}.service.${meta.tld}/ trace=true", "metrics=${NOMAD_JOB_NAME}"]
+        tags = ["urlprefix-${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}.service.${meta.tld}/ trace=true", "metrics=${NOMAD_JOB_NAME}"]
         name = "${JOB}-${TASK}"
         port = "default"
 
