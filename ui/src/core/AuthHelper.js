@@ -50,6 +50,7 @@ export const authLogin = (isAuthenticated) => {
     // check if the validation of this user failed
     const error = getURLParams('error');
     if (typeof error !== 'undefined' && error === 'access_denied') {
+      console.error("failed to redirect user to dashboard, invalid okta access");
       removeTokensLocally();
       dispatch(authRedirectFailed(error));
       window.location.href = '/Unauthorized.html';
@@ -96,7 +97,9 @@ export const authLogin = (isAuthenticated) => {
             }
           }
         }).catch(error => {
+          console.error(`failed to login user. error = ${JSON.stringify(error)}`);
           dispatch(authRedirectFailed(error));
+          window.location.href = '/Logout.html';
         });
       }
     } else {
@@ -138,6 +141,7 @@ const authToken = (code) => (dispatch) => {
       throw new Error("Unknown data received");
     }
   }).catch(error => {
+    console.error(`failed to secure access token from okta. error = ${JSON.stringify(error)}`);
     dispatch(authLoginFailed(error));
     dispatch(authAuthorizationReset());
   });
@@ -180,8 +184,10 @@ export const authLogout = (accessToken) => (dispatch) => {
       }
     })
     .catch(error => {
+      console.error(`failed to logout user. error = ${JSON.stringify(error)}`);
       dispatch(authLogoutFailed(error));
       dispatch(authAuthorizationReset());
+      window.location.href = '/Logout.html';
     });
 };
 
@@ -297,15 +303,15 @@ const authUserInfo = (idToken, accessToken) => (dispatch) => {
                 window.location.href = '/Unauthorized.html';
             }
         } else {
-            console.error('User auth failed: No data returned');
+            console.error(`Retreival of user info failed because there is no data returned`);
             removeTokensLocally();
             dispatch(authAuthorizationReset());
             window.location.href = '/Unauthorized.html';
         }
     })
     .catch(error => {
+      console.error(`Retrieval of user info failed. error = ${error}`);
       removeTokensLocally();
-      console.error('User auth failed', error);
       dispatch(authInfoFailed(error));
       dispatch(authAuthorizationError());
       dispatch(authAuthorizationReset());
