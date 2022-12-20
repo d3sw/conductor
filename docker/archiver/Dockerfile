@@ -1,13 +1,13 @@
-FROM amazoncorretto:8 as builder
+FROM amazoncorretto:11 as builder
 WORKDIR /stage
 ADD . /stage
 
-RUN ./gradlew build -x test
+RUN ./gradlew build -x test --stacktrace
 
 #
 # conductor:archiver - Deluxe conductor archiver
 #
-FROM amazoncorretto:8
+FROM amazoncorretto:11
 
 # Make app folders
 RUN mkdir -p /app

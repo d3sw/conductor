@@ -1,13 +1,14 @@
 plugins {
     id 'de.sebastianboegl.shadow.transformer.log4j' version '2.1.1'
-    id 'com.github.johnrengelman.shadow' version '1.2.4'
+    id 'com.github.johnrengelman.shadow' version '5.2.0'
     id 'application'
     id 'java'
 }
 
-mainClassName = "com.netflix.conductor.archiver.Main"
+project.setProperty("mainClassName", "com.netflix.conductor.archiver.Main")
 
-sourceCompatibility = 1.8
+sourceCompatibility = 1.11
+targetCompatibility = 1.11
 
 repositories {
     mavenCentral()
@@ -24,7 +25,7 @@ dependencies {
     }
 
     // Log4j
-//    compile 'org.apache.logging.log4j:log4j-core:2.11.1'
+    compile 'org.apache.logging.log4j:log4j-core:2.17.0'
     compile 'org.apache.logging.log4j:log4j-slf4j-impl:2.17.0'
 
     // PostgreSQL
