@@ -137,10 +137,14 @@ const AuthClient = {
         return;
       }
 
-      // sign the user out
-      const logoutUrl = `${oktaServiceUrl}/login/signout?fromURI=${encodeURIComponent(redirectUri)}`;
-      success(logoutUrl);
-    });
+        // sign the user out
+        // side note: one-auth team defaulted all redirects to one-ui until they figure out how/when to add apps to okta dashboard
+        const logoutUrl = `${oktaServiceUrl}/login/signout`;
+        success(logoutUrl);
+      }).catch(err => {
+        console.error(`failed to clear okta session: ${err}`);
+        error(err);
+      });
   },
 
   user(token, success, error) {
