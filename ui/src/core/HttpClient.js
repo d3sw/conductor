@@ -21,11 +21,7 @@ const HttpClient = {
       .accept('application/json')
       .end((err, res) => {
         if (err) {
-          //if (err.status === 404) {
-          //  resolve(null);
-          //} else {
-            reject(err);
-          //}
+          reject(err);
         } else {
           resolve(res.body);
         }
@@ -41,7 +37,7 @@ const HttpClient = {
     }
     req.end((err, res) => {
         if (err || !res.ok) {
-          console.error('Error on post! ' + res);
+          console.error('Error on post! ' + JSON.stringify(res));
           reject(err);
         } else {
           if(res.body){
@@ -63,7 +59,7 @@ const HttpClient = {
     }
     req.end((err, res) => {
       if (err || !res.ok) {
-        console.error('Error on post! ' + res);
+        console.error('Error on post! ' + JSON.stringify(res));
         reject(err);
       } else {
         if(res.body){
@@ -85,7 +81,7 @@ const HttpClient = {
     }
     req.end((err, res) => {
       if (err || !res.ok) {
-        console.error('Error on post! ' + res);
+        console.error('Error on post! ' + JSON.stringify(res));
         reject(err);
       } else {
         resolve(res.body);

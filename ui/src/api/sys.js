@@ -7,7 +7,6 @@ const router = new Router();
 router.get('/', async (req, res, next) => {
 
   const server = await lookup.lookup();
-
   try {
     const result = {
       server: server,
