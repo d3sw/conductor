@@ -222,8 +222,8 @@ public class AdminResource {
     @Path("/showVars")
     @ApiOperation("Gets vars")
     @Consumes({MediaType.WILDCARD})
-    public HashMap<String, String> getEnv(List<String> keys){
-        if ( CollectionUtils.isEmpty(keys)){
+    public HashMap<String, String> getEnv( @QueryParam("keys") List<String> keys){
+        if (CollectionUtils.isEmpty(keys)){
             return null;
         }
 
