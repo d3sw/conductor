@@ -222,25 +222,13 @@ public class AdminResource {
     @Path("/showVars")
     @ApiOperation("Gets vars")
     @Consumes({MediaType.WILDCARD})
-    public HashMap<String, String> getVars(){
-        HashMap<String, String> vars = new HashMap<>();
-        vars.put("workflow.failure.expandInline", config.getProperty("workflow.failure.expandInline","DEFAULT_VAL"));
-        vars.put("decider.sweep.frequency.seconds", config.getProperty("decider.sweep.frequency.seconds","DEFAULT_VAL"));
-        vars.put("workflow.system.task.worker.thread.count", config.getProperty("workflow.system.task.worker.thread.count","DEFAULT_VAL"));
-        vars.put("workflow.system.task.worker.poll.count", config.getProperty("workflow.system.task.worker.poll.count","DEFAULT_VAL"));
-        vars.put("workflow.system.task.worker.poll.timeout", config.getProperty("workflow.system.task.worker.poll.timeout","DEFAULT_VAL"));
-        vars.put("workflow.system.task.worker.poll.frequency", config.getProperty("workflow.system.task.worker.poll.frequency","DEFAULT_VAL"));
-        vars.put("workflow.system.task.worker.queue.size", config.getProperty("workflow.system.task.worker.queue.size","DEFAULT_VAL"));
-        vars.put("workflow.system.task.http.unack.timeout", config.getProperty("workflow.system.task.http.unack.timeout","DEFAULT_VAL"));
-        vars.put("workflow.sweeper.frequency", config.getProperty("workflow.sweeper.frequency","DEFAULT_VAL"));
-        vars.put("workflow.sweeper.thread.count", config.getProperty("workflow.sweeper.thread.count","DEFAULT_VAL"));
-        vars.put("workflow.sweeper.pool.timeout", config.getProperty("workflow.sweeper.pool.timeout","DEFAULT_VAL"));
-        vars.put("workflow.sweeper.batch.names", config.getProperty("workflow.sweeper.batch.names","DEFAULT_VAL"));
-        vars.put("workflow.batch.sherlock.service", config.getProperty("workflow.batch.sherlock.service","DEFAULT_VAL"));
-        vars.put("workflow.batch.sherlock.worker.count", config.getProperty("workflow.batch.sherlock.worker.count","DEFAULT_VAL"));
-        vars.put("workflow.batch.sherlock.enabled", config.getProperty("workflow.batch.sherlock.enabled","DEFAULT_VAL"));
-        vars.put("workflow.lazy.decider", config.getProperty("workflow.lazy.decider","DEFAULT_VAL"));
+    public HashMap<String, String> getEnv(List<String> keys){
+        if ( CollectionUtils.isEmpty(keys)){
+            return null;
+        }
 
+        HashMap<String, String> vars = new HashMap<>();
+        keys.forEach(x->vars.put(x, config.getProperty(x.replaceAll("_","."), "NO_VALUE_FOUND")));
         return vars;
     }
 
