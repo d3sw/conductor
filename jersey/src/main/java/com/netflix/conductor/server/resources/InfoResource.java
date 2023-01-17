@@ -79,16 +79,21 @@ public class InfoResource {
 	@ApiOperation(value = "Get the health status")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Map<String, Object> health() throws IOException {
-		boolean status = false;
 
-		try {
-			status = metricsDAO.ping();
-		} catch (Exception e) {
-			logger.error("Db health check failed: " + e.getMessage(), e);
-			throw e;
+		if(isMaintenanceMode()){
+			return Collections.singletonMap("is_ping_okay", true);
+		}else{
+			boolean status = false;
+
+			try {
+				status = metricsDAO.ping();
+			} catch (Exception e) {
+				logger.error("Db health check failed: " + e.getMessage(), e);
+				throw e;
+			}
+
+			return Collections.singletonMap("is_ping_okay", status);
 		}
-
-		return Collections.singletonMap("is_ping_okay", status);
 	}
 
 	@GET
@@ -159,5 +164,9 @@ public class InfoResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Map<String, Object> metrics() {
 		return metricsDAO.getMetrics();
+	}
+
+	private boolean isMaintenanceMode(){
+		return "true".equalsIgnoreCase(config.getProperty("MAINTENANCE_MODE", "false"));
 	}
 }
