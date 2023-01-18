@@ -2176,18 +2176,17 @@ public class WorkflowExecutor {
 		}
 	}
 
-	public List<WorkflowError> searchErrorRegistry(WorkflowErrorRegistry workflowErrorRegistry) throws Exception {
+	public List<WorkflowError> searchErrorRegistry(WorkflowErrorRegistry workflowErrorRegistry) {
 		List<WorkflowError> workflowErrorRegistries = edao.searchWorkflowErrorRegistry(workflowErrorRegistry);
 		return workflowErrorRegistries;
 	}
 
-	public List<WorkflowErrorRegistry> searchErrorRegistryList(WorkflowErrorRegistry workflowErrorRegistry) throws Exception {
+	public List<WorkflowErrorRegistry> searchErrorRegistryList(WorkflowErrorRegistry workflowErrorRegistry) {
 		List<WorkflowErrorRegistry> workflowErrorRegistries = edao.searchWorkflowErrorRegistryList(workflowErrorRegistry);
-		workflowErrorRegistries.forEach(wer -> {
-			Optional<WorkflowErrorRegistry> subWorkflow = findSubWorkflow(wer.getWorkflowId(), workflowErrorRegistries);
-			subWorkflow.ifPresent(errorRegistry -> wer.setSubWorkflow(errorRegistry.getWorkflowId()));});
+		List<WorkflowErrorRegistry> subWorkflows = edao.findSubWorkflows(workflowErrorRegistries.stream().map(WorkflowErrorRegistry::getWorkflowId).collect(Collectors.toList()));
 
-		return workflowErrorRegistries;
+		return workflowErrorRegistries.stream().peek(wer -> findSubWorkflow(wer.getWorkflowId(), subWorkflows)
+				.ifPresent(errorRegistry -> wer.setSubWorkflow(errorRegistry.getWorkflowId()))).collect(Collectors.toList());
 	}
 
 	public List<TaskDetails> searchTaskDetails(String jobId, String workflowId, String workflowType, String taskName, Boolean includeOutput) throws Exception {
