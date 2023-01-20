@@ -217,6 +217,22 @@ public class AdminResource {
         }
     }
 
+
+    @GET
+    @Path("/showVars")
+    @ApiOperation("Gets vars")
+    @Consumes({MediaType.WILDCARD})
+    public HashMap<String, String> getEnv( @QueryParam("keys") List<String> keys){
+        if (CollectionUtils.isEmpty(keys)){
+            return null;
+        }
+
+        HashMap<String, String> vars = new HashMap<>();
+        keys.forEach(x->vars.put(x, config.getProperty(x.replaceAll("_","."), "NO_VALUE_FOUND")));
+        return vars;
+    }
+
+
     private boolean bypassAuth(HttpHeaders headers) {
         if (!auth_referer_bypass)
             return false;
