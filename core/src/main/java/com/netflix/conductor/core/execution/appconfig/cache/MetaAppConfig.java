@@ -27,9 +27,9 @@ public class MetaAppConfig {
     private static HashMap<String, String> DEFAULT = new HashMap<>();
 
     static {
-        DEFAULT.put(CC_EXTRACT_SERVER, "http://nomad.service."+System.getenv()+":4646");
-        DEFAULT.put(CHECKSUM_SERVER, "http://nomad.service."+System.getenv()+":4646");
-        DEFAULT.put(ONE_CDN_SERVER, "http://nomad.service."+System.getenv()+":4646");
+        DEFAULT.put(CC_EXTRACT_SERVER, "http://nomad.service." + System.getenv("TLD") + ":4646");
+        DEFAULT.put(CHECKSUM_SERVER, "http://nomad.service." + System.getenv("TLD") + ":4646");
+        DEFAULT.put(ONE_CDN_SERVER, "http://nomad.service." + System.getenv("TLD") + ":4646");
     }
 
 
