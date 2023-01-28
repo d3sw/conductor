@@ -237,7 +237,7 @@ job "conductor" {
 
     // service registration for consul connect proxying
     service {
-      name = "${JOB}-pxy"
+      name = "${JOB}-${TASK}-pxy"
       port = "default"
 
       connect {
@@ -245,7 +245,6 @@ job "conductor" {
       }
 
       check {
-        name     = "${NOMAD_JOB_NAME}-pxy"
         port     = "default"
         type     = "http"
         path     = "/v1/health"
