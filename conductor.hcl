@@ -237,7 +237,7 @@ job "conductor" {
 
     // service registration for consul connect proxying
     service {
-      name = "${JOB}-${TASK}-pxy"
+      name = "${JOB}-server-pxy"
       port = "default"
 
       connect {
@@ -257,7 +257,7 @@ job "conductor" {
     // service registration for fabia
     service {
       tags = ["urlprefix-${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}.service.${meta.tld}/ trace=true", "metrics=${NOMAD_JOB_NAME}"]
-      name = "${JOB}-${TASK}"
+      name = "${JOB}-server"
       port = "default"
 
       check {
