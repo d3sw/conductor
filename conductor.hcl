@@ -235,6 +235,46 @@ job "conductor" {
       policies    = ["read-secrets"]
     }
 
+    // service registration for consul connect proxying
+    service {
+      name = "${JOB}-pxy"
+      port = "default"
+
+      connect {
+        sidecar_service {}
+      }
+
+      check {
+        name     = "${NOMAD_JOB_NAME}-pxy"
+        port     = "default"
+        type     = "http"
+        path     = "/v1/health"
+        interval = "30s"
+        timeout  = "10s"
+        expose   = true
+      }
+    }
+
+    // service registration for fabia
+    service {
+      tags = ["urlprefix-${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}.service.${meta.tld}/ trace=true", "metrics=${NOMAD_JOB_NAME}"]
+      name = "${JOB}-${TASK}"
+      port = "default"
+
+      check {
+        type     = "http"
+        path     = "/v1/health"
+        interval = "30s"
+        timeout  = "10s"
+        check_restart {
+          limit           = 3
+          grace           = "180s"
+          ignore_warnings = false
+        }
+      }
+    }
+
+
     task "server" {
       meta {
         product-class = "custom"
@@ -316,45 +356,6 @@ job "conductor" {
 
         FLYWAY_MIGRATE = "true"
 
-      }
-
-      // service registration for consul connect proxying
-      service {
-        name = "${JOB}-pxy"
-        port = "default"
-
-        connect {
-          sidecar_service {}
-        }
-
-        check {
-          name     = "${NOMAD_JOB_NAME}-pxy"
-          port     = "http"
-          type     = "http"
-          path     = "/v1/health"
-          interval = "30s"
-          timeout  = "10s"
-          expose   = true
-        }
-      }
-
-      // service registration for fabia
-      service {
-        tags = ["urlprefix-${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}.service.${meta.tld}/ trace=true", "metrics=${NOMAD_JOB_NAME}"]
-        name = "${JOB}-${TASK}"
-        port = "default"
-
-        check {
-          type     = "http"
-          path     = "/v1/health"
-          interval = "30s"
-          timeout  = "10s"
-          check_restart {
-            limit           = 3
-            grace           = "180s"
-            ignore_warnings = false
-          }
-        }
       }
 
       # Write secrets to the file that can be mounted as volume
