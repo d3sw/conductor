@@ -318,6 +318,27 @@ job "conductor" {
 
       }
 
+      // service registration for consul connect proxying
+      service {
+        name = "${JOB}-pxy"
+        port = "default"
+
+        connect {
+          sidecar_service {}
+        }
+
+        check {
+          name     = "${NOMAD_JOB_NAME}-pxy"
+          port     = "http"
+          type     = "http"
+          path     = "/v1/health"
+          interval = "30s"
+          timeout  = "10s"
+          expose   = true
+        }
+      }
+
+      // service registration for fabia
       service {
         tags = ["urlprefix-${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}.service.${meta.tld}/ trace=true", "metrics=${NOMAD_JOB_NAME}"]
         name = "${JOB}-${TASK}"
