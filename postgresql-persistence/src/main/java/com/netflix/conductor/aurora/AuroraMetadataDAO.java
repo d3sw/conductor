@@ -281,6 +281,29 @@ public class AuroraMetadataDAO extends AuroraBaseDAO implements MetadataDAO {
 		}));
 	}
 
+	public List<Pair<String, String>> getConfigsByIsPreloaded(boolean isPreloaded) {
+		final String SQL = "SELECT name, value FROM config_store where is_preloaded = ?";
+		return queryWithTransaction(SQL, q -> q.addParameter(isPreloaded).executeAndFetch(rs -> {
+			List<Pair<String, String>> configs = new ArrayList<>();
+			while (rs.next()) {
+				Pair<String, String> entry = Pair.of(rs.getString(1), rs.getString(2));
+				configs.add(entry);
+			}
+			return configs;
+		}));
+	}
+
+	public Pair<String, String> getConfigsByName(String name) {
+		final String SQL = "SELECT name, value FROM config_store where name = ?";
+		return queryWithTransaction(SQL, q -> q.addParameter(name).executeAndFetch(rs -> {
+			Pair<String, String> entry = null;
+			while (rs.next()) {
+				entry= Pair.of(rs.getString(1), rs.getString(2));
+			}
+			return entry;
+		}));
+	}
+
 	@Override
 	public void addConfig(String name, String value) {
 		String SQL = "INSERT INTO meta_config (name, value) VALUES (?, ?) " +

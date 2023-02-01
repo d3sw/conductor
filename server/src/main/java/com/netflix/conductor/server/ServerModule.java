@@ -161,7 +161,6 @@ public class ServerModule extends AbstractModule {
 
         bind(ExecutionDAO.class).to(AuroraExecutionDAO.class).asEagerSingleton();
         bind(MetadataDAO.class).to(AuroraMetadataDAO.class).asEagerSingleton();
-        bind(AppConfigDAO.class).to(AuroraAppConfigDAO.class).asEagerSingleton();
         bind(QueueDAO.class).to(AuroraQueueDAO.class).asEagerSingleton();
         bind(MetricsDAO.class).to(AuroraMetricsDAO.class).asEagerSingleton();
         bind(IndexDAO.class).to(AuroraIndexDAO.class).asEagerSingleton();

@@ -22,7 +22,7 @@ public class PropertiesLoader {
 
     @Inject
     public void init() {
-        metadata.getConfigs()
+        metadata.getConfigsByIsPreloaded(true)
                 .forEach(it -> properties.put(it.getLeft(), StrSubstitutor.replace(it.getRight(), System.getenv())));
     }
 
