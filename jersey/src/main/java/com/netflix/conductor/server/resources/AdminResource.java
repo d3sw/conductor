@@ -21,11 +21,14 @@ package com.netflix.conductor.server.resources;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
+import com.netflix.conductor.core.execution.appconfig.cache.AppConfig;
 import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.service.ExecutionService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,6 +51,7 @@ import com.netflix.conductor.service.MetadataService;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.Response;
 
 /**
  * @author Viren
@@ -70,13 +74,16 @@ public class AdminResource {
     private MetadataService metaservice;
     private WorkflowExecutor executor;
 
+    private AppConfig appConfig;
+
     @Inject
-    public AdminResource(Configuration config, ExecutionService service, MetadataService metaservice,QueueDAO queue, MetadataDAO metadata,WorkflowExecutor executor) {
+    public AdminResource(Configuration config, ExecutionService service, MetadataService metaservice,QueueDAO queue, MetadataDAO metadata, AppConfig appConfig, WorkflowExecutor executor) {
         this.config = config;
         this.service = service;
         this.metaservice = metaservice;
         this.queue = queue;
         this.metadata = metadata;
+        this.appConfig = appConfig;
         this.version = "UNKNOWN";
         this.buildDate = "UNKNOWN";
         this.executor = executor;
@@ -216,6 +223,77 @@ public class AdminResource {
             return pushed + "." + workflowId;
         }
     }
+
+
+    @GET
+    @Path("/showVars")
+    @ApiOperation("Gets vars")
+    @Consumes({MediaType.WILDCARD})
+    public HashMap<String, String> getEnv( @QueryParam("keys") List<String> keys){
+        if (CollectionUtils.isEmpty(keys)){
+            return null;
+        }
+
+        HashMap<String, String> vars = new HashMap<>();
+        keys.forEach(x->vars.put(x, config.getProperty(x.replaceAll("_","."), "NO_VALUE_FOUND")));
+        return vars;
+    }
+
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/appconfig/key/{key}")
+    @ApiOperation(value = "Retrieves the App Config for the key ", response = Response.class)
+    public String getAppConfig(@PathParam("key") String key, @Context HttpHeaders headers) {
+
+        if (StringUtils.isEmpty(key)){
+            return null;
+        }
+
+        try {
+            return appConfig.getValue(key);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @PUT
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/appconfig/key/{key}/value/{value}")
+    @ApiOperation(value = "Adds a new config value to the database", response = Response.class)
+    public void setAppConfig(@PathParam("key") String key, @PathParam("value") String value, @Context HttpHeaders headers) {
+        try {
+            appConfig.setValue(key, value);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @DELETE
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/appconfig/key/{key}")
+    @ApiOperation(value = "Delete the App Config for the key", response = Response.class)
+    public void deleteAppConfig(@PathParam("key") String key, @Context HttpHeaders headers) {
+        try {
+            appConfig.removeConfig(key);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/appconfig/list")
+    @ApiOperation(value = "Get the list of all application configs from the database", response = Response.class)
+    public List<Pair<String, String>> getAppConfigs(@Context HttpHeaders headers) {
+        try {
+            return appConfig.getConfigs();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 
     private boolean bypassAuth(HttpHeaders headers) {
         if (!auth_referer_bypass)
