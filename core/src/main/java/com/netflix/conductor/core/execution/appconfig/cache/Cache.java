@@ -2,6 +2,7 @@ package com.netflix.conductor.core.execution.appconfig.cache;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 public class Cache<T> {
 
@@ -62,6 +63,9 @@ public class Cache<T> {
         cache.entrySet().removeIf(entry -> isExpired(nowSeconds, entry.getValue()));
     }
 
+    public <T> Map<String, T> getCurrentCache(){
+        return cache.entrySet().stream().collect(Collectors.toMap(x-> x.getKey(), x-> (T) x.getValue().getData()));
+    }
 
 }
 

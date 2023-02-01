@@ -7,8 +7,8 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import javax.inject.Inject;
 import javax.sql.DataSource;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 public class AuroraAppConfigDAO extends AuroraBaseDAO implements AppConfigDAO {
     @Inject
@@ -23,13 +23,12 @@ public class AuroraAppConfigDAO extends AuroraBaseDAO implements AppConfigDAO {
 
     }
 
-    public List<Pair<String, String>> getConfigs(){
+    public Map<String, String> getConfigs(){
         final String SQL = "SELECT key, value FROM app_config ORDER BY key, value";
         return queryWithTransaction(SQL, q -> q.executeAndFetch(rs -> {
-            List<Pair<String, String>> configs = new ArrayList<>();
+            Map<String, String> configs = new HashMap<>();
             while (rs.next()) {
-                Pair<String, String> entry = Pair.of(rs.getString(1), rs.getString(2));
-                configs.add(entry);
+                configs.put(rs.getString(1), rs.getString(2));
             }
             return configs;
         }));

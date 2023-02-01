@@ -46,7 +46,7 @@ public class AppConfig {
         appCache = cacheManager.getCache(APP_CACHE);
         this.appConfigDAO = appConfigDAO;
         logger = LogManager.getLogger(AppConfig.class);
-        logger.info("Starting archiver");
+        logger.info("Initialized AppConfig");
     }
 
     /**
@@ -66,7 +66,7 @@ public class AppConfig {
                 }
             }
         }
-        logger.info("AppCache: Ask for " + key + ". Got " + value == null ? DEFAULT.get(key) : value);
+        logger.info("AppConfig: Ask for " + key + ". Got " + value == null ? DEFAULT.get(key) : value);
         return value == null ? DEFAULT.get(key) : value;
     }
 
@@ -87,8 +87,8 @@ public class AppConfig {
      * @return
      * @throws Exception
      */
-    public List<Pair<String, String>> getConfigs() throws Exception {
-        return appConfigDAO.getConfigs();
+    public Map<String, String> getConfigs() throws Exception {
+        return appCache.getCurrentCache();
     }
 
     /**
@@ -126,8 +126,8 @@ public class AppConfig {
         if (appCache.get(testKey) == null) {
             appCache.invalidate();
             logger.info("AppConfig testKey " + testKey + ". Invalidating Cache ");
-            List<Pair<String, String>> configValues = appConfigDAO.getConfigs();
-            configValues.forEach(configValue -> appCache.put(configValue.getLeft(), StrSubstitutor.replace(configValue.getRight(), System.getenv()), TTL_SECONDS));
+            Map<String, String> configValues = appConfigDAO.getConfigs();
+            configValues.entrySet().forEach(configValue -> appCache.put(configValue.getKey(), StrSubstitutor.replace(configValue.getValue(), System.getenv()), TTL_SECONDS));
         }
     }
 

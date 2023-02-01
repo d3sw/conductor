@@ -37,6 +37,7 @@ import javax.inject.Singleton;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.io.InputStream;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -174,7 +175,6 @@ public class AdminResource {
 
     @POST
     @Consumes({MediaType.WILDCARD})
-    @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Reload configuration parameters from the database")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
@@ -241,9 +241,10 @@ public class AdminResource {
 
 
     @GET
-    @Produces(MediaType.APPLICATION_JSON)
     @Path("/appconfig/key/{key}")
-    @ApiOperation(value = "Retrieves the App Config for the key ", response = Response.class)
+    @Consumes(MediaType.TEXT_PLAIN)
+    @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(value = "Retrieves the App Config for the key ")
     public String getAppConfig(@PathParam("key") String key, @Context HttpHeaders headers) {
 
         if (StringUtils.isEmpty(key)){
@@ -258,9 +259,8 @@ public class AdminResource {
     }
 
     @PUT
-    @Produces(MediaType.APPLICATION_JSON)
     @Path("/appconfig/key/{key}/value/{value}")
-    @ApiOperation(value = "Adds a new config value to the database", response = Response.class)
+    @ApiOperation(value = "Adds a new config value to the database")
     public void setAppConfig(@PathParam("key") String key, @PathParam("value") String value, @Context HttpHeaders headers) {
         try {
             appConfig.setValue(key, value);
@@ -270,9 +270,8 @@ public class AdminResource {
     }
 
     @DELETE
-    @Produces(MediaType.APPLICATION_JSON)
     @Path("/appconfig/key/{key}")
-    @ApiOperation(value = "Delete the App Config for the key", response = Response.class)
+    @ApiOperation(value = "Delete the App Config for the key")
     public void deleteAppConfig(@PathParam("key") String key, @Context HttpHeaders headers) {
         try {
             appConfig.removeConfig(key);
@@ -283,10 +282,9 @@ public class AdminResource {
 
 
     @GET
-    @Produces(MediaType.APPLICATION_JSON)
     @Path("/appconfig/list")
-    @ApiOperation(value = "Get the list of all application configs from the database", response = Response.class)
-    public List<Pair<String, String>> getAppConfigs(@Context HttpHeaders headers) {
+    @ApiOperation(value = "Get the list of all application configs from the database")
+    public Map<String, String> getAppConfigs(@Context HttpHeaders headers) {
         try {
             return appConfig.getConfigs();
         } catch (Exception e) {
@@ -294,6 +292,17 @@ public class AdminResource {
         }
     }
 
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/appconfig/refresh")
+    @ApiOperation(value = "Refresh the cache with list of App Configs from the database")
+    public void refreshAppConfig(@Context HttpHeaders headers) {
+        try {
+            appConfig.reloadProperties("");
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     private boolean bypassAuth(HttpHeaders headers) {
         if (!auth_referer_bypass)

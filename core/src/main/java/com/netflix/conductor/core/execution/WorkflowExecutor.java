@@ -252,8 +252,8 @@ public class WorkflowExecutor {
 			wf.setContextUser(contextUser);
 			wf.setVariables(workflowDef.getVariables());
 			Map <String, String > configValues = new HashMap<>();
-			List<Pair<String, String>> configs = appConfig.getConfigs();
-			configs.forEach(x-> configValues.put(x.getLeft(), x.getRight()));
+			Map<String, String> configs = appConfig.getConfigs();
+			configs.entrySet().forEach(x-> configValues.put(x.getKey(), x.getValue()));
 
 			wf.setMetaConfigs(configValues);
 			if (jobPriority == null) {
