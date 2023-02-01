@@ -243,14 +243,13 @@ public class AdminResource {
     @GET
     @Path("/appconfig/key/{key}")
     @Consumes(MediaType.TEXT_PLAIN)
-    @Produces(MediaType.APPLICATION_JSON)
+    @Produces({MediaType.TEXT_PLAIN})
     @ApiOperation(value = "Retrieves the App Config for the key ")
     public String getAppConfig(@PathParam("key") String key, @Context HttpHeaders headers) {
 
         if (StringUtils.isEmpty(key)){
             return null;
         }
-
         try {
             return appConfig.getValue(key);
         } catch (Exception e) {
