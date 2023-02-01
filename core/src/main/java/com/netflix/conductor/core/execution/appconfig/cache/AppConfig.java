@@ -34,9 +34,9 @@ public class AppConfig {
     private static HashMap<String, String> DEFAULT = new HashMap<>();
 
     static {
-        DEFAULT.put(CC_EXTRACT_SERVER, "http://no.service."+System.getenv()+":4646");
-        DEFAULT.put(CHECKSUM_SERVER, "http://no.service."+System.getenv()+":4646");
-        DEFAULT.put(ONE_CDN_SERVER, "http://no.service."+System.getenv()+":4646");
+        DEFAULT.put(CC_EXTRACT_SERVER, "http://one-batch.service." + System.getenv("TLD"));
+        DEFAULT.put(CHECKSUM_SERVER, "http://one-batch.service." + System.getenv("TLD"));
+        DEFAULT.put(ONE_CDN_SERVER, "http://one-batch.service." + System.getenv("TLD"));
     }
 
 

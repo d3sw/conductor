@@ -7,33 +7,33 @@ variable "env" {
 }
 
 variable "conductor_server_count" {
-    type = map(string)
-    default = {
-        dev = 2
-        int = 4
-        uat = 2
-        live = 4
-    }
+  type = map(string)
+  default = {
+    dev = 2
+    int = 4
+    uat = 2
+    live = 4
+  }
 }
 
 variable "conductor_server_cpu" {
-    type = map(string)
-    default = {
-        dev = 128
-        int = 256
-        uat = 128
-        live = 256
-    }
+  type = map(string)
+  default = {
+    dev = 128
+    int = 256
+    uat = 128
+    live = 256
+  }
 }
 
 variable "conductor_server_mem" {
-    type = map(string)
-    default = {
-        dev = 512
-        int = 1024
-        uat = 512
-        live = 1024
-    }
+  type = map(string)
+  default = {
+    dev = 512
+    int = 1024
+    uat = 512
+    live = 1024
+  }
 }
 
 variable "conductor_worker_count" {
@@ -67,33 +67,33 @@ variable "conductor_worker_mem" {
 }
 
 variable "conductor_ui_count" {
-    type = map(string)
-    default = {
-        dev = 2
-        int = 3
-        uat = 2
-        live = 3
-    }
+  type = map(string)
+  default = {
+    dev = 2
+    int = 3
+    uat = 2
+    live = 3
+  }
 }
 
 variable "conductor_ui_cpu" {
-    type = map(string)
-    default = {
-        dev = 100
-        int = 100
-        uat = 100
-        live = 100
-    }
+  type = map(string)
+  default = {
+    dev = 100
+    int = 100
+    uat = 100
+    live = 100
+  }
 }
 
 variable "conductor_ui_mem" {
-    type = map(string)
-    default = {
-        dev = 128
-        int = 128
-        uat = 128
-        live = 128
-    }
+  type = map(string)
+  default = {
+    dev = 128
+    int = 128
+    uat = 128
+    live = 128
+  }
 }
 
 job "conductor" {
@@ -130,11 +130,11 @@ job "conductor" {
     count = lookup(var.conductor_ui_count, var.env, 1)
 
     network {
-       mode = "bridge"
+      mode = "bridge"
 
-       port "default" {
-           to = 5000
-       }
+      port "default" {
+        to = 5000
+      }
     }
 
     # vault declaration
@@ -221,11 +221,11 @@ job "conductor" {
     count = lookup(var.conductor_server_count, var.env, 1)
 
     network {
-       mode = "bridge"
+      mode = "bridge"
 
-       port "default" {
-           to = 8080
-       }
+      port "default" {
+        to = 8080
+      }
     }
 
     # vault declaration
@@ -274,26 +274,6 @@ job "conductor" {
         db = "aurora"
         aurora_app_pool_name  = "server"
         aurora_log4j_pool_name = "log4j_server"
-
-        // Workflow settings
-        workflow_failure_expandInline                = "false"
-        decider_sweep_disable                        = "true"
-        decider_sweep_frequency_seconds              = "0"
-        workflow_system_task_worker_thread_count     = "0"
-        workflow_system_task_worker_poll_count       = "0"
-        workflow_system_task_worker_poll_timeout     = "0"
-        workflow_system_task_worker_poll_frequency   = "0"
-        workflow_system_task_worker_queue_size       = "1" //Setting this to 0 will cause IllegalArgException
-        workflow_system_task_http_unack_timeout      = "0"
-        workflow_sweeper_frequency                   = "0"
-        workflow_sweeper_thread_count                = "0"
-        workflow_sweeper_pool_timeout                = "0"
-        workflow_sweeper_batch_names                 = ""
-        workflow_batch_sherlock_service              = "sherlock.service.${meta.tld}"
-        workflow_batch_sherlock_worker_count         = "1" //Setting this to 0 will cause IllegalArgException
-        workflow_batch_sherlock_enabled              = "true"
-        workflow_event_processor_disabled            = "true"
-        workflow_lazy_decider                        = "true"
 
         // Elasticsearch settings.
         workflow_elasticsearch_mode = "none"
@@ -435,24 +415,6 @@ job "conductor" {
         db = "aurora"
         aurora_app_pool_name  = "worker"
         aurora_log4j_pool_name = "log4j"
-
-        // Workflow settings
-        workflow_failure_expandInline                = "false"
-        decider_sweep_frequency_seconds              = "60"
-        workflow_system_task_worker_thread_count     = "5"
-        workflow_system_task_worker_poll_count       = "50"
-        workflow_system_task_worker_poll_timeout     = "1000"
-        workflow_system_task_worker_poll_frequency   = "1000"
-        workflow_system_task_worker_queue_size       = "300"
-        workflow_system_task_http_unack_timeout      = "300"
-        workflow_sweeper_frequency                   = "500"
-        workflow_sweeper_thread_count                = "50"
-        workflow_sweeper_pool_timeout                = "1000"
-        workflow_sweeper_batch_names                 = "sherlock"
-        workflow_batch_sherlock_service              = "sherlock.service.${meta.tld}"
-        workflow_batch_sherlock_worker_count         = "100"
-        workflow_batch_sherlock_enabled              = "true"
-        workflow_lazy_decider                        = "true"
 
         // Elasticsearch settings.
         workflow_elasticsearch_mode = "none"
