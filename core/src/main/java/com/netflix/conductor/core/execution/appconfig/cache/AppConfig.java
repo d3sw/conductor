@@ -88,13 +88,7 @@ public class AppConfig {
      * @throws Exception
      */
     public Map<String, String> getConfigs() throws Exception {
-        if (appCache.getCurrentCache().isEmpty()) {
-            Map<String, String> configValues = appConfigDAO.getConfigs();
-            configValues.entrySet().forEach(configValue -> appCache.put(configValue.getKey(), StrSubstitutor.replace(configValue.getValue(), System.getenv()), TTL_SECONDS));
             return appCache.getCurrentCache();
-        } else {
-            return appCache.getCurrentCache();
-        }
     }
 
     /**
