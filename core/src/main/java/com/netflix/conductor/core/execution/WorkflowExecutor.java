@@ -43,7 +43,7 @@ import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.events.queue.ObservableQueue;
 import com.netflix.conductor.core.execution.ApplicationException.Code;
 import com.netflix.conductor.core.execution.DeciderService.DeciderOutcome;
-import com.netflix.conductor.core.execution.appconfig.cache.MetaAppConfig;
+import com.netflix.conductor.core.execution.appconfig.cache.AppConfig;
 import com.netflix.conductor.core.execution.tasks.SubWorkflow;
 import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask;
 import com.netflix.conductor.core.utils.IDGenerator;
@@ -112,14 +112,14 @@ public class WorkflowExecutor {
 
 	private final PropertiesLoader propertiesLoader;
 
-	private final MetaAppConfig metaAppConfig;
+	private final AppConfig appConfig;
 
 	@Inject
 	public WorkflowExecutor(MetadataDAO metadata, ExecutionDAO edao, QueueDAO queue, ErrorLookupDAO errorLookupDAO,ObjectMapper om,
 							AuthManager auth, Configuration config,
 							TaskStatusListener taskStatusListener,
 							WorkflowStatusListener workflowStatusListener,
-							PropertiesLoader propertiesLoader, MetaAppConfig metaAppConfig) {
+							PropertiesLoader propertiesLoader, AppConfig appConfig) {
 		this.metadata = metadata;
 		this.edao = edao;
 		this.queue = queue;
@@ -136,7 +136,7 @@ public class WorkflowExecutor {
 		this.authContextEnabled = Boolean.parseBoolean(config.getProperty("workflow.authcontext.enabled", "false"));
 		this.lazyDecider = Boolean.parseBoolean(config.getProperty("workflow.lazy.decider", "false"));
 		this.propertiesLoader = propertiesLoader;
-		this.metaAppConfig = metaAppConfig;
+		this.appConfig = appConfig;
 	}
 
 	public String startWorkflow(String name, int version, String correlationId, Map<String, Object> input) throws Exception {
@@ -252,9 +252,8 @@ public class WorkflowExecutor {
 			wf.setContextUser(contextUser);
 			wf.setVariables(workflowDef.getVariables());
 			Map <String, String > configValues = new HashMap<>();
-			configValues.put(MetaAppConfig.CC_EXTRACT_SERVER, metaAppConfig.getValue(MetaAppConfig.CC_EXTRACT_SERVER));
-			configValues.put(MetaAppConfig.CHECKSUM_SERVER, metaAppConfig.getValue(MetaAppConfig.CHECKSUM_SERVER));
-			configValues.put(MetaAppConfig.ONE_CDN_SERVER, metaAppConfig.getValue(MetaAppConfig.ONE_CDN_SERVER));
+			Map<String, String> configs = appConfig.getConfigs();
+			configs.entrySet().forEach(x-> configValues.put(x.getKey(), x.getValue()));
 
 			wf.setMetaConfigs(configValues);
 			if (jobPriority == null) {
