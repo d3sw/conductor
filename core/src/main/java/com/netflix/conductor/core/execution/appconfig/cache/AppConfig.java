@@ -45,8 +45,26 @@ public class AppConfig {
         CacheManager cacheManager = CacheManager.getInstance();
         appCache = cacheManager.getCache(APP_CACHE);
         this.appConfigDAO = appConfigDAO;
+        try {
+            initialize();
+        } catch (Exception e) {
+            logger.error("Unable to load App Config ", e);
+            throw new RuntimeException(e);
+        }
         logger = LogManager.getLogger(AppConfig.class);
         logger.info("Initialized AppConfig");
+    }
+
+    /**
+     * Initialize the cache
+     *
+     * @return
+     * @throws Exception
+     */
+    private void initialize() throws Exception {
+        synchronized (AppConfig.class){
+            reloadProperties("");
+        }
     }
 
     /**
@@ -125,7 +143,7 @@ public class AppConfig {
     public synchronized void reloadProperties(String testKey) throws SQLException {
         if (appCache.get(testKey) == null) {
             appCache.invalidate();
-            logger.info("AppConfig testKey " + testKey + ". Invalidating Cache ");
+            //logger.info("AppConfig testKey " + testKey + ". Invalidating Cache ");
             Map<String, String> configValues = appConfigDAO.getConfigs();
             configValues.entrySet().forEach(configValue -> appCache.put(configValue.getKey(), StrSubstitutor.replace(configValue.getValue(), System.getenv()), TTL_SECONDS));
         }
