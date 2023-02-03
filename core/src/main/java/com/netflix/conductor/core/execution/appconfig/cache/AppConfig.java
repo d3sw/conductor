@@ -106,7 +106,21 @@ public class AppConfig {
      * @throws Exception
      */
     public Map<String, String> getConfigs() throws Exception {
-            return appCache.getCurrentCache();
+        Map<String, String> currentConfigs = appCache.getCurrentCache();
+        Map<String, String> updatedConfigs = new HashMap<>();
+        for (Map.Entry<String, String> entry : currentConfigs.entrySet()) {
+            if ((appCache.get(entry.getKey())) == null) {
+                synchronized (AppConfig.class) {
+                    if ((appCache.get(entry.getKey())) == null) {
+                        reloadProperties(entry.getKey());
+                        updatedConfigs.put(entry.getKey(), appCache.get(entry.getKey()));
+                    }
+                }
+            } else {
+                updatedConfigs.put(entry.getKey(), appCache.get(entry.getKey()));
+            }
+        }
+        return updatedConfigs;
     }
 
     /**
