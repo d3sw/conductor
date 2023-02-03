@@ -24,6 +24,7 @@ public class AppConfig {
 
     private AppConfigDAO appConfigDAO;
     private final static String APP_CACHE = "APP_CACHE";
+    private static final String CACHE_REF_KEY = "__REF_KEY__" ;
     private final int TTL_SECONDS = (int) TimeUnit.SECONDS.convert(1, TimeUnit.MINUTES);
 
     public static final String CC_EXTRACT_SERVER = "cc_extract_server";
@@ -45,8 +46,26 @@ public class AppConfig {
         CacheManager cacheManager = CacheManager.getInstance();
         appCache = cacheManager.getCache(APP_CACHE);
         this.appConfigDAO = appConfigDAO;
+        try {
+            initialize();
+        } catch (Exception e) {
+            logger.error("Unable to load App Config ", e);
+            throw new RuntimeException(e);
+        }
         logger = LogManager.getLogger(AppConfig.class);
         logger.info("Initialized AppConfig");
+    }
+
+    /**
+     * Initialize the cache
+     *
+     * @return
+     * @throws Exception
+     */
+    private void initialize() throws Exception {
+        synchronized (AppConfig.class){
+            reloadProperties("");
+        }
     }
 
     /**
@@ -88,7 +107,15 @@ public class AppConfig {
      * @throws Exception
      */
     public Map<String, String> getConfigs() throws Exception {
-            return appCache.getCurrentCache();
+        if ( getValue(CACHE_REF_KEY) == null){
+            synchronized (AppConfig.class){
+                if ((appCache.get(CACHE_REF_KEY)) == null) {
+                    reloadProperties(CACHE_REF_KEY);
+                }
+            }
+        }
+
+        return appCache.getCurrentCache();
     }
 
     /**
@@ -125,9 +152,9 @@ public class AppConfig {
     public synchronized void reloadProperties(String testKey) throws SQLException {
         if (appCache.get(testKey) == null) {
             appCache.invalidate();
-            logger.info("AppConfig testKey " + testKey + ". Invalidating Cache ");
             Map<String, String> configValues = appConfigDAO.getConfigs();
             configValues.entrySet().forEach(configValue -> appCache.put(configValue.getKey(), StrSubstitutor.replace(configValue.getValue(), System.getenv()), TTL_SECONDS));
+            appCache.put(CACHE_REF_KEY, "CACHE_REF_KEY", TTL_SECONDS);
         }
     }
 
