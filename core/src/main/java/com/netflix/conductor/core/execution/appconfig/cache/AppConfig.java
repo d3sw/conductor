@@ -85,7 +85,6 @@ public class AppConfig {
                 }
             }
         }
-        logger.info("AppConfig: Ask for " + key + ". Got " + value == null ? DEFAULT.get(key) : value);
         return value == null ? DEFAULT.get(key) : value;
     }
 
@@ -154,7 +153,7 @@ public class AppConfig {
             appCache.invalidate();
             Map<String, String> configValues = appConfigDAO.getConfigs();
             configValues.entrySet().forEach(configValue -> appCache.put(configValue.getKey(), StrSubstitutor.replace(configValue.getValue(), System.getenv()), TTL_SECONDS));
-            appCache.put(CACHE_REF_KEY, "CACHE_REF_KEY", TTL_SECONDS);
+            appCache.put(CACHE_REF_KEY, CACHE_REF_KEY, TTL_SECONDS);
         }
     }
 
