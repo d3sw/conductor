@@ -1,5 +1,3 @@
-DROP TABLE IF EXISTS config_store;
-
 create table if not exists app_config
 (
     key  varchar(255) not null primary key,
