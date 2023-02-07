@@ -236,15 +236,15 @@ job "conductor" {
     }
 
     service {
-      name = "${JOB}-server-pxy"
-      port = "default"
+      name = "${JOB}-${NOMAD_GROUP_NAME}-pxy"
+      port = "8080"
 
       connect {
         sidecar_service {}
       }
 
       check {
-        name     = "${JOB}-server-pxy"
+        name     = "${JOB}-${NOMAD_GROUP_NAME}-pxy"
         type     = "http"
         path     = "/v1/health"
         interval = "30s"
