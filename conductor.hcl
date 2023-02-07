@@ -237,7 +237,7 @@ job "conductor" {
 
     service {
       name = "${JOB}-server-pxy"
-      port = "8080"
+      port = "default"
 
       connect {
         sidecar_service {}
