@@ -245,7 +245,6 @@ job "conductor" {
 
       check {
         name     = "${JOB}-server-pxy"
-        port     = "default"
         type     = "http"
         path     = "/v1/health"
         interval = "30s"
