@@ -244,7 +244,7 @@ job "conductor" {
       }
 
       check {
-        name     = "${NOMAD_JOB_NAME}-server-pxy"
+        name     = "${JOB}-server-pxy"
         port     = "default"
         type     = "http"
         path     = "/v1/health"
