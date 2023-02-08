@@ -177,6 +177,7 @@ public class ActionProcessor {
 		Map<String, Object> op = new HashMap<>();
 		try {
 			String workflowId = ScriptEvaluator.evalJq(updateTask.getWorkflowId(), payload);
+			logger.info("Running ActionProcessor.updateTask {}. workflowId={}", updateTask, workflowId);
 			if (StringUtils.isEmpty(workflowId))
 				throw new RuntimeException("Unable to determine workflowId. Check mapping and payload");
 

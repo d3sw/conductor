@@ -119,30 +119,24 @@ public class WorkflowSweeper {
 
                     WorkflowContext ctx = new WorkflowContext(config.getAppId());
                     WorkflowContext.set(ctx);
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("Running sweeper for workflow {}", workflowId);
-                    }
+                    logger.info("Running sweeper for workflow {}", workflowId);
                     queues.push(WorkflowExecutor.sweeperQueue, workflowId, 0, 0); // For sweeper queue 0 priority is fine
                     Pair<Boolean, Integer> result = executor.decide(workflowId);
                     if (!result.getLeft()) {
-                        if (logger.isDebugEnabled()) {
-                            logger.debug("Setting unack timeout {} secs for workflow {}", result.getRight(), workflowId);
-                        }
+                        logger.info("Setting unack timeout {} secs for workflow {}", result.getRight(), workflowId);
                         queues.setUnackTimeout(WorkflowExecutor.deciderQueue, workflowId, result.getRight() * 1000);
                     } else {
-                        if (logger.isDebugEnabled()) {
-                            logger.debug("Marking workflow as completed {}", workflowId);
-                        }
+                        logger.info("Marking workflow as completed {}", workflowId);
                         queues.remove(WorkflowExecutor.deciderQueue, workflowId);
                     }
 
                 } catch (ApplicationException e) {
                     if (e.getCode().equals(Code.NOT_FOUND)) {
-                        logger.debug("Workflow NOT found for id: " + workflowId, e);
+                        logger.info("Workflow NOT found for id: " + workflowId, e);
                         queues.remove(WorkflowExecutor.deciderQueue, workflowId);
                     }
                 } catch (Exception e) {
-                    logger.debug("Error running sweep for " + workflowId, e);
+                    logger.info("Error running sweep for " + workflowId, e);
                 } finally {
                     queues.remove(WorkflowExecutor.sweeperQueue, workflowId);
                     NDC.remove();

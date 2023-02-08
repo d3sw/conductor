@@ -38,6 +38,9 @@ import com.netflix.conductor.core.execution.ApplicationException.Code;
 import com.netflix.conductor.core.config.Configuration;
 import org.apache.commons.collections.CollectionUtils;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 
@@ -53,6 +56,7 @@ import javax.ws.rs.core.HttpHeaders;
 @Singleton
 public class TaskResource {
 
+    private static final Logger logger = LoggerFactory.getLogger(TaskResource.class);
     private ExecutionService taskService;
     private boolean auth_referer_bypass;
     private Configuration config;
@@ -118,6 +122,7 @@ public class TaskResource {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
     public String updateTask(TaskResult task, @Context HttpHeaders headers) throws Exception {
+        logger.info("Controller update request received is {}, outputData={}", task, task.getOutputData());
         if (!bypassAuth(headers)) {
             String primarRole = executor.checkUserRoles(headers);
             if (!primarRole.endsWith("admin")) {

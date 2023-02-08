@@ -44,19 +44,20 @@ public class SimpleStatusHandler implements JavaEventAction {
         String statusName = ScriptEvaluator.evalJq(".status.name", payload);
         String statusReason = ScriptEvaluator.evalJq(".status.reason", payload);
         String workflowId = ScriptEvaluator.evalJq(workflowJq, payload);
+        logger.info("Starting Simple status handler for workflow {} and payload {}", workflowId, payload);
         if (StringUtils.isEmpty(workflowId)) {
-            logger.debug("Skipping. No workflowId provided in urns");
+            logger.info("Skipping. No workflowId provided in urns");
             return Collections.singletonList(UUID.randomUUID().toString());//Random UUId is returned to handle the retryEnbaled=true case.This will prevent retrying
         }
 
         Workflow workflow = executor.getWorkflow(workflowId, false);
         if (workflow == null) {
-            logger.debug("Skipping. No workflow found for given id " + workflowId);
+            logger.info("Skipping. No workflow found for given id " + workflowId);
             return Collections.singletonList(UUID.randomUUID().toString());
         }
 
         if (workflow.getStatus().isTerminal()) {
-            logger.debug("Skipping. Target workflow is already " + workflow.getStatus().name()
+            logger.info("Skipping. Target workflow is already " + workflow.getStatus().name()
                     + ", workflowId=" + workflow.getWorkflowId()
                     + ", contextUser=" + workflow.getContextUser()
                     + ", correlationId=" + workflow.getCorrelationId()
@@ -75,7 +76,7 @@ public class SimpleStatusHandler implements JavaEventAction {
         }
 
         if (task.getStatus().isTerminal()) {
-            logger.debug("Skipping. Target task " + task + " is already finished. "
+            logger.info("Skipping. Target task " + task + " is already finished. "
                     + ", workflowId=" + workflow.getWorkflowId()
                     + ", contextUser=" + workflow.getContextUser()
                     + ", correlationId=" + workflow.getCorrelationId()
@@ -85,6 +86,7 @@ public class SimpleStatusHandler implements JavaEventAction {
         TaskResult taskResult = new TaskResult(task);
 
         if ("Completed".equalsIgnoreCase(statusName) || "Complete".equalsIgnoreCase(statusName)) {
+            logger.info("Simple status handler is completed for workflow {}", workflowId);
             taskResult.setStatus(TaskResult.Status.COMPLETED);
         } else if ("Failed".equalsIgnoreCase(statusName)) {
             taskResult.setStatus(TaskResult.Status.FAILED);
@@ -98,7 +100,7 @@ public class SimpleStatusHandler implements JavaEventAction {
             taskResult.setStatus(TaskResult.Status.IN_PROGRESS);
             taskResult.setResetStartTime(true);
         } else{
-            logger.debug("Handler for statusName value {} is not registered", statusName);
+            logger.info("Handler for statusName value {} is not registered", statusName);
             return Collections.singletonList(UUID.randomUUID().toString());
         }
 

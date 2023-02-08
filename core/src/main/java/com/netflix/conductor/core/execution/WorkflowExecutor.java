@@ -312,7 +312,7 @@ public class WorkflowExecutor {
 			} else {
 				decide(workflowId);
 			}
-			logger.debug("Workflow has started. Current status=" + wf.getStatus() + ",workflowId=" + wf.getWorkflowId()
+			logger.info("Workflow has started. Current status=" + wf.getStatus() + ",workflowId=" + wf.getWorkflowId()
 				+ ",correlationId=" + wf.getCorrelationId() + ",contextUser=" + wf.getContextUser()
 				+ ",clientId=" + wf.getClientId() + ",traceId=" + wf.getTraceId());
 			return workflowId;
@@ -674,7 +674,7 @@ public class WorkflowExecutor {
 		Workflow workflow = edao.getWorkflow(wf.getWorkflowId(), false);
 
 		if (workflow.getStatus().equals(WorkflowStatus.COMPLETED)) {
-			logger.debug("Workflow has already been completed. Current status=" + workflow.getStatus()
+			logger.info("Workflow has already been completed. Current status=" + workflow.getStatus()
 					+ ", workflowId=" + wf.getWorkflowId() + ",correlationId=" + wf.getCorrelationId()
 					+ ",traceId=" + workflow.getTraceId()+ ",contextUser=" + workflow.getContextUser()
 					+ ",clientId=" + workflow.getClientId());
@@ -683,7 +683,7 @@ public class WorkflowExecutor {
 
 		if (workflow.getStatus().isTerminal()) {
 			String msg = "Workflow has already been completed. Current status " + workflow.getStatus();
-			logger.debug("Workflow has already been completed. status=" + workflow.getStatus()
+			logger.info("Workflow has already been completed. status=" + workflow.getStatus()
 					+ ",workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId()
 					+ ",traceId=" + workflow.getTraceId() + ",contextUser=" + workflow.getContextUser()
 					+ ",clientId=" + workflow.getClientId());
@@ -706,7 +706,7 @@ public class WorkflowExecutor {
 		// send wf end message
 		workflowStatusListener.onWorkflowCompleted(workflow);
 
-		logger.debug("Workflow has completed, workflowId=" + wf.getWorkflowId()
+		logger.info("Workflow has completed, workflowId=" + wf.getWorkflowId()
 				+ ",correlationId=" + wf.getCorrelationId() + ",traceId=" + wf.getTraceId()
 				+ ",contextUser=" + workflow.getContextUser() + ",clientId=" + workflow.getClientId());
 	}
@@ -1134,19 +1134,20 @@ public class WorkflowExecutor {
 
 	public void updateTask(TaskResult result) throws Exception {
 		if (result == null) {
-			logger.debug("null task given for update..." + result);
+			logger.info("null task given for update..." + result);
 			throw new ApplicationException(Code.INVALID_INPUT, "Task object is null");
 		}
 		String workflowId = result.getWorkflowInstanceId();
+		logger.info("Update result for task {}, result={}, outputData={}", result.getTaskId(), result, result.getOutputData());
 		Workflow wf = edao.getWorkflow(workflowId, false);
 		if (wf == null) {
-			logger.debug("No workflow found for " + workflowId);
+			logger.info("No workflow found for " + workflowId);
 			return;
 		}
 
 		Task task = edao.getTask(result.getTaskId());
 		if (task == null) {
-			logger.debug("No task found for " + result.getTaskId() + " in " + wf);
+			logger.info("No task found for " + result.getTaskId() + " in " + wf);
 			return;
 		}
 
@@ -1159,7 +1160,7 @@ public class WorkflowExecutor {
 				task.setStatus(Status.COMPLETED);
 			}
 			String msg = "Workflow " + wf.getWorkflowId() + " is already completed as " + wf.getStatus() + ", task=" + task.getTaskType() + ",reason=" + wf.getReasonForIncompletion()+",correlationId="+wf.getCorrelationId() + ",contextUser=" + wf.getContextUser()+ ",clientId=" + wf.getClientId();
-			logger.debug(msg);
+			logger.info(msg);
 			//Monitors.recordUpdateConflict(task.getTaskType(), wf.getWorkflowType(), wf.getStatus());
 			return;
 		}
@@ -1168,7 +1169,7 @@ public class WorkflowExecutor {
 			// Task was already updated....
 			queue.remove(QueueUtils.getQueueName(task), result.getTaskId());
 			String msg = "Task is already completed as " + task.getStatus() + "@" + task.getEndTime() + ", workflow status=" + wf.getStatus() + ",workflowId=" + wf.getWorkflowId() + ",taskId=" + task.getTaskId()+",correlationId="+wf.getCorrelationId() + ",contextUser=" + wf.getContextUser()+ ",clientId=" + wf.getClientId();
-			logger.debug(msg);
+			logger.info(msg);
 			//Monitors.recordUpdateConflict(task.getTaskType(), wf.getWorkflowType(), task.getStatus());
 			return;
 		}
@@ -1198,6 +1199,7 @@ public class WorkflowExecutor {
 			edao.resetStartTime(task, result.isUpdateOutput());
 		} else {
 			edao.updateTask(task);
+			logger.info("Task {} for workflow {} successfully updated", task, workflowId);
 		}
 		if (task.isTerminal()) {
 			MetricService.getInstance().taskComplete(task.getTaskType(),
@@ -1255,7 +1257,7 @@ public class WorkflowExecutor {
 	private void wakeUpSweeper(String workflowId, int priority) {
 		boolean active = queue.exists(WorkflowExecutor.sweeperQueue, workflowId);
 		if (active) {
-			logger.debug("wakeUpSweeper. Sweeper in progress for " + workflowId);
+			logger.info("wakeUpSweeper. Sweeper in progress for " + workflowId);
 
 			// Wait a little bit. If the current sweeper call is empty
 			// then it will exit soon and we can wake it up again
@@ -1266,14 +1268,14 @@ public class WorkflowExecutor {
 
 			// Exit if it still active
 			if (active) {
-				logger.debug("wakeUpSweeper. Sweeper still in progress for " + workflowId);
+				logger.info("wakeUpSweeper. Sweeper still in progress for " + workflowId);
 				return;
 			}
 		}
 
 		// Otherwise wake it up by unacking message via queue
 		boolean result = queue.wakeup(WorkflowExecutor.deciderQueue, workflowId, priority);
-		logger.debug("wakeUpSweeper " + result + " for " + workflowId);
+		logger.info("wakeUpSweeper " + result + " for " + workflowId);
 	}
 
 	public List<Task> getTasks(String taskType, String startKey, int count) throws Exception {
@@ -1313,7 +1315,7 @@ public class WorkflowExecutor {
 	 * @throws Exception If there was an error - caller should retry in this case.
 	 */
 	public Pair<Boolean, Integer> decide(String workflowId) throws Exception {
-		logger.debug("Invoked decide for workflow " + workflowId);
+		logger.info("Invoked decide for workflow " + workflowId);
 		if (workflowId == null || workflowId.isEmpty()) {
 			logger.error("ONECOND-1106: Invoked decide() with an empty or null Workflow ID");
 			return Pair.of(false, config.getSweepFrequency());
@@ -1326,7 +1328,7 @@ public class WorkflowExecutor {
 		}
 
 		if (workflow.getStatus().isTerminal()) {
-			logger.debug("Invoked decide for finished workflow " + workflowId);
+			logger.info("Invoked decide for finished workflow " + workflowId);
 			return Pair.of(true, config.getSweepFrequency());
 		}
 
@@ -1361,6 +1363,7 @@ public class WorkflowExecutor {
 			stateChanged = scheduleTask(workflow, tasksToBeScheduled) || stateChanged;
 
 			if(!outcome.tasksToBeUpdated.isEmpty() || !outcome.tasksToBeScheduled.isEmpty()) {
+				logger.info("Tasks to be updated {}. workflowId", tasksToBeUpdated, workflowId);
 				edao.updateTasks(tasksToBeUpdated);
 				boolean shallResetTags = tasksToBeUpdated.stream().anyMatch(t -> t.isTerminal() && t.shallResetTags());
 				if (shallResetTags) {

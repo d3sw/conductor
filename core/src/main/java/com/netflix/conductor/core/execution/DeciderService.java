@@ -77,6 +77,7 @@ public class DeciderService {
 		workflow.setSchemaVersion(def.getSchemaVersion());
 		
 		final List<Task> tasks = workflow.getTasks();
+		logger.info("Starting decision on tasks {}. workflowId={}", tasks, workflow.getWorkflowId());
 		List<Task> executedTasks = tasks.stream().filter(t -> !t.getStatus().equals(Status.SKIPPED) && !t.getStatus().equals(Status.READY_FOR_RERUN)).collect(Collectors.toList());
 		List<Task> tasksToBeScheduled = new LinkedList<>();
 		if (executedTasks.isEmpty()) {
@@ -91,13 +92,13 @@ public class DeciderService {
 		DeciderOutcome outcome = new DeciderOutcome();
 		
 		if (workflow.getStatus().equals(WorkflowStatus.PAUSED)) {
-			logger.debug("Workflow " + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() + ",traceId=" + workflow.getTraceId() + " is paused");
+			logger.info("Workflow " + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() + ",traceId=" + workflow.getTraceId() + " is paused");
 			return outcome;
 		}
 		
 		if (workflow.getStatus().isTerminal()) {
 			//you cannot evaluate a terminal workflow
-			logger.debug("Workflow " + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() + ",traceId=" + workflow.getTraceId() + " is already finished. status=" + workflow.getStatus() + ",reason=" + workflow.getReasonForIncompletion() + ",contextUser=" + workflow.getContextUser());
+			logger.info("Workflow " + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() + ",traceId=" + workflow.getTraceId() + " is already finished. status=" + workflow.getStatus() + ",reason=" + workflow.getReasonForIncompletion() + ",contextUser=" + workflow.getContextUser());
 			return outcome;
 		}
 		
@@ -114,8 +115,9 @@ public class DeciderService {
 			tasksToBeScheduled.put(pst.getReferenceTaskName(), pst);
 		});
 
+		logger.info("List of pending tasks for decision making {}. workflowId={}", pendingTasks, workflow.getWorkflowId());
 		for (Task task : pendingTasks) {
-
+			logger.info("Processing pending task {}. workflowId={}", task, workflow.getWorkflowId());
 			if (SystemTaskType.is(task.getTaskType()) && !task.getStatus().isTerminal()) {
 				tasksToBeScheduled.put(task.getReferenceTaskName(), task);
 				executedTaskRefNames.remove(task.getReferenceTaskName());
@@ -163,16 +165,16 @@ public class DeciderService {
 		
 		List<Task> unScheduledTasks = tasksToBeScheduled.values().stream().filter(tt -> !executedTaskRefNames.contains(tt.getReferenceTaskName())).collect(Collectors.toList());
 		if (!unScheduledTasks.isEmpty()) {
-			logger.debug("Scheduling Tasks " + unScheduledTasks.stream().map(Task::getReferenceTaskName).collect(Collectors.toList()) + ",workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
+			logger.info("Scheduling Tasks " + unScheduledTasks.stream().map(Task::getReferenceTaskName).collect(Collectors.toList()) + ",workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
 			outcome.tasksToBeScheduled.addAll(unScheduledTasks);
 		}
 		updateOutput(def, workflow);
 		if (outcome.tasksToBeScheduled.isEmpty() && checkForWorkflowCompletion(def, workflow)) {
-			logger.debug("Marking workflow as complete. workflow=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() + ",tasks=" + workflow.getTasks() + ",contextUser=" + workflow.getContextUser());
+			logger.info("Marking workflow as complete. workflow=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() + ",tasks=" + workflow.getTasks() + ",contextUser=" + workflow.getContextUser());
 			outcome.isComplete = true;
 		}
 
-		logger.debug("tasksToBeScheduled =" + tasksToBeScheduled.toString() + ",workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
+		logger.info("tasksToBeScheduled =" + tasksToBeScheduled.toString() + ",workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
 
 		return outcome;
 	
