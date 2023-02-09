@@ -235,6 +235,48 @@ job "conductor" {
       policies    = ["read-secrets"]
     }
 
+    service {
+      name = "${JOB}-${NOMAD_GROUP_NAME}-pxy"
+      port = "8080"
+
+      connect {
+        sidecar_service {}
+      }
+
+      check {
+        name     = "${JOB}-${NOMAD_GROUP_NAME}-pxy"
+        type     = "http"
+        path     = "/v1/health"
+        interval = "30s"
+        timeout  = "10s"
+        expose   = true
+        check_restart {
+          limit           = 3
+          grace           = "180s"
+          ignore_warnings = false
+        }
+      }
+    }
+
+    service {
+      tags = ["urlprefix-${NOMAD_JOB_NAME}-${NOMAD_GROUP_NAME}.service.${meta.tld}/ trace=true", "metrics=${NOMAD_JOB_NAME}"]
+      name = "${JOB}-${NOMAD_GROUP_NAME}"
+      port = "default"
+
+      check {
+        type     = "http"
+        path     = "/v1/health"
+        interval = "30s"
+        timeout  = "10s"
+        check_restart {
+          limit           = 3
+          grace           = "180s"
+          ignore_warnings = false
+        }
+      }
+    }
+
+
     task "server" {
       meta {
         product-class = "custom"
@@ -316,24 +358,6 @@ job "conductor" {
 
         FLYWAY_MIGRATE = "true"
 
-      }
-
-      service {
-        tags = ["urlprefix-${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}.service.${meta.tld}/ trace=true", "metrics=${NOMAD_JOB_NAME}"]
-        name = "${JOB}-${TASK}"
-        port = "default"
-
-        check {
-          type     = "http"
-          path     = "/v1/health"
-          interval = "30s"
-          timeout  = "10s"
-          check_restart {
-            limit           = 3
-            grace           = "180s"
-            ignore_warnings = false
-          }
-        }
       }
 
       # Write secrets to the file that can be mounted as volume
