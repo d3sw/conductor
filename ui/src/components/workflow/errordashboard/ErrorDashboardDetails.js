@@ -51,6 +51,7 @@ class ErrorDashboardDetails extends Component {
     }
 
     render() {
+     let sys = this.state.sys;
 
      const options = {
              sizePerPageList: [ {
@@ -82,22 +83,34 @@ class ErrorDashboardDetails extends Component {
             return <Link to={`/workflow/id/${cell}`}>{cell}</Link>;
         };
 
+        function orderIdLinkMaker(cell, row) {
+            return <Link to={`http://one-orders-ui.service.${sys['env']['TLD']}/orders/${cell}`}>{cell}</Link>;
+        };
+
+        function jobIdLinkMaker(cell, row) {
+            return <Link to={`http://one-orders-ui.service.${sys['env']['TLD']}/delivery-jobs/${cell}`}>{cell}</Link>;
+        }
+
         var errorData = this.props.errorData;
+
         return (
             <div className="ui-content">
 
                 {(this.props.params.lookup !== 'undefined' && (<h1>{this.props.params.lookup}</h1>))}
                 {errorData && errorData.result.length ?
-                    <BootstrapTable data={errorData.result} striped={true} search={true} hover={true} exportCSV={true}
+                    <BootstrapTable responsive data={errorData.result} striped={true} search={true} hover={true} exportCSV={true}
                                    csvFileName={"conductorErrorReport_"+dateTime+".csv"}  pagination={true}  options={ options }>
-                        <TableHeaderColumn dataField="workflowId" isKey={true} dataFormat={linkMaker} dataAlign="left"
+                        <TableHeaderColumn dataField="workflowId" width = '10%' isKey={true} dataFormat={linkMaker} dataAlign="left"
                                            dataSort={true}>Workflow ID</TableHeaderColumn>
-                        <TableHeaderColumn dataField="subWorkflow" dataFormat={linkMaker} dataSort={true}>Sub Workflow</TableHeaderColumn>
-                        <TableHeaderColumn dataField="orderId" dataSort={true}>Order ID</TableHeaderColumn>
-                        <TableHeaderColumn dataField="jobId" dataSort={true}>Job ID</TableHeaderColumn>
-                        <TableHeaderColumn dataField="rankingId" dataSort={true}>Ranking ID</TableHeaderColumn>
-                        <TableHeaderColumn dataField="startTime" dataSort={true} dataFormat={formatDate}>Failure Time</TableHeaderColumn>
-                        <TableHeaderColumn dataField="completeError" dataSort={true}>Complete Error Message</TableHeaderColumn>
+                        <TableHeaderColumn dataField="subWorkflow" width = '10%' dataFormat={linkMaker} dataSort={true}>Sub Workflow</TableHeaderColumn>
+                        <TableHeaderColumn dataField="orderId" width = '10%' dataFormat={orderIdLinkMaker} dataSort={true}>Order ID</TableHeaderColumn>
+                        <TableHeaderColumn dataField="jobId" width = '10%' dataFormat={jobIdLinkMaker} dataSort={true}>Job ID</TableHeaderColumn>
+                        <TableHeaderColumn dataField="rankingId" width = '10%' dataSort={true}>Ranking ID</TableHeaderColumn>
+                        <TableHeaderColumn dataField="startTime" width = '10%' dataSort={true} dataFormat={formatDate}>Failure Time</TableHeaderColumn>
+                        <TableHeaderColumn dataField="completeError" width = '10%' dataSort={true}>Complete Error Message</TableHeaderColumn>
+                        <TableHeaderColumn dataField="errorCode" width = '10%' dataSort={true}>Error Code</TableHeaderColumn>
+                        <TableHeaderColumn dataField="rootCause" width = '10%' dataSort={true}>Root Cause</TableHeaderColumn>
+                        <TableHeaderColumn dataField="resolution" width = '10%' dataSort={true}>Resolution</TableHeaderColumn>
                     </BootstrapTable> :
                     <i className="fa fa-spinner fa-spin" astyle={{fontSize: "100px", marginLeft: "50%", marginTop: "15%"}}></i>
                 }

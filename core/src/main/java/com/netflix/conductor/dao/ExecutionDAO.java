@@ -365,5 +365,7 @@ public interface ExecutionDAO {
         throw new IllegalStateException("Not implemented");
     }
 
+    List<WorkflowErrorRegistry> findSubWorkflows(List<String> parent_workflow_ids);
+
     public abstract List<TaskDetails> searchTaskDetails(String jobId, String workflowId, String workflowType, String taskName, Boolean includeOutput);
 }

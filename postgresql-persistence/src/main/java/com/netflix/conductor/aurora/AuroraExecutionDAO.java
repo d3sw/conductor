@@ -516,6 +516,11 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
                 .executeUpdate());
     }
 
+    private List<String> getSubWorkflowIds(Connection tx, String workflowID) {
+        String SQL = "SELECT workflow_id FROM workflow WHERE parent_workflow_id = ? ";
+        return query(tx, SQL, q -> q.addParameter(workflowID).executeScalarList(String.class));
+    }
+
     private List<String> getRunningWorkflowIds(Connection tx, String workflowName) {
         String SQL = "SELECT workflow_id FROM workflow WHERE workflow_type = ? AND workflow_status IN ('RUNNING','PAUSED')";
         return query(tx, SQL, q -> q.addParameter(workflowName).executeScalarList(String.class));
@@ -977,7 +982,7 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
     }
 
     public List<WorkflowErrorRegistry> searchWorkflowErrorRegistryList(WorkflowErrorRegistry workflowErrorRegistryEntry) {
-        StringBuilder SQL = new StringBuilder("SELECT * FROM workflow_error_registry WHERE 1=1 ");
+        StringBuilder SQL = new StringBuilder("SELECT * FROM workflow_error_registry LEFT JOIN meta_error_registry on workflow_error_registry.error_lookup_id = meta_error_registry.id WHERE 1=1 ");
         LinkedList<Object> params = new LinkedList<>();
         if (workflowErrorRegistryEntry != null && workflowErrorRegistryEntry.getWorkflowId() != null) {
             SQL.append("AND (workflow_id = ? ");
@@ -1039,6 +1044,54 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
                 while (rs.next()) {
                     WorkflowErrorRegistry workflowErrorRegistry = new WorkflowErrorRegistry();
 
+                    workflowErrorRegistry.setStatus(rs.getString("workflow_status"));
+                    workflowErrorRegistry.setWorkflowId(rs.getString("workflow_id"));
+                    workflowErrorRegistry.setWorkflowType(rs.getString("workflow_type"));
+                    workflowErrorRegistry.setErrorLookUpId(rs.getInt("error_lookup_id"));
+                    workflowErrorRegistry.setStartTime(rs.getTimestamp("start_time").getTime());
+                    workflowErrorRegistry.setEndTime(rs.getTimestamp("end_time").getTime());
+                    workflowErrorRegistry.setParentWorkflowId(rs.getString("parent_workflow_id"));
+                    workflowErrorRegistry.setJobId(rs.getString("job_id"));
+                    workflowErrorRegistry.setRankingId(rs.getString("ranking_id"));
+                    workflowErrorRegistry.setOrderId(rs.getString("order_id"));
+                    workflowErrorRegistry.setCompleteError(rs.getString("complete_error"));
+                    workflowErrorRegistry.setRootCause(rs.getString("root_cause"));
+                    workflowErrorRegistry.setResolution(rs.getString("resolution"));
+                    workflowErrorRegistry.setErrorCode(rs.getString("error_code"));
+
+                    workflowErrorRegistries.add(workflowErrorRegistry);
+                }
+
+                return workflowErrorRegistries;
+            });
+        });
+
+    }
+
+    public List<WorkflowErrorRegistry> findSubWorkflows(List<String> parent_workflow_ids) {
+        StringBuilder SQL = new StringBuilder("SELECT * FROM workflow_error_registry WHERE 1=1 and parent_workflow_id = ANY(?)");
+        List<Object> params = new LinkedList<>();
+        params.add(parent_workflow_ids);
+        return queryWithTransaction(SQL.toString(), q -> {
+            params.forEach(p -> {
+                if (p instanceof Timestamp) {
+                    q.addParameter((Timestamp) p);
+                } else if (p instanceof List) {
+                    q.addStringListParameter((Collection<String>) p);
+                } else if (p instanceof String) {
+                    q.addParameter((String) p);
+                } else if (p instanceof Long) {
+                    q.addTimestampParameter((Long) p);
+                } else if (p instanceof Integer) {
+                    q.addParameter((Integer) p);
+                }
+            });
+
+
+            return q.executeAndFetch(rs -> {
+                List<WorkflowErrorRegistry> workflowErrorRegistries = new LinkedList<>();
+                while (rs.next()) {
+                    WorkflowErrorRegistry workflowErrorRegistry = new WorkflowErrorRegistry();
                     workflowErrorRegistry.setStatus(rs.getString("workflow_status"));
                     workflowErrorRegistry.setWorkflowId(rs.getString("workflow_id"));
                     workflowErrorRegistry.setWorkflowType(rs.getString("workflow_type"));

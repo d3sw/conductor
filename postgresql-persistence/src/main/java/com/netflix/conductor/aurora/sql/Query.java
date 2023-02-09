@@ -92,6 +92,14 @@ public class Query implements AutoCloseable {
         });
     }
 
+    public Query addStringListParameter(final Collection<String> value) {
+        return addParameterInternal((ps, idx) -> {
+            String[] strings = value.toArray(new String[0]);
+            Array arrayOf = ps.getConnection().createArrayOf("varchar", strings);
+            ps.setArray(idx, arrayOf);
+        });
+    }
+
     public Query addLongListParameter(final Collection<Long> value) {
         return addParameterInternal((ps, idx) -> {
             Long[] values = value.toArray(new Long[0]);

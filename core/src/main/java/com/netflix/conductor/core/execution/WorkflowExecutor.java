@@ -43,6 +43,7 @@ import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.events.queue.ObservableQueue;
 import com.netflix.conductor.core.execution.ApplicationException.Code;
 import com.netflix.conductor.core.execution.DeciderService.DeciderOutcome;
+import com.netflix.conductor.core.execution.appconfig.cache.AppConfig;
 import com.netflix.conductor.core.execution.tasks.SubWorkflow;
 import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask;
 import com.netflix.conductor.core.utils.IDGenerator;
@@ -111,12 +112,14 @@ public class WorkflowExecutor {
 
 	private final PropertiesLoader propertiesLoader;
 
+	private final AppConfig appConfig;
+
 	@Inject
 	public WorkflowExecutor(MetadataDAO metadata, ExecutionDAO edao, QueueDAO queue, ErrorLookupDAO errorLookupDAO,ObjectMapper om,
 							AuthManager auth, Configuration config,
 							TaskStatusListener taskStatusListener,
 							WorkflowStatusListener workflowStatusListener,
-							PropertiesLoader propertiesLoader) {
+							PropertiesLoader propertiesLoader, AppConfig appConfig) {
 		this.metadata = metadata;
 		this.edao = edao;
 		this.queue = queue;
@@ -133,6 +136,7 @@ public class WorkflowExecutor {
 		this.authContextEnabled = Boolean.parseBoolean(config.getProperty("workflow.authcontext.enabled", "false"));
 		this.lazyDecider = Boolean.parseBoolean(config.getProperty("workflow.lazy.decider", "false"));
 		this.propertiesLoader = propertiesLoader;
+		this.appConfig = appConfig;
 	}
 
 	public String startWorkflow(String name, int version, String correlationId, Map<String, Object> input) throws Exception {
@@ -247,7 +251,11 @@ public class WorkflowExecutor {
 			wf.setClientId(clientId);
 			wf.setContextUser(contextUser);
 			wf.setVariables(workflowDef.getVariables());
-			wf.setMetaConfigs(propertiesLoader.getProperties());
+			Map <String, String > configValues = new HashMap<>();
+			Map<String, String> configs = appConfig.getConfigs();
+			configs.entrySet().forEach(x-> configValues.put(x.getKey(), x.getValue()));
+
+			wf.setMetaConfigs(configValues);
 			if (jobPriority == null) {
 				Object priority = input.get("jobPriority"); // Backward compatible
 				if (priority instanceof String) {
@@ -2176,18 +2184,17 @@ public class WorkflowExecutor {
 		}
 	}
 
-	public List<WorkflowError> searchErrorRegistry(WorkflowErrorRegistry workflowErrorRegistry) throws Exception {
+	public List<WorkflowError> searchErrorRegistry(WorkflowErrorRegistry workflowErrorRegistry) {
 		List<WorkflowError> workflowErrorRegistries = edao.searchWorkflowErrorRegistry(workflowErrorRegistry);
 		return workflowErrorRegistries;
 	}
 
-	public List<WorkflowErrorRegistry> searchErrorRegistryList(WorkflowErrorRegistry workflowErrorRegistry) throws Exception {
+	public List<WorkflowErrorRegistry> searchErrorRegistryList(WorkflowErrorRegistry workflowErrorRegistry) {
 		List<WorkflowErrorRegistry> workflowErrorRegistries = edao.searchWorkflowErrorRegistryList(workflowErrorRegistry);
-		workflowErrorRegistries.forEach(wer -> {
-			Optional<WorkflowErrorRegistry> subWorkflow = findSubWorkflow(wer.getWorkflowId(), workflowErrorRegistries);
-			subWorkflow.ifPresent(errorRegistry -> wer.setSubWorkflow(errorRegistry.getWorkflowId()));});
+		List<WorkflowErrorRegistry> subWorkflows = edao.findSubWorkflows(workflowErrorRegistries.stream().map(WorkflowErrorRegistry::getWorkflowId).collect(Collectors.toList()));
 
-		return workflowErrorRegistries;
+		return workflowErrorRegistries.stream().peek(wer -> findSubWorkflow(wer.getWorkflowId(), subWorkflows)
+				.ifPresent(errorRegistry -> wer.setSubWorkflow(errorRegistry.getWorkflowId()))).collect(Collectors.toList());
 	}
 
 	public List<TaskDetails> searchTaskDetails(String jobId, String workflowId, String workflowType, String taskName, Boolean includeOutput) throws Exception {
