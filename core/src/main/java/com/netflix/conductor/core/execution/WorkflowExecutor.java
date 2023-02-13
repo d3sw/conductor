@@ -43,11 +43,13 @@ import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.events.queue.ObservableQueue;
 import com.netflix.conductor.core.execution.ApplicationException.Code;
 import com.netflix.conductor.core.execution.DeciderService.DeciderOutcome;
+import com.netflix.conductor.core.execution.appconfig.cache.PriorityConfig;
 import com.netflix.conductor.core.execution.appconfig.cache.AppConfig;
 import com.netflix.conductor.core.execution.tasks.SubWorkflow;
 import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask;
 import com.netflix.conductor.core.utils.IDGenerator;
 import com.netflix.conductor.core.utils.JobUtils;
+import com.netflix.conductor.core.utils.PriorityLookup;
 import com.netflix.conductor.core.utils.QueueUtils;
 import com.netflix.conductor.dao.ErrorLookupDAO;
 import com.netflix.conductor.dao.ExecutionDAO;
@@ -114,12 +116,14 @@ public class WorkflowExecutor {
 
 	private final AppConfig appConfig;
 
+	private final PriorityConfig priorityConfig;
+
 	@Inject
 	public WorkflowExecutor(MetadataDAO metadata, ExecutionDAO edao, QueueDAO queue, ErrorLookupDAO errorLookupDAO,ObjectMapper om,
 							AuthManager auth, Configuration config,
 							TaskStatusListener taskStatusListener,
 							WorkflowStatusListener workflowStatusListener,
-							PropertiesLoader propertiesLoader, AppConfig appConfig) {
+							PropertiesLoader propertiesLoader, AppConfig appConfig, PriorityConfig priorityConfig) {
 		this.metadata = metadata;
 		this.edao = edao;
 		this.queue = queue;
@@ -137,6 +141,7 @@ public class WorkflowExecutor {
 		this.lazyDecider = Boolean.parseBoolean(config.getProperty("workflow.lazy.decider", "false"));
 		this.propertiesLoader = propertiesLoader;
 		this.appConfig = appConfig;
+		this.priorityConfig = priorityConfig;
 	}
 
 	public String startWorkflow(String name, int version, String correlationId, Map<String, Object> input) throws Exception {
@@ -266,7 +271,14 @@ public class WorkflowExecutor {
 					jobPriority = 5;
 				}
 			}
+			Map<String, String> priorityConfigurations = new HashMap<>();
+			List<PriorityLookup> priorityLookups = priorityConfig.getValue(jobPriority);
+			if ( priorityLookups != null){
+				priorityConfigurations = priorityLookups.stream().collect(Collectors.toMap(PriorityLookup::getName, PriorityLookup::getValue));
+			}
+			wf.setPriorityConfig(priorityConfigurations);
 			wf.setJobPriority(jobPriority);
+
 			if (traceIdEnabled) {
 				wf.setTraceId(traceId);
 			}

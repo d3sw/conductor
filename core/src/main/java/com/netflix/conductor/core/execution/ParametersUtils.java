@@ -117,6 +117,7 @@ public class ParametersUtils {
 		wf.put("attributes", workflow.getAttributes());
 		wf.put("variables", workflow.getVariables());
 		wf.put("metaConfigs", workflow.getMetaConfigs());
+		wf.put("priorityConfigs", workflow.getPriorityConfig());
 
 		String correlationId = workflow.getCorrelationId();
 		if (StringUtils.isNotEmpty(correlationId) && correlationId.startsWith("{") && correlationId.endsWith("}")) {
