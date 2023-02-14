@@ -272,9 +272,15 @@ public class WorkflowExecutor {
 				}
 			}
 			Map<String, String> priorityConfigurations = new HashMap<>();
-			List<PriorityLookup> priorityLookups = priorityConfig.getValue(jobPriority);
-			if ( priorityLookups != null){
-				priorityConfigurations = priorityLookups.stream().collect(Collectors.toMap(PriorityLookup::getName, PriorityLookup::getValue));
+			List<PriorityLookup> priorityLookups = priorityConfig.getPriorityConfigs();
+			List<PriorityLookup> updatedPriorityLookups = new ArrayList<>();
+			if (priorityLookups != null) {
+				for (PriorityLookup priorityLookup : priorityLookups) {
+					if (jobPriority >= priorityLookup.getMinPriority() && jobPriority <= priorityLookup.getMaxPriority()) {
+						updatedPriorityLookups.add(priorityLookup);
+					}
+				}
+				priorityConfigurations = updatedPriorityLookups.stream().collect(Collectors.toMap(PriorityLookup::getName, PriorityLookup::getValue));
 			}
 			wf.setPriorityConfig(priorityConfigurations);
 			wf.setJobPriority(jobPriority);

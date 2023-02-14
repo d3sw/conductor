@@ -19,6 +19,7 @@ public class PriorityConfig {
     private Cache<List<PriorityLookup>> appCache;
     private PriorityLookupDAO priorityLookupDAO;
     private final static String PRIORITY_CACHE = "PRIORITY_CACHE";
+    private static final String CACHE_REF_KEY = "__PRIORITY_REF_KEY__";
     private final int TTL_SECONDS = (int) TimeUnit.SECONDS.convert(1, TimeUnit.MINUTES);
 
 
@@ -27,43 +28,56 @@ public class PriorityConfig {
         CacheManager cacheManager = CacheManager.getInstance();
         appCache = cacheManager.getCache(PRIORITY_CACHE);
         this.priorityLookupDAO = priorityLookupDAO;
+        try {
+            initialize();
+        } catch (Exception e) {
+            logger.error("Unable to load Priority Config ", e);
+            throw new RuntimeException(e);
+        }
         logger = LogManager.getLogger(PriorityConfig.class);
         logger.info("Initialized PriorityConfig");
     }
 
-
     /**
-     * Obtain the value for a specified key. Returns null if not found
+     * Initialize the cache
      *
-     * @param priority
      * @return
      * @throws Exception
      */
-    public List<PriorityLookup> getValue(Integer priority) throws Exception {
-        List<PriorityLookup> value;
-        if ((value = appCache.get(Integer.toString(priority))) == null) {
-            synchronized (PriorityConfig.class) {
-                if ((value = appCache.get(Integer.toString(priority))) == null) {
-                    reloadProperties(priority);
-                    value = appCache.get(Integer.toString(priority));
-                }
-            }
+    private void initialize() throws Exception {
+        synchronized (AppConfig.class) {
+            reloadProperties();
         }
-        return value;
     }
 
 
     /**
+     * Method to obtain all the configs by querying the database
+     *
+     * @return
+     * @throws Exception
+     */
+    public List<PriorityLookup> getPriorityConfigs() throws Exception {
+        if (appCache.get(CACHE_REF_KEY) == null) {
+            synchronized (AppConfig.class) {
+                if ((appCache.get(CACHE_REF_KEY)) == null) {
+                    reloadProperties();
+                }
+            }
+        }
+        return appCache.get(CACHE_REF_KEY);
+    }
+
+    /**
      * Method to refresh the cache with the values from the database
      *
-     * @param priority
      * @throws SQLException
      */
-    public synchronized void reloadProperties(Integer priority) throws SQLException {
-        if (appCache.get(Integer.toString(priority)) == null) {
+    public synchronized void reloadProperties() throws SQLException {
+        if (appCache.get(CACHE_REF_KEY) == null) {
             appCache.invalidate();
-            List<PriorityLookup> configValue = priorityLookupDAO.getPriority(priority);
-            appCache.put(Integer.toString(priority), configValue, TTL_SECONDS);
+            List<PriorityLookup> configValue = priorityLookupDAO.getAllPriorities();
+            appCache.put(CACHE_REF_KEY, configValue, TTL_SECONDS);
         }
     }
 }
