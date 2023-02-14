@@ -291,8 +291,7 @@ public class AdminResource {
         }
     }
 
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
+    @PUT
     @Path("/appconfig/refresh")
     @ApiOperation(value = "Refresh the cache with list of App Configs from the database")
     public void refreshAppConfig(@Context HttpHeaders headers) {

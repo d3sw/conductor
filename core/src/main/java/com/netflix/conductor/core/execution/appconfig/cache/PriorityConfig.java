@@ -11,12 +11,12 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Class to obtain the Application specific Configuration values.
+ * Class to obtain the Priority mappings.
  */
 public class PriorityConfig {
     public static Logger logger;
 
-    private Cache<List<PriorityLookup>> appCache;
+    private Cache<List<PriorityLookup>> priorityCache;
     private PriorityLookupDAO priorityLookupDAO;
     private final static String PRIORITY_CACHE = "PRIORITY_CACHE";
     private static final String CACHE_REF_KEY = "__PRIORITY_REF_KEY__";
@@ -26,7 +26,7 @@ public class PriorityConfig {
     @Inject
     public PriorityConfig(PriorityLookupDAO priorityLookupDAO) {
         CacheManager cacheManager = CacheManager.getInstance();
-        appCache = cacheManager.getCache(PRIORITY_CACHE);
+        priorityCache = cacheManager.getCache(PRIORITY_CACHE);
         this.priorityLookupDAO = priorityLookupDAO;
         try {
             initialize();
@@ -45,7 +45,7 @@ public class PriorityConfig {
      * @throws Exception
      */
     private void initialize() throws Exception {
-        synchronized (AppConfig.class) {
+        synchronized (PriorityConfig.class) {
             reloadProperties();
         }
     }
@@ -58,14 +58,14 @@ public class PriorityConfig {
      * @throws Exception
      */
     public List<PriorityLookup> getPriorityConfigs() throws Exception {
-        if (appCache.get(CACHE_REF_KEY) == null) {
-            synchronized (AppConfig.class) {
-                if ((appCache.get(CACHE_REF_KEY)) == null) {
+        if (priorityCache.get(CACHE_REF_KEY) == null) {
+            synchronized (PriorityConfig.class) {
+                if ((priorityCache.get(CACHE_REF_KEY)) == null) {
                     reloadProperties();
                 }
             }
         }
-        return appCache.get(CACHE_REF_KEY);
+        return priorityCache.get(CACHE_REF_KEY);
     }
 
     /**
@@ -74,10 +74,10 @@ public class PriorityConfig {
      * @throws SQLException
      */
     public synchronized void reloadProperties() throws SQLException {
-        if (appCache.get(CACHE_REF_KEY) == null) {
-            appCache.invalidate();
-            List<PriorityLookup> configValue = priorityLookupDAO.getAllPriorities();
-            appCache.put(CACHE_REF_KEY, configValue, TTL_SECONDS);
+        if (priorityCache.get(CACHE_REF_KEY) == null) {
+            priorityCache.invalidate();
+            List<PriorityLookup> priorities = priorityLookupDAO.getAllPriorities();
+            priorityCache.put(CACHE_REF_KEY, priorities, TTL_SECONDS);
         }
     }
 }
