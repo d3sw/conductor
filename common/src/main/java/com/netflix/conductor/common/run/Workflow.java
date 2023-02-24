@@ -108,7 +108,10 @@ public class Workflow extends Auditable {
 
 	private Map<String, String> metaConfigs = new HashMap<>();
 
+	private Map<String, String> priorityConfig = new HashMap<>();
+
 	private PGobject jsonDataWorkflowIds;
+
 
 	public Workflow(){
 		
@@ -507,5 +510,13 @@ public class Workflow extends Auditable {
 
 	public void setMetaConfigs(Map<String, String> metaConfigs) {
 		this.metaConfigs = metaConfigs;
+	}
+
+	public Map<String, String> getPriorityConfig() {
+		return priorityConfig;
+	}
+
+	public void setPriorityConfig(Map<String, String> priorityConfig) {
+		this.priorityConfig = priorityConfig;
 	}
 }
