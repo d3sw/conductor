@@ -32,6 +32,8 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -157,7 +159,7 @@ public class SystemTaskWorkerCoordinator {
 
 	private void pollAndExecute(WorkflowSystemTask systemTask) {
 		try {
-			
+			Instant start = Instant.now();
 			if(config.disableAsyncWorkers()) {
 				logger.warn("System Task Worker is DISABLED.  Not polling.");
 				return;
@@ -216,7 +218,7 @@ public class SystemTaskWorkerCoordinator {
 					MetricService.getInstance().systemWorkersQueueFull(name);
 				}
 			}
-			
+			MetricService.getInstance().taskExecutionTime("polling.processing", systemTask.getName(), Duration.between(start, Instant.now()).toMillis());
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
 		}

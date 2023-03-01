@@ -131,17 +131,7 @@ public class MetricService {
 		statsd.incrementCounter(aspect, toArray(tags));
 	}
 
-	public void httpStarted(String taskType, String refName, String defName, String service) {
-		Set<String> tagsCounter = new HashSet<>();
-		tagsCounter.add("metric:deluxe.conductor.http.started");
-		tagsCounter.add("task_type:" + taskType);
-		tagsCounter.add("ref_name:" + refName);
-		tagsCounter.add("def_name:" + defName);
-		tagsCounter.add("service:" + service);
-		statsd.incrementCounter(aspect, toArray(tagsCounter));
-	}
-
-	public void httpComplete(String taskType, String refName, String defName, String service, long execTime) {
+	public void httpExecution(String taskType, String refName, String defName, String service, long execTime) {
 		Set<String> tagsCounter = new HashSet<>();
 		tagsCounter.add("metric:deluxe.conductor.http.complete");
 		tagsCounter.add("task_type:" + taskType);
@@ -156,7 +146,7 @@ public class MetricService {
 		tagsTime.add("ref_name:" + refName);
 		tagsTime.add("def_name:" + defName);
 		tagsTime.add("service:" + service);
-		statsd.recordExecutionTime(aspect, execTime, toArray(tagsTime));
+		statsd.recordDistributionValue(aspect, execTime, toArray(tagsTime));
 	}
 
 	public void httpFailed(String taskType, String refName, String defName, String service, long execTime) {
@@ -174,7 +164,7 @@ public class MetricService {
 		tagsTime.add("ref_name:" + refName);
 		tagsTime.add("def_name:" + defName);
 		tagsTime.add("service:" + service);
-		statsd.recordExecutionTime(aspect, execTime, toArray(tagsTime));
+		statsd.incrementCounter(aspect, execTime, toArray(tagsTime));
 	}
 
 	public void taskComplete(String taskType, String refName, String defName, String status, long startTime) {
@@ -193,6 +183,13 @@ public class MetricService {
 		tagsTime.add("def_name:" + defName);
 		long execTime = System.currentTimeMillis() - startTime;
 		statsd.recordExecutionTime(aspect, execTime, toArray(tagsTime));
+	}
+
+	public void taskExecutionTime(String name, String taskName, long duration) {
+		Set<String> tagsTime = new HashSet<>();
+		tagsTime.add(String.format("metric:deluxe.conductor.task.%s.time", name));
+		tagsTime.add("task_name:" + taskName);
+		statsd.recordDistributionValue(aspect, duration, toArray(tagsTime));
 	}
 
 	public void eventReceived(String subject) {
@@ -395,12 +392,13 @@ public class MetricService {
 	}
 
 	public void httpQueueDepth(String refName, String defName, String serviceName, Long count) {
-		Set<String> tagsGauge = new HashSet<>();
-		tagsGauge.add("metric:deluxe.conductor.queue.http.gauge");
-		tagsGauge.add("ref_name:" + refName);
-		tagsGauge.add("def_name:" + defName);
-		tagsGauge.add("service:" + serviceName);
-		statsd.recordGaugeValue(aspect, count, toArray(tagsGauge));
+		Set<String> tagsLag = new HashSet<>();
+		tagsLag.add("metric:deluxe.conductor.queue.http.lag");
+		tagsLag.add("ref_name:" + refName);
+		tagsLag.add("def_name:" + defName);
+		tagsLag.add("service:" + serviceName);
+		// we need the total number, avg, min and max per poll
+		statsd.distribution(aspect, count, toArray(tagsLag));
 	}
 
 	public void deciderQueueDepth(String workflow, Long count) {
