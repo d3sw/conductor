@@ -131,7 +131,7 @@ public class HttpTask extends GenericHttpTask {
 		long start_time = System.currentTimeMillis();
 		try {
 			HttpResponse response = new HttpResponse();
-			logger.debug("http task starting. WorkflowId=" + workflow.getWorkflowId()
+			logger.info("http task starting. WorkflowId=" + workflow.getWorkflowId()
 					+ ",taskReferenceName=" + task.getReferenceTaskName()
 					+ ",service=" + serviceName
 					+ ",taskId=" + task.getTaskId()
