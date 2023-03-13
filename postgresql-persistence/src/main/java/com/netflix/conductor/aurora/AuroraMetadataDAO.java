@@ -27,6 +27,7 @@ public class AuroraMetadataDAO extends AuroraBaseDAO implements MetadataDAO {
 	private static final String PROP_TASKDEF_CACHE_REFRESH = "conductor.taskdef.cache.refresh.time.seconds";
 	private static final int DEFAULT_TASKDEF_CACHE_REFRESH_SECONDS = 60;
 	private final ConcurrentHashMap<String, TaskDef> taskDefCache = new ConcurrentHashMap<>();
+	private final ScheduledExecutorService executorService;
 
 	@Inject
 	public AuroraMetadataDAO(DataSource dataSource, ObjectMapper mapper, Configuration config) {
@@ -34,18 +35,8 @@ public class AuroraMetadataDAO extends AuroraBaseDAO implements MetadataDAO {
 		refreshTaskDefs();
 
 		int cacheRefreshTime = config.getIntProperty(PROP_TASKDEF_CACHE_REFRESH, DEFAULT_TASKDEF_CACHE_REFRESH_SECONDS);
-		ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+		executorService = Executors.newSingleThreadScheduledExecutor();
 		executorService.scheduleWithFixedDelay(this::refreshTaskDefs, cacheRefreshTime, cacheRefreshTime, TimeUnit.SECONDS);
-
-		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-			try {
-				logger.info("Closing refreshTaskDefs pool");
-				executorService.shutdown();
-				executorService.awaitTermination(5, TimeUnit.SECONDS);
-			} catch (Exception e) {
-				logger.debug("Closing refreshTaskDefs pool failed " + e.getMessage(), e);;
-			}
-		}));
 	}
 
 	@Override
@@ -63,6 +54,16 @@ public class AuroraMetadataDAO extends AuroraBaseDAO implements MetadataDAO {
 		validate(taskDef);
 		taskDef.setUpdateTime(System.currentTimeMillis());
 		return insertOrUpdateTaskDef(taskDef);
+	}
+
+	public void shutdown() {
+		try {
+			logger.info("Closing refreshTaskDefs pool");
+			executorService.shutdown();
+			executorService.awaitTermination(5, TimeUnit.SECONDS);
+		} catch (Exception e) {
+			logger.error("failed to shutdown refreshTaskDefs pool");
+		}
 	}
 
 	@Override
