@@ -381,6 +381,8 @@ public class SubWorkflow extends WorkflowSystemTask {
 		result.put("failureStatus", workflow.getStatus().toString());
 		result.put("reason", subWorkflow.getReasonForIncompletion());
 		result.put("variables", workflow.getVariables());
+		result.put("metaConfigs", workflow.getMetaConfigs());
+		result.put("priorityConfigs", workflow.getPriorityConfig());
 
 		// Failed sub-workflow details
 		Map<String, Object> failedSubWorkflow = new HashMap<>();

@@ -41,6 +41,11 @@ public class WorkflowErrorRegistry {
 
     private int errorLookUpId;
 
+    private String errorCode;
+    private String rootCause;
+    private String resolution;
+
+
     public WorkflowErrorRegistry() {
 
     }
@@ -187,6 +192,30 @@ public class WorkflowErrorRegistry {
 
     public void setSubWorkflow(String subWorkflow) {
         this.subWorkflow = subWorkflow;
+    }
+
+    public String getErrorCode() {
+        return errorCode;
+    }
+
+    public void setErrorCode(String errorCode) {
+        this.errorCode = errorCode;
+    }
+
+    public String getRootCause() {
+        return rootCause;
+    }
+
+    public void setRootCause(String rootCause) {
+        this.rootCause = rootCause;
+    }
+
+    public String getResolution() {
+        return resolution;
+    }
+
+    public void setResolution(String resolution) {
+        this.resolution = resolution;
     }
 
     /**

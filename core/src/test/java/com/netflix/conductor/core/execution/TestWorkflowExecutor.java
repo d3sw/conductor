@@ -65,6 +65,7 @@ public class TestWorkflowExecutor {
 	QueueDAO queue = mock(QueueDAO.class);
 	ObjectMapper om = new ObjectMapper();
 	AuthManager auth = mock(AuthManager.class);
+	PropertiesLoader propertiesLoader = mock(PropertiesLoader.class);
 
 	@Test
 	public void test() throws Exception {
@@ -103,7 +104,7 @@ public class TestWorkflowExecutor {
 		workflow.setWorkflowId("1");
 		
 		WorkflowExecutor executor = new WorkflowExecutor(metadata, edao, queue, errorLookupDAO, om, auth, config,
-				taskListener, workflowListener);
+				taskListener, workflowListener, propertiesLoader);
 		List<Task> tasks = new LinkedList<>();
 		
 		WorkflowTask taskToSchedule = new WorkflowTask();
@@ -174,7 +175,7 @@ public class TestWorkflowExecutor {
 		input.put("constant", "value");
 
 		WorkflowExecutor executor = new WorkflowExecutor(metadata, edao, queue, errorLookupDAO, om, auth, config,
-			taskListener, workflowListener);
+			taskListener, workflowListener, propertiesLoader);
 		executor.startWorkflow("validationSuccess", 1, null, input);
 	}
 
@@ -193,7 +194,7 @@ public class TestWorkflowExecutor {
 		when(metadata.get("validationFailure1", 1)).thenReturn(def);
 
 		WorkflowExecutor executor = new WorkflowExecutor(metadata, edao, queue, errorLookupDAO, om, auth, config,
-			taskListener, workflowListener);
+			taskListener, workflowListener, propertiesLoader);
 		try {
 			executor.startWorkflow("validationFailure1", 1, null, new HashMap<>());
 		} catch (ApplicationException ex) {
@@ -217,7 +218,7 @@ public class TestWorkflowExecutor {
 		when(metadata.get("validationFailure2", 1)).thenReturn(def);
 
 		WorkflowExecutor executor = new WorkflowExecutor(metadata, edao, queue, errorLookupDAO,  om, auth, config,
-			taskListener, workflowListener);
+			taskListener, workflowListener, propertiesLoader);
 		try {
 			executor.startWorkflow("validationFailure2", 1, null, new HashMap<>());
 		} catch (ApplicationException ex) {
@@ -254,7 +255,7 @@ public class TestWorkflowExecutor {
 		AuthManager manager = new AuthManager(cfg);
 
 		WorkflowExecutor executor = new WorkflowExecutor(metadata, edao, queue, errorLookupDAO, om, manager, cfg,
-			taskListener, workflowListener);
+			taskListener, workflowListener, propertiesLoader);
 		executor.validateAuth(def, headers);
 	}
 
@@ -284,7 +285,7 @@ public class TestWorkflowExecutor {
 		AuthManager manager = new AuthManager(cfg);
 
 		WorkflowExecutor executor = new WorkflowExecutor(metadata, edao, queue, errorLookupDAO,  om, manager, cfg,
-			taskListener, workflowListener);
+			taskListener, workflowListener, propertiesLoader);
 		executor.validateAuth(def, headers);
 	}
 
@@ -304,7 +305,7 @@ public class TestWorkflowExecutor {
 		when(cfg.getProperty("workflow.auth.validate", "false")).thenReturn("true");
 
 		WorkflowExecutor executor = new WorkflowExecutor(metadata, edao, queue, errorLookupDAO,  om, auth, cfg,
-			taskListener, workflowListener);
+			taskListener, workflowListener, propertiesLoader);
 		try {
 			executor.validateAuth(def, headers);
 			fail("Should not be here");
@@ -330,7 +331,7 @@ public class TestWorkflowExecutor {
 		when(cfg.getProperty("workflow.auth.validate", "false")).thenReturn("true");
 
 		WorkflowExecutor executor = new WorkflowExecutor(metadata, edao,  queue,errorLookupDAO,  om, auth, cfg,
-			taskListener, workflowListener);
+			taskListener, workflowListener, propertiesLoader);
 		try {
 			executor.validateAuth(def, headers);
 			fail("Should not be here");
@@ -357,7 +358,7 @@ public class TestWorkflowExecutor {
 		when(cfg.getProperty("workflow.auth.validate", "false")).thenReturn("true");
 
 		WorkflowExecutor executor = new WorkflowExecutor(metadata, edao, queue, errorLookupDAO, om, auth, cfg,
-			taskListener, workflowListener);
+			taskListener, workflowListener, propertiesLoader);
 		try {
 			executor.validateAuth(def, headers);
 			fail("Should not be here");

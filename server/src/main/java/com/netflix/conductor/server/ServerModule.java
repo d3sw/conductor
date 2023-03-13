@@ -20,6 +20,7 @@ package com.netflix.conductor.server;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+import com.google.inject.name.Named;
 import com.netflix.conductor.aurora.*;
 import com.netflix.conductor.contribs.*;
 import com.netflix.conductor.contribs.json.JsonJqTransform;
@@ -28,8 +29,6 @@ import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.config.CoreModule;
 import com.netflix.conductor.core.execution.TaskStatusListener;
 import com.netflix.conductor.core.execution.WorkflowStatusListener;
-import com.netflix.conductor.core.execution.WorkflowSweeper;
-import com.netflix.conductor.core.utils.PriorityLookup;
 import com.netflix.conductor.dao.*;
 import com.netflix.conductor.dao.dynomite.DynoProxy;
 import com.netflix.conductor.dao.dynomite.RedisExecutionDAO;
@@ -42,9 +41,13 @@ import com.netflix.dyno.queues.redis.DynoShardSupplier;
 import com.netflix.spectator.api.DefaultRegistry;
 import com.netflix.spectator.api.Registry;
 import com.netflix.spectator.api.Spectator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import redis.clients.jedis.JedisCommands;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -55,110 +58,153 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class ServerModule extends AbstractModule {
 
-	private int maxThreads = 50;
+    private int maxThreads = 50;
 
-	private ExecutorService es;
+    private ExecutorService es;
 
-	private JedisCommands dynoConn;
+    private JedisCommands dynoConn;
 
-	private HostSupplier hs;
+    private HostSupplier hs;
 
-	private String region;
+    private String region;
 
-	private String localRack;
+    private String localRack;
 
-	private ConductorConfig config;
+    private ConductorConfig config;
 
-	private ConductorServer.DB db;
+    private ConductorServer.DB db;
 
-	public ServerModule(JedisCommands jedis, HostSupplier hs, ConductorConfig config, ConductorServer.DB db) {
-		this.dynoConn = jedis;
-		this.hs = hs;
-		this.config = config;
-		this.region = config.getRegion();
-		this.localRack = config.getAvailabilityZone();
-		this.db = db;
-	}
+    private static final String FLYWAY_MIGRATE = "FLYWAY_MIGRATE";
 
-	@Override
-	protected void configure() {
-		Registry registry = new DefaultRegistry();
-		Spectator.globalRegistry().add(registry);
+    private static final Logger logger = LoggerFactory.getLogger(ServerModule.class);
 
-		configureExecutorService();
-		bind(Configuration.class).toInstance(config);
-		bind(Registry.class).toInstance(registry);
+    public ServerModule(JedisCommands jedis, HostSupplier hs, ConductorConfig config, ConductorServer.DB db) {
+        this.dynoConn = jedis;
+        this.hs = hs;
+        this.config = config;
+        this.region = config.getRegion();
+        this.localRack = config.getAvailabilityZone();
+        this.db = db;
+    }
 
-		if (ConductorServer.DB.elasticsearch.equals(db)) {
-			install(new Elasticsearch6RestModule());
+    @Override
+    protected void configure() {
+        runMigrations();
 
-			bind(ExecutionDAO.class).to(Elasticsearch6RestExecutionDAO.class);
-			bind(MetadataDAO.class).to(Elasticsearch6RestMetadataDAO.class);
-			bind(QueueDAO.class).to(Elasticsearch6RestQueueDAO.class);
-			bind(MetricsDAO.class).to(Elasticsearch6RestMetricsDAO.class);
-			bind(IndexDAO.class).to(Elasticsearch6RestIndexDAO.class);
-			bind(ErrorLookupDAO.class).to(Elasticsearch6ErrorLookupDAO.class);
-			bind(PriorityLookupDAO.class).to(ElasticSearch6PriorityLookupDAO.class);
-		} else if (ConductorServer.DB.aurora.equals(db)) {
-			install(new AuroraModule());
+        Registry registry = new DefaultRegistry();
+        Spectator.globalRegistry().add(registry);
+        configureExecutorService();
+        bind(Configuration.class).toInstance(config);
+        bind(Registry.class).toInstance(registry);
 
-			bind(ExecutionDAO.class).to(AuroraExecutionDAO.class).asEagerSingleton();;
-			bind(MetadataDAO.class).to(AuroraMetadataDAO.class).asEagerSingleton();;
-			bind(QueueDAO.class).to(AuroraQueueDAO.class).asEagerSingleton();;
-			bind(MetricsDAO.class).to(AuroraMetricsDAO.class).asEagerSingleton();;
-			bind(IndexDAO.class).to(AuroraIndexDAO.class).asEagerSingleton();;
-			bind(ErrorLookupDAO.class).to(AuroraErrorLookupDAO.class).asEagerSingleton();;
-			bind(PriorityLookupDAO.class).to(AuroraPriorityLookupDAO.class).asEagerSingleton();;
-		} else {
-			String localDC = localRack.replaceAll(region, "");
-			DynoShardSupplier ss = new DynoShardSupplier(hs, region, localDC);
-			DynoQueueDAO queueDao = new DynoQueueDAO(dynoConn, dynoConn, ss, config);
+        switch (db) {
+            case aurora:
+                configureAuroraContext();
+                break;
+            case elasticsearch:
+                configureElasticsearchContext();
+                break;
+            default:
+                configureDefaultContext();
+        }
 
-			DynoProxy proxy = new DynoProxy(dynoConn);
-			bind(DynoProxy.class).toInstance(proxy);
+        List<AbstractModule> additionalModules = config.getAdditionalModules();
+        if (additionalModules != null) {
+            for (AbstractModule additionalModule : additionalModules) {
+                install(additionalModule);
+            }
+        }
+        install(new CoreModule());
+        install(new JerseyModule());
+        install(new HttpModule());
+        install(new AuthModule());
+        install(new AssetModule());
+        install(new ProgressModule());
+        install(new StatusModule());
+        install(new TaskUpdateModule());
+        new JsonJqTransform();
+        new ValidationTask();
+        bind(TaskStatusListener.class).to(StatusEventPublisher.class).asEagerSingleton();
+        bind(WorkflowStatusListener.class).to(StatusEventPublisher.class).asEagerSingleton();
+        bind(ServerShutdown.class).asEagerSingleton();
 
-			bind(ExecutionDAO.class).to(RedisExecutionDAO.class);
-			bind(MetadataDAO.class).to(RedisMetadataDAO.class);
-			bind(DynoQueueDAO.class).toInstance(queueDao);
-			bind(QueueDAO.class).to(DynoQueueDAO.class);
-		}
+    }
 
-		List<AbstractModule> additionalModules = config.getAdditionalModules();
-		if (additionalModules != null) {
-			for (AbstractModule additionalModule : additionalModules) {
-				install(additionalModule);
-			}
-		}
-		install(new CoreModule());
-		install(new JerseyModule());
-		install(new HttpModule());
-		install(new AuthModule());
-		install(new AssetModule());
-		install(new ProgressModule());
-		install(new StatusModule());
-		install(new TaskUpdateModule());
-		new JsonJqTransform();
-		new ValidationTask();
-		bind(TaskStatusListener.class).to(StatusEventPublisher.class).asEagerSingleton();
-		bind(WorkflowStatusListener.class).to(StatusEventPublisher.class).asEagerSingleton();
-		bind(ServerShutdown.class).asEagerSingleton();
-	}
+    private void configureDefaultContext() {
+        String localDC = localRack.replaceAll(region, "");
+        DynoShardSupplier ss = new DynoShardSupplier(hs, region, localDC);
+        DynoQueueDAO queueDao = new DynoQueueDAO(dynoConn, dynoConn, ss, config);
 
-	@Provides
-	public ExecutorService getExecutorService() {
-		return this.es;
-	}
+        DynoProxy proxy = new DynoProxy(dynoConn);
+        bind(DynoProxy.class).toInstance(proxy);
 
-	private void configureExecutorService() {
-		AtomicInteger count = new AtomicInteger(0);
-		this.es = java.util.concurrent.Executors.newFixedThreadPool(maxThreads, new ThreadFactory() {
+        bind(ExecutionDAO.class).to(RedisExecutionDAO.class);
+        bind(MetadataDAO.class).to(RedisMetadataDAO.class);
+        bind(DynoQueueDAO.class).toInstance(queueDao);
+        bind(QueueDAO.class).to(DynoQueueDAO.class);
+    }
 
-			@Override
-			public Thread newThread(Runnable r) {
-				Thread t = new Thread(r);
-				t.setName("conductor-worker-" + count.getAndIncrement());
-				return t;
-			}
-		});
-	}
+    private void configureElasticsearchContext() {
+        install(new Elasticsearch6RestModule());
+
+        bind(ExecutionDAO.class).to(Elasticsearch6RestExecutionDAO.class);
+        bind(MetadataDAO.class).to(Elasticsearch6RestMetadataDAO.class);
+        bind(QueueDAO.class).to(Elasticsearch6RestQueueDAO.class);
+        bind(MetricsDAO.class).to(Elasticsearch6RestMetricsDAO.class);
+        bind(IndexDAO.class).to(Elasticsearch6RestIndexDAO.class);
+        bind(ErrorLookupDAO.class).to(Elasticsearch6ErrorLookupDAO.class);
+        bind(PriorityLookupDAO.class).to(ElasticSearch6PriorityLookupDAO.class);
+    }
+
+    private void configureAuroraContext() {
+        install(new AuroraModule());
+
+        bind(ExecutionDAO.class).to(AuroraExecutionDAO.class).asEagerSingleton();
+        bind(MetadataDAO.class).to(AuroraMetadataDAO.class).asEagerSingleton();
+        bind(AppConfigDAO.class).to(AuroraAppConfigDAO.class).asEagerSingleton();
+        bind(QueueDAO.class).to(AuroraQueueDAO.class).asEagerSingleton();
+        bind(MetricsDAO.class).to(AuroraMetricsDAO.class).asEagerSingleton();
+        bind(IndexDAO.class).to(AuroraIndexDAO.class).asEagerSingleton();
+        bind(ErrorLookupDAO.class).to(AuroraErrorLookupDAO.class).asEagerSingleton();
+        bind(PriorityLookupDAO.class).to(AuroraPriorityLookupDAO.class).asEagerSingleton();
+    }
+
+    @Provides
+    public ExecutorService getExecutorService() {
+        return this.es;
+    }
+
+    @Provides
+    @Named("properties")
+    public Map<String, String> getProperties() {
+        return new HashMap<>();
+    }
+
+    private void configureExecutorService() {
+        AtomicInteger count = new AtomicInteger(0);
+        this.es = java.util.concurrent.Executors.newFixedThreadPool(maxThreads, new ThreadFactory() {
+
+            @Override
+            public Thread newThread(Runnable r) {
+                Thread t = new Thread(r);
+                t.setName("conductor-worker-" + count.getAndIncrement());
+                return t;
+            }
+        });
+    }
+
+    private void runMigrations() {
+        try {
+            boolean doMigration = "true".equalsIgnoreCase(config.getProperty(FLYWAY_MIGRATE, "false"));
+            if (doMigration) {
+                logger.info("Flyway migraton enabled.");
+                FlywayService.migrate(config);
+            } else {
+                logger.info("Skipping Flyway migration (not enabled)");
+            }
+        } catch (Exception ex) {
+            logger.error("Error during flyway migration " + ex.getMessage(), ex);
+            System.exit(-1);
+        }
+    }
 }

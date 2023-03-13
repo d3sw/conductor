@@ -679,6 +679,11 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 		return null;
 	}
 
+	@Override
+	public List<WorkflowErrorRegistry> findSubWorkflows(List<String> parent_workflow_ids) {
+		return null;
+	}
+
 	private List<String> dateStrBetweenDates(Long startdatems, Long enddatems) {
 		if (logger.isDebugEnabled())
 			logger.debug("dateStrBetweenDates: startdatems={}, enddatems={}", startdatems, enddatems);

@@ -59,7 +59,6 @@ import java.util.*;
 public class ConductorServer {
 
     private static final Logger logger = LoggerFactory.getLogger(ConductorServer.class);
-    private static final String FLYWAY_MIGRATE = "FLYWAY_MIGRATE";
 
     enum DB {
         redis, dynomite, memory, elasticsearch, aurora
@@ -213,13 +212,6 @@ public class ConductorServer {
             System.exit(-1);
         }
 
-        //Run migrations
-        try {
-            runMigrations();
-        }catch(Exception ex){
-            logger.error("Error during flyway migration " + ex.getMessage(), ex);
-            System.exit(-1);
-        }
         // Holds handlers
         final HandlerList handlers = new HandlerList();
 
@@ -273,16 +265,6 @@ public class ConductorServer {
             server.join();
         }
 
-    }
-
-    private void runMigrations() throws Exception {
-        boolean doMigration = "true".equalsIgnoreCase(cc.getProperty(FLYWAY_MIGRATE,"false"));
-        if (doMigration) {
-            logger.info("Flyway migraton enabled.");
-            FlywayService.migrate(cc);
-        } else {
-            logger.info("Skipping Flyway migration (not enabled)");
-        }
     }
 
     public synchronized void stop() throws Exception {

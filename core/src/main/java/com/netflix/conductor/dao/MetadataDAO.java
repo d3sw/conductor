@@ -173,6 +173,7 @@ public interface MetadataDAO {
 		return Collections.emptyList();
 	}
 
+
 	public default void addConfig(String name, String value) {
 	}
 

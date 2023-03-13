@@ -66,7 +66,11 @@ public class WorkflowSummary {
 	private List<String> workflowIds = new ArrayList<>();
 
 	private String variables;
-	
+
+	private String metaConfigs;
+
+	private String priorityConfigs;
+
 	public WorkflowSummary() {
 		
 	}
@@ -98,6 +102,8 @@ public class WorkflowSummary {
 		this.event = workflow.getEvent();
 		this.workflowIds = workflow.getWorkflowIds();
 		this.variables = workflow.getVariables().toString();
+		this.metaConfigs = workflow.getMetaConfigs().toString();
+		this.priorityConfigs = workflow.getPriorityConfig().toString();
 	}
 
 	/**
@@ -222,5 +228,21 @@ public class WorkflowSummary {
 
 	public void setVariables(String variables) {
 		this.variables = variables;
+	}
+
+	public String getMetaConfigs() {
+		return metaConfigs;
+	}
+
+	public void setMetaConfigs(String metaConfigs) {
+		this.metaConfigs = metaConfigs;
+	}
+
+	public String getPriorityConfigs() {
+		return priorityConfigs;
+	}
+
+	public void setPriorityConfigs(String priorityConfigs) {
+		this.priorityConfigs = priorityConfigs;
 	}
 }

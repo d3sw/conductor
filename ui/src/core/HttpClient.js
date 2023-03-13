@@ -21,11 +21,7 @@ const HttpClient = {
       .accept('application/json')
       .end((err, res) => {
         if (err) {
-          //if (err.status === 404) {
-          //  resolve(null);
-          //} else {
-            reject(err);
-          //}
+          reject(err);
         } else {
           resolve(res.body);
         }
@@ -35,13 +31,11 @@ const HttpClient = {
   post: (path, data, token) => new Promise((resolve, reject) => {
     let req = request
       .post(path, data)
-      .set('Accept', 'application/json');
-    if (token) {
-      req.set('Authorization', 'Bearer ' + token);
-    }
+      .set('Accept', 'application/json')
+      .set('Authorization', 'Bearer ' + token);
     req.end((err, res) => {
         if (err || !res.ok) {
-          console.error('Error on post! ' + res);
+          console.error('Error on post! ' + JSON.stringify(res));
           reject(err);
         } else {
           if(res.body){
@@ -57,13 +51,11 @@ const HttpClient = {
   postPlain: (path, data, token) => new Promise((resolve, reject) => {
     let req = request
       .post(path, data)
-      .set('Accept', 'text/plain');
-    if (token) {
-      req.set('Authorization', 'Bearer ' + token);
-    }
+      .set('Accept', 'text/plain')
+      .set('Authorization', 'Bearer ' + token);
     req.end((err, res) => {
       if (err || !res.ok) {
-        console.error('Error on post! ' + res);
+        console.error('Error on postPlain! ' + JSON.stringify(res));
         reject(err);
       } else {
         if(res.body){
@@ -79,13 +71,11 @@ const HttpClient = {
   put: (path, data, token) => new Promise((resolve, reject) => {
     let req = request
       .put(path, data)
-      .set('Accept', 'application/json');
-    if (token) {
-      req.set('Authorization', 'Bearer ' + token);
-    }
+      .set('Accept', 'application/json')
+      .set('Authorization', 'Bearer ' + token);
     req.end((err, res) => {
       if (err || !res.ok) {
-        console.error('Error on post! ' + res);
+        console.error('Error on put! ' + JSON.stringify(res));
         reject(err);
       } else {
         resolve(res.body);
@@ -96,13 +86,11 @@ const HttpClient = {
   delete: (path, data, token) => new Promise((resolve, reject) => {
     let req = request
       .del(path, data)
-      .set('Accept', 'application/json');
-    if (token) {
-      req.set('Authorization', 'Bearer ' + token);
-    }
+      .set('Accept', 'application/json')
+      .set('Authorization', 'Bearer ' + token);
     req.end((err, res) => {
       if (err || !res.ok) {
-        console.error('Error on post! ' + err);
+        console.error('Error on delete! ' + err);
         reject(err);
       } else {
         resolve(res);
