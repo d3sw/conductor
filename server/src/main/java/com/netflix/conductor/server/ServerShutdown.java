@@ -1,5 +1,7 @@
 package com.netflix.conductor.server;
 
+import com.netflix.conductor.aurora.AuroraMetadataDAO;
+import com.netflix.conductor.aurora.AuroraQueueDAO;
 import com.netflix.conductor.core.events.EventProcessor;
 import com.netflix.conductor.core.execution.WorkflowSweeper;
 import com.netflix.conductor.core.execution.batch.BatchSweeper;
@@ -20,37 +22,43 @@ public class ServerShutdown {
 	private final EventProcessor eventProcessor;
 	private final BatchSweeper batchSweeper;
 	private final DataSource dataSource;
+	private final AuroraMetadataDAO auroraMetadataDAO;
+	private final AuroraQueueDAO auroraQueueDAO;
 
 	@Inject
 	public ServerShutdown(SystemTaskWorkerCoordinator taskWorkerCoordinator,
 						  WorkflowSweeper workflowSweeper,
 						  EventProcessor eventProcessor,
 						  BatchSweeper batchSweeper,
-						  DataSource dataSource) {
+						  DataSource dataSource,
+						  AuroraMetadataDAO auroraMetadataDAO,
+						  AuroraQueueDAO auroraQueueDAO) {
 		this.taskWorkerCoordinator = taskWorkerCoordinator;
 		this.workflowSweeper = workflowSweeper;
 		this.eventProcessor = eventProcessor;
 		this.batchSweeper = batchSweeper;
 		this.dataSource = dataSource;
-
-		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-			try {
-				shutdown();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}));
+		this.auroraMetadataDAO = auroraMetadataDAO;
+		this.auroraQueueDAO = auroraQueueDAO;
 	}
 
-	private void shutdown() {
+	public void shutdown() {
 		batchSweeper.shutdown();
 		eventProcessor.shutdown();
 		workflowSweeper.shutdown();
 		taskWorkerCoordinator.shutdown();
+		auroraMetadataDAO.shutdown();
+		auroraQueueDAO.shutdown();
 
 		logger.info("Closing primary data source");
 		if (dataSource instanceof HikariDataSource) {
-			((HikariDataSource) dataSource).close();
+			// close all open connections
+			HikariDataSource datasource = (HikariDataSource) dataSource;
+			datasource.getHikariPoolMXBean().softEvictConnections();
+			while (datasource.getHikariPoolMXBean().getActiveConnections() > 0) {
+				logger.trace("waiting for {} active connections to complete shutdown...", datasource.getHikariPoolMXBean().getActiveConnections());
+			}
+			datasource.close();
 		}
 	}
 }

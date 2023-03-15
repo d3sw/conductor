@@ -19,12 +19,9 @@
 package com.netflix.conductor.server;
 
 import org.apache.log4j.PropertyConfigurator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.lang.management.ManagementFactory;
 import java.util.Properties;
 
 /**
@@ -32,7 +29,6 @@ import java.util.Properties;
  * Entry point for the server
  */
 public class Main {
-	private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
 	static {
 		// Workaround to send java util logging to log4j
@@ -54,25 +50,6 @@ public class Main {
 		if (args.length == 2) {
 			PropertyConfigurator.configure(new FileInputStream(new File(args[1])));
 		}
-
-		Runtime.getRuntime().addShutdownHook(new Thread() {
-			int mb = 1024 * 1024;
-
-			public void run() {
-
-				com.sun.management.OperatingSystemMXBean mxBean =
-					(com.sun.management.OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
-				double cpuLoad = mxBean.getProcessCpuLoad();
-
-				Runtime runtime = Runtime.getRuntime();
-				StringBuilder info = new StringBuilder();
-				info.append("Used memory=").append((runtime.totalMemory() - runtime.freeMemory()) / mb).append("mb");
-				info.append(", free memory=").append(runtime.freeMemory() / mb).append("mb");
-				info.append(", cpu load=").append(String.format("%.2f", cpuLoad)).append("%");
-
-				logger.info("Caught shutdown signal. " + info.toString());
-			}
-		});
 
 		ConductorConfig config = new ConductorConfig();
 		ConductorServer server = new ConductorServer(config);
