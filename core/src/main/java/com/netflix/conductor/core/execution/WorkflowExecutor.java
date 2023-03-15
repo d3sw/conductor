@@ -1667,7 +1667,6 @@ public class WorkflowExecutor {
 			String queueName = QueueUtils.getQueueName(task);
 
 			if (task.getTaskType().equals("LONGRUNNUNG_HTTP")) {
-
 				if (task.getStatus().isTerminal()) {
 					//Tune the SystemTaskWorkerCoordinator's queues - if the queue size is very big this can happen!
 					logger.debug("Task {}/{} was already completed.", task.getTaskType(), task.getTaskId());
@@ -1689,13 +1688,6 @@ public class WorkflowExecutor {
 					return;
 				}
 
-
-				// Workaround when workflow id disappears from the queue
-				boolean exists = queue.exists(WorkflowExecutor.deciderQueue, workflowId);
-				if (!exists) {
-					// If not exists then need place back
-					queue.pushIfNotExists(WorkflowExecutor.deciderQueue, workflowId, config.getSweepFrequency(), workflow.getJobPriority());
-				}
 
 				logger.debug("Executing {}/{}-{} for workflowId={},correlationId={},traceId={},contextUser={},clientId={}",
 						task.getTaskType(), task.getReferenceTaskName(), task.getTaskId(), workflow.getWorkflowId(),
