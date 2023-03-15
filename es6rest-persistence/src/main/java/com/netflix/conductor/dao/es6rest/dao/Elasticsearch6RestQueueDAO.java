@@ -30,11 +30,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import java.sql.Connection;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 
 /**
  * @author Oleksiy Lysak
@@ -166,6 +168,11 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
         } catch (Exception ex) {
             logger.error("pop ({}): failed for {} with {}", session, queueName, ex.getMessage(), ex);
         }
+        return Collections.emptyList();
+    }
+
+    @Override
+    public List<String> getQueueRecords(String queueName, int count, int timeout) {
         return Collections.emptyList();
     }
 

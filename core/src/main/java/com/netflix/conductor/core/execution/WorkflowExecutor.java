@@ -1653,6 +1653,67 @@ public class WorkflowExecutor {
 		}
 	}
 
+	//Update the async system task
+	public void executeSystemTaskUpdate(WorkflowSystemTask systemTask, String taskId) {
+		try {
+
+			logger.debug("Executing async taskId={}");
+
+			Task task = edao.getTask(taskId);
+			if (task == null) {
+				logger.debug("No task found for task id = " + taskId + ". System task is " + systemTask);
+				return;
+			}
+			String queueName = QueueUtils.getQueueName(task);
+
+			if (task.getTaskType().equals("LONGRUNNUNG_HTTP")) {
+
+				if (task.getStatus().isTerminal()) {
+					//Tune the SystemTaskWorkerCoordinator's queues - if the queue size is very big this can happen!
+					logger.debug("Task {}/{} was already completed.", task.getTaskType(), task.getTaskId());
+					queue.remove(queueName, task.getTaskId());
+					return;
+				}
+
+				String workflowId = task.getWorkflowInstanceId();
+				Workflow workflow = edao.getWorkflow(workflowId, true);
+
+				if (workflow.getStatus().isTerminal()) {
+					logger.debug("Workflow {} has been completed for {}/{}", workflow.getWorkflowId(), systemTask.getName(), task.getTaskId());
+					if (!task.getStatus().isTerminal()) {
+						task.setStatus(Status.CANCELED);
+					}
+					edao.updateTask(task);
+					queue.remove(queueName, task.getTaskId());
+					taskStatusListener.onTaskFinished(task);
+					return;
+				}
+
+
+				// Workaround when workflow id disappears from the queue
+				boolean exists = queue.exists(WorkflowExecutor.deciderQueue, workflowId);
+				if (!exists) {
+					// If not exists then need place back
+					queue.pushIfNotExists(WorkflowExecutor.deciderQueue, workflowId, config.getSweepFrequency(), workflow.getJobPriority());
+				}
+
+				logger.debug("Executing {}/{}-{} for workflowId={},correlationId={},traceId={},contextUser={},clientId={}",
+						task.getTaskType(), task.getReferenceTaskName(), task.getTaskId(), workflow.getWorkflowId(),
+						workflow.getCorrelationId(), workflow.getTraceId(), workflow.getContextUser(), workflow.getClientId());
+
+				String propName = "workflow.system.task." + task.getTaskDefName().toLowerCase() + ".unack.timeout";
+				int unackTimeout = config.getIntProperty(propName, systemTask.getRetryTimeInSecond());
+				queue.setUnackTimeout(queueName, task.getTaskId(), unackTimeout * 1000L);
+				logger.debug("Done Executing {}/{}-{} for workflowId={},correlationId={},traceId={},contextUser={},clientId={}",
+						task.getTaskType(), task.getReferenceTaskName(), task.getTaskId(), workflow.getWorkflowId(), workflow.getCorrelationId(),
+						workflow.getTraceId(), workflow.getContextUser(), workflow.getClientId());
+			}
+
+		} catch (Exception e) {
+			logger.info("executeSystemTaskUpdate failed with " + e.getMessage() + " for task id=" + taskId + ", system task=" + systemTask, e);
+		}
+	}
+
 	public void setTaskDomains(List<Task> tasks, Workflow wf){
 		Map<String, String> taskToDomain = wf.getTaskToDomain();
 		if(taskToDomain != null){
