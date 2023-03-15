@@ -3,6 +3,7 @@ package com.netflix.conductor.aurora.sql;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.core.execution.ApplicationException;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.postgresql.util.PGobject;
 import org.slf4j.Logger;
@@ -139,7 +140,8 @@ public class Query implements AutoCloseable {
      * @return {@literal this}
      */
     public Query addJsonParameter(Object value) {
-        return addParameter(toJson(value));
+        String jsonData = toJson(value);
+        return addParameter(filterNullUnicode(jsonData));
     }
 
     public Query addParameter(PGobject value) {
@@ -616,6 +618,16 @@ public class Query implements AutoCloseable {
         } catch (JsonProcessingException ex) {
             throw new ApplicationException(Code.BACKEND_ERROR, ex.getMessage(), ex);
         }
+    }
+
+    protected String filterNullUnicode(String value) {
+        if (StringUtils.isBlank(value)) return value;
+
+        String nullUnicodeValue = "\\u0000";
+        if (value.contains(nullUnicodeValue)) {
+            return value.replace(nullUnicodeValue, "");
+        }
+        return value;
     }
 
     protected <V> V fromJson(String value, Class<V> returnType) {
