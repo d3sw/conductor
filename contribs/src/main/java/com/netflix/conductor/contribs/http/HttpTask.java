@@ -39,6 +39,8 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -68,7 +70,7 @@ public class HttpTask extends GenericHttpTask {
 	@Trace(operationName = "Start Http Task", resourceName = "httpTask")
 	@Override
 	public void start(Workflow workflow, Task task, WorkflowExecutor executor) throws Exception {
-
+		Instant start = Instant.now();
 		Object request = task.getInputData().get(REQUEST_PARAMETER_NAME);
 		task.setWorkerId(config.getServerId());
 		String hostAndPort = null;
@@ -139,10 +141,6 @@ public class HttpTask extends GenericHttpTask {
 					+ ",correlationId=" + workflow.getCorrelationId()
 					+ ",traceId=" + workflow.getTraceId()
 					+ ",contextUser=" + workflow.getContextUser());
-			MetricService.getInstance().httpStarted(task.getTaskType(),
-					task.getReferenceTaskName(),
-					task.getTaskDefName(),
-					serviceName);
 
 			if (input.getContentType() != null) {
 				if (input.getContentType().equalsIgnoreCase("application/x-www-form-urlencoded")) {
@@ -202,11 +200,11 @@ public class HttpTask extends GenericHttpTask {
 					+ ",contextUser=" + workflow.getContextUser()
 					+ ",traceId=" + workflow.getTraceId()
 					+ ",request=" + input.getBody());
-			MetricService.getInstance().httpComplete(task.getTaskType(),
+			MetricService.getInstance().httpExecution(task.getTaskType(),
 					task.getReferenceTaskName(),
 					task.getTaskDefName(),
 					serviceName,
-					exec_time);
+					Duration.between(start, Instant.now()).toMillis());
 		} catch (Exception ex) {
 			long exec_time = System.currentTimeMillis() - start_time;
 			logger.error("http task failed. WorkflowId=" + workflow.getWorkflowId()
