@@ -115,7 +115,7 @@ public class TestHttpTask {
 		Configuration config = mock(Configuration.class);
 		when(config.getServerId()).thenReturn("test_server_id");
 		RestClientManager rcm = new RestClientManager();
-		httpTask = new HttpTask(rcm, config, new ObjectMapper(), authManager, foreignAuthManager);
+		httpTask = new HttpTask("HTTP",rcm, config, new ObjectMapper(), authManager, foreignAuthManager);
 	}
 	
 	@Test

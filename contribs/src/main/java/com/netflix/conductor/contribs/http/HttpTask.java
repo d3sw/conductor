@@ -61,8 +61,8 @@ public class HttpTask extends GenericHttpTask {
 	private final int unackTimeout;
 
 	@Inject
-	public HttpTask(RestClientManager rcm, Configuration config, ObjectMapper om, AuthManager authManager, ForeignAuthManager foreignAuthManager) {
-		super(NAME, config, rcm, om, authManager, foreignAuthManager);
+	public HttpTask(String name,RestClientManager rcm, Configuration config, ObjectMapper om, AuthManager authManager, ForeignAuthManager foreignAuthManager) {
+		super(name, config, rcm, om, authManager, foreignAuthManager);
 		unackTimeout = config.getIntProperty("workflow.system.task.http.unack.timeout", 60);
 		logger.debug("HttpTask initialized...");
 	}
