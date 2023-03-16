@@ -276,7 +276,12 @@ public class RedisMetadataDAO extends BaseDynoDAO implements MetadataDAO {
 		});
 		return handlers;
 	}
-	
+
+	@Override
+	public boolean isDatasourceClosed() {
+		return false;
+	}
+
 	private void index(EventHandler eh) {
 		String event = eh.getEvent();
 		String key = nsKey(EVENT_HANDLERS_BY_EVENT, event);

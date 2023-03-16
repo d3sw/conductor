@@ -55,8 +55,11 @@ public class ServerShutdown {
 			// close all open connections
 			HikariDataSource datasource = (HikariDataSource) dataSource;
 			datasource.getHikariPoolMXBean().softEvictConnections();
-			while (datasource.getHikariPoolMXBean().getActiveConnections() > 0) {
-				logger.trace("waiting for {} active connections to complete shutdown...", datasource.getHikariPoolMXBean().getActiveConnections());
+			while (datasource.getHikariPoolMXBean().getActiveConnections() > 0 ||
+					!auroraMetadataDAO.isTaskTerminated() ||
+					!auroraQueueDAO.isTaskTerminated()) {
+				logger.debug("waiting for {} active connections to complete shutdown...",
+						datasource.getHikariPoolMXBean().getActiveConnections());
 			}
 			datasource.close();
 		}

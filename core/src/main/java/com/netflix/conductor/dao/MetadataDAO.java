@@ -38,7 +38,7 @@ public interface MetadataDAO {
 	 * @return name of the task definition
 	 *  
 	 */
-	public abstract String createTaskDef(TaskDef taskDef);
+	String createTaskDef(TaskDef taskDef);
 
 	/**
 	 * 
@@ -46,7 +46,7 @@ public interface MetadataDAO {
 	 * @return name of the task definition
 	 *  
 	 */
-	public abstract String updateTaskDef(TaskDef taskDef);
+	String updateTaskDef(TaskDef taskDef);
 
 	/**
 	 * 
@@ -54,40 +54,40 @@ public interface MetadataDAO {
 	 * @return Task Definition
 	 *  
 	 */
-	public abstract TaskDef getTaskDef(String name);
+	TaskDef getTaskDef(String name);
 
 	/**
 	 * 
 	 * @return All the task definitions
 	 *  
 	 */
-	public abstract List<TaskDef> getAllTaskDefs();
+	List<TaskDef> getAllTaskDefs();
 
 	/**
 	 * 
 	 * @param name Name of the task
 	 */
-	public abstract void removeTaskDef(String name);
+	void removeTaskDef(String name);
 	
 	/**
 	 * 
 	 * @param def workflow definition
 	 * 
 	 */
-	public abstract void create(WorkflowDef def);
+	void create(WorkflowDef def);
 
 	/**
 	 * 
 	 * @param def workflow definition
 	 * 
 	 */
-	public abstract void update(WorkflowDef def);
+	void update(WorkflowDef def);
 
 	/**
 	 *
 	 * @param def workflow definition
 	 */
-	public default void removeWorkflow(WorkflowDef def) {
+	default void removeWorkflow(WorkflowDef def) {
 	}
 
 	/**
@@ -96,7 +96,7 @@ public interface MetadataDAO {
 	 * @return Workflow Definition
 	 * 
 	 */
-	public abstract WorkflowDef getLatest(String name);
+	WorkflowDef getLatest(String name);
 
 	/**
 	 * 
@@ -105,28 +105,28 @@ public interface MetadataDAO {
 	 * @return workflow definition
 	 * 
 	 */
-	public abstract WorkflowDef get(String name, int version);
+	WorkflowDef get(String name, int version);
 
 	/**
 	 * 
 	 * @return Names of all the workflows
 	 * 
 	 */
-	public abstract List<String> findAll();
+	List<String> findAll();
 
 	/**
 	 * 
 	 * @return List of all the workflow definitions
 	 * 
 	 */
-	public abstract List<WorkflowDef> getAll();
+	List<WorkflowDef> getAll();
 
 	/**
 	 * 
 	 * @return List of all the latest workflow definitions
 	 * 
 	 */
-	public abstract List<WorkflowDef> getAllLatest();
+	List<WorkflowDef> getAllLatest();
 
 	/**
 	 * 
@@ -134,32 +134,38 @@ public interface MetadataDAO {
 	 * @return List of all the workflow definitions
 	 * 
 	 */
-	public abstract List<WorkflowDef> getAllVersions(String name);
+	List<WorkflowDef> getAllVersions(String name);
 	
 	/**
 	 * 
 	 * @param eventHandler Event handler to be added.  
 	 * Will throw an exception if an event handler already exists with the name
 	 */
-	public abstract void addEventHandler(EventHandler eventHandler);
+	void addEventHandler(EventHandler eventHandler);
 
 	/**
 	 * 
 	 * @param eventHandler Event handler to be updated.
 	 */
-	public abstract void updateEventHandler(EventHandler eventHandler);
+	void updateEventHandler(EventHandler eventHandler);
 	
 	/**
 	 * 
 	 * @param name Removes the event handler from the system
 	 */
-	public abstract void removeEventHandlerStatus(String name);
+	void removeEventHandlerStatus(String name);
 
 	/**
 	 * 
 	 * @return All the event handlers registered in the system
 	 */
-	public List<EventHandler> getEventHandlers();
+	List<EventHandler> getEventHandlers();
+
+	/**
+	 * Validates if the datasource in use is closed
+	 * @return the status of the datasource
+	 */
+	boolean isDatasourceClosed();
 	
 	/**
 	 * 
@@ -167,19 +173,19 @@ public interface MetadataDAO {
 	 * @param activeOnly if true, returns only the active handlers
 	 * @return Returns the list of all the event handlers for a given event
 	 */
-	public List<EventHandler> getEventHandlersForEvent(String event, boolean activeOnly);
+	List<EventHandler> getEventHandlersForEvent(String event, boolean activeOnly);
 
-	public default List<Pair<String, String>> getConfigs() {
+	default List<Pair<String, String>> getConfigs() {
 		return Collections.emptyList();
 	}
 
 
-	public default void addConfig(String name, String value) {
+	default void addConfig(String name, String value) {
 	}
 
-	public default void updateConfig(String name, String value) {
+	default void updateConfig(String name, String value) {
 	}
 
-	public default void deleteConfig(String name) {
+	default void deleteConfig(String name) {
 	}
 }

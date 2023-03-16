@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 
 import static java.util.Objects.nonNull;
 
-public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
+public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO, AuroraTaskShutdown {
 	private static final Set<String> queues = ConcurrentHashMap.newKeySet();
 	private static final Long UNACK_SCHEDULE_MS = 300_000L;
 	private static final Long UNACK_TIME_MS = 60_000L;
@@ -183,6 +183,10 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 
 	@Override
 	public void processUnacks(String queueName) {
+		// do nothing when external queue dependency calls for unack when the datasource is closed
+		if (isDatasourceClosed())
+			return;
+
 		// Process regular queue messages
 		try {
 			long threshold = config.getIntProperty("conductor.queue." + queueName.toLowerCase() + ".unack.threshold", UNACK_TIME_MS.intValue());
@@ -407,6 +411,10 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 		queues.stream().filter(q -> !q.endsWith(".lock")).forEach(this::processUnacks);
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
 	public void shutdown() {
 		if (nonNull(executorService)) {
 			try {
@@ -417,6 +425,14 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 				logger.error("failed to shutdown processAllUnacks pool");
 			}
 		}
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public boolean isTaskTerminated() {
+		return executorService.isTerminated();
 	}
 
 	private static class QueueMessage {
