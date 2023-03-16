@@ -322,6 +322,11 @@ public class ElasticSearch5MetadataDAO extends ElasticSearch5BaseDAO implements 
 	}
 
 	@Override
+	public boolean isDatasourceClosed() {
+		return false;
+	}
+
+	@Override
 	public List<EventHandler> getEventHandlersForEvent(String event, boolean activeOnly) {
 		if (logger.isDebugEnabled())
 			logger.debug("getEventHandlersForEvent: event={}, activeOnly={}", event, activeOnly);

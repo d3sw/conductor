@@ -45,6 +45,11 @@ public class AuroraMetricsDAO extends AuroraBaseDAO implements MetricsDAO {
 		return Collections.emptyMap();
 	}
 
+	@Override
+	public boolean isDatasourceClosed() {
+		return super.isDatasourceClosed();
+	}
+
 	// Wait until all futures completed
 	private void waitCompleted(List<Future<?>> futures) {
 		for (Future<?> future : futures) {

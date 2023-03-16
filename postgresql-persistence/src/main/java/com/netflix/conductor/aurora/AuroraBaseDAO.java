@@ -38,6 +38,11 @@ public abstract class AuroraBaseDAO {
 		this.mapper = mapper;
 	}
 
+	protected boolean isDatasourceClosed() {
+		HikariDataSource datasource = (HikariDataSource) dataSource;
+		return datasource.isClosed();
+	}
+
 	void withTransaction(Consumer<Connection> consumer) {
 		getWithTransaction(connection -> {
 			consumer.accept(connection);
@@ -46,8 +51,7 @@ public abstract class AuroraBaseDAO {
 	}
 
 	<R> R getWithTransaction(TransactionalFunction<R> function) {
-		HikariDataSource datasource = (HikariDataSource) dataSource;
-		if (datasource.isClosed()) {
+		if (isDatasourceClosed()) {
 			throw new RuntimeException(DATASOURCE_SHUTDOWN_MSG);
 		}
 
