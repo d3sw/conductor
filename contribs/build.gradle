@@ -3,7 +3,7 @@ dependencies {
 	compile project(':conductor-common')
 	compile project(':conductor-core')
 
-	compile 'com.amazonaws:aws-java-sdk-sqs:latest.release'
+	compile 'com.amazonaws:aws-java-sdk-sqs:1.12.428'
 	compile ('com.google.inject:guice:4.1.0') { force= true}
 
 	compile 'net.thisptr:jackson-jq:0.0.10'
