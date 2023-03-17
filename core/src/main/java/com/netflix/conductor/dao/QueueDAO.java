@@ -61,10 +61,6 @@ public interface QueueDAO {
 	public List<String> pop(String queueName, int count, int timeout);
 
 
-	public List<String> getQueueRecords(String queueName, int count, int timeout);
-
-
-
 	/**
 	 *
 	 * @param queueName Name of the queue

@@ -28,6 +28,8 @@ import com.netflix.conductor.core.DNSLookup;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.ScriptEvaluator;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
+import com.netflix.conductor.core.utils.QueueUtils;
+import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.service.MetricService;
 import datadog.trace.api.Trace;
 import org.apache.commons.lang3.StringUtils;
@@ -42,7 +44,9 @@ import java.net.URL;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static java.util.Objects.isNull;
@@ -60,9 +64,12 @@ public class HttpTask extends GenericHttpTask {
 	private static final String CONDITIONS_PARAMETER = "conditions";
 	private final int unackTimeout;
 
+	private final QueueDAO queue;
+
 	@Inject
-	public HttpTask(String name,RestClientManager rcm, Configuration config, ObjectMapper om, AuthManager authManager, ForeignAuthManager foreignAuthManager) {
-		super(name, config, rcm, om, authManager, foreignAuthManager);
+	public HttpTask(RestClientManager rcm, Configuration config, ObjectMapper om, AuthManager authManager, ForeignAuthManager foreignAuthManager, QueueDAO queue) {
+		super(NAME, config, rcm, om, authManager, foreignAuthManager,queue);
+		this.queue =queue;
 		unackTimeout = config.getIntProperty("workflow.system.task.http.unack.timeout", 60);
 		logger.debug("HttpTask initialized...");
 	}
@@ -70,6 +77,7 @@ public class HttpTask extends GenericHttpTask {
 	@Trace(operationName = "Start Http Task", resourceName = "httpTask")
 	@Override
 	public void start(Workflow workflow, Task task, WorkflowExecutor executor) throws Exception {
+
 		Instant start = Instant.now();
 		Object request = task.getInputData().get(REQUEST_PARAMETER_NAME);
 		task.setWorkerId(config.getServerId());
@@ -141,6 +149,23 @@ public class HttpTask extends GenericHttpTask {
 					+ ",correlationId=" + workflow.getCorrelationId()
 					+ ",traceId=" + workflow.getTraceId()
 					+ ",contextUser=" + workflow.getContextUser());
+
+			Object param = task.getInputData().get(LONG_RUNNING_HTTP);
+
+			if (param != null && (Boolean) param) {
+				ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+				executorService.scheduleWithFixedDelay(() -> updateUnack(task.getTaskId()), 1000, 60000, TimeUnit.MILLISECONDS);
+
+				Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+					try {
+						logger.info("Closing updateUnack pool");
+						executorService.shutdown();
+						executorService.awaitTermination(5, TimeUnit.SECONDS);
+					} catch (Exception e) {
+						logger.debug("Closing updateUnack pool failed " + e.getMessage(), e);
+					}
+				}));
+			}
 
 			if (input.getContentType() != null) {
 				if (input.getContentType().equalsIgnoreCase("application/x-www-form-urlencoded")) {
@@ -224,6 +249,12 @@ public class HttpTask extends GenericHttpTask {
 					serviceName,
 					exec_time);
 		}
+	}
+
+
+	public void updateUnack(String taskId)
+	{
+		queue.setUnackTimeout("http", taskId, unackTimeout * 1000L);
 	}
 
 	@Override

@@ -171,11 +171,6 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
         return Collections.emptyList();
     }
 
-    @Override
-    public List<String> getQueueRecords(String queueName, int count, int timeout) {
-        return Collections.emptyList();
-    }
-
     /**
      * Used by 'conductor' event type subscription. Should lock and read
      */

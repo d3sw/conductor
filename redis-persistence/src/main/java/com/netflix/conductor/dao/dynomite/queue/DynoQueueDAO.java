@@ -152,10 +152,6 @@ public class DynoQueueDAO implements QueueDAO {
 		return msg.stream().map(m -> m.getId()).collect(Collectors.toList());
 	}
 
-	@Override
-	public List<String> getQueueRecords(String queueName, int count, int timeout) {
-		return Collections.emptyList();
-	}
 
 	@Override
 	public List<com.netflix.conductor.core.events.queue.Message> pollMessages(String queueName, int count, int timeout) {

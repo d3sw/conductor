@@ -43,7 +43,6 @@ public class CoreModule extends AbstractModule {
 		bind(EventProcessor.class).asEagerSingleton();		
 		bind(WorkflowSweeper.class).asEagerSingleton();
 		bind(SystemTaskWorkerCoordinator.class).asEagerSingleton();
-		bind(LongRunningHttpWorkerCoordinator.class).asEagerSingleton();
 		bind(SubWorkflow.class).asEagerSingleton();
 		bind(Wait.class).asEagerSingleton();
 		bind(Event.class).asEagerSingleton();

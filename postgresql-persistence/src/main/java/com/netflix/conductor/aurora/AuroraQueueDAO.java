@@ -144,63 +144,6 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 		return Collections.emptyList();
 	}
 
-
-	@Override
-	public List<String> getQueueRecords(String queueName, int count, int timeout) {
-		final String QUERY = "SELECT id FROM queue_message " +
-				"WHERE queue_name = ? AND deliver_on < now() AND popped = true AND AND unacked= true AND unack_on is not null " +
-				"ORDER BY priority, deliver_on, id LIMIT ? FOR UPDATE SKIP LOCKED";
-
-		try {
-			long start = System.currentTimeMillis();
-
-			// Returns true until foundIds = count or time spent = timeout
-			Set<String> foundIds = new LinkedHashSet<>(count);
-			final Supplier<Boolean> keepPooling = () -> foundIds.size() < count
-					&& ((System.currentTimeMillis() - start) < timeout);
-
-			try (Connection tx = dataSource.getConnection()) {
-				tx.setAutoCommit(false);
-				try {
-					// Repeat until foundIds = count or time spent = timeout
-					while (keepPooling.get()) {
-						// Limit how many left to pick up
-						int limit = count - foundIds.size();
-
-						// Get the list of locked message ids
-						List<String> locked = query(tx, QUERY, q -> q
-								.addParameter(queueName.toLowerCase())
-								.addParameter(limit)
-								.executeScalarList(String.class));
-
-						// Commit
-						tx.commit();
-
-						// Add found message ids
-						foundIds.addAll(locked);
-
-						// We recheck this condition after each message to ensure
-						// foundIds not greater than requested count and within timeout window
-						if (!keepPooling.get()) {
-							break;
-						}
-
-						// Wait a little bit before next iteration
-						TimeUnit.MILLISECONDS.sleep(50);
-					}
-				} catch (Exception ex) {
-					logger.debug("pop: rollback for {} with {}", queueName, ex.getMessage(), ex);
-					tx.rollback();
-				}
-			}
-			return Lists.newArrayList(foundIds);
-		} catch (Exception ex) {
-			logger.error("pop: failed for {} with {}", queueName, ex.getMessage(), ex);
-		}
-
-		return Collections.emptyList();
-	}
-
 	@Override
 	public void unpop(String queueName, String messageId) {
 		final String UPDATE = "UPDATE queue_message " +

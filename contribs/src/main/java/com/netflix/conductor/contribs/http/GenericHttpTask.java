@@ -15,6 +15,7 @@ import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.ScriptEvaluator;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask;
+import com.netflix.conductor.dao.QueueDAO;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
@@ -50,6 +51,7 @@ class GenericHttpTask extends WorkflowSystemTask {
 	static final String STATUS_MAPPING_PARAMETER_NAME = "status_mapping";
 	static final String RESPONSE_MAPPING_PARAMETER_NAME = "response_mapping";
 	static final String RESET_START_TIME_PARAMETER_NAME = "reset_startTime";
+	static final String LONG_RUNNING_HTTP = "long_runnning_http";
 	protected Configuration config;
 	protected ObjectMapper om;
 	private final AuthManager authManager;
@@ -57,6 +59,8 @@ class GenericHttpTask extends WorkflowSystemTask {
 	private final boolean traceIdEnabled;
 	private final boolean authContextEnabled;
 	private final ForeignAuthManager foreignAuthManager;
+	private QueueDAO queue;
+
 
 	private final TypeReference<Map<String, Object>> mapOfObj = new TypeReference<Map<String, Object>>() {
 	};
@@ -64,7 +68,7 @@ class GenericHttpTask extends WorkflowSystemTask {
 	private final TypeReference<List<Object>> listOfObj = new TypeReference<List<Object>>() {
 	};
 
-	GenericHttpTask(String name, Configuration config, RestClientManager rcm, ObjectMapper om, AuthManager authManager, ForeignAuthManager foreignAuthManager) {
+	GenericHttpTask(String name, Configuration config, RestClientManager rcm, ObjectMapper om, AuthManager authManager, ForeignAuthManager foreignAuthManager,QueueDAO queue) {
 		super(name);
 		this.config = config;
 		this.rcm = rcm;
@@ -73,6 +77,7 @@ class GenericHttpTask extends WorkflowSystemTask {
 		this.foreignAuthManager = foreignAuthManager;
 		this.traceIdEnabled = Boolean.parseBoolean(config.getProperty("workflow.traceid.enabled", "false"));
 		this.authContextEnabled = Boolean.parseBoolean(config.getProperty("workflow.authcontext.enabled", "false"));
+		this.queue=queue;
 	}
 
 	@SuppressWarnings("unchecked")
