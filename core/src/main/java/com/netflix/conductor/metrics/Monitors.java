@@ -172,10 +172,9 @@ public class Monitors {
 		getTimer(classQualifier, "task_queue_wait", "taskType", taskType).record(queueWaitTime, TimeUnit.MILLISECONDS);
 	}
 
-	public static void recordTaskExecutionTime(Task task, long duration, boolean includesRetries) {
+	public static void recordTaskExecutionTime(String name, Task task, long duration, boolean includesRetries) {
 		if (task.getTaskType().equals("HTTP")) {
 			getTimer(classQualifier, "http_task_execution", "taskType", task.getTaskDefName(), "includeRetries", "" + includesRetries, "status", task.getStatus().name()).record(duration, TimeUnit.MILLISECONDS);
-			//counter(classQualifier, "http_task_execution", "taskType", task.getTaskDefName(), "status", task.getStatus().name());
 		}
 
 		if (task.getTaskType().equals("WAIT")) {
