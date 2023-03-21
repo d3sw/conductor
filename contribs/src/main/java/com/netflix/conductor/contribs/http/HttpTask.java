@@ -62,6 +62,7 @@ public class HttpTask extends GenericHttpTask {
 			+ "' key wiht HttpTask.Input as value. See documentation for HttpTask for required input parameters";
 	public static final String NAME = "HTTP";
 	private static final String CONDITIONS_PARAMETER = "conditions";
+	private static final Long UNACK_SCHEDULE_MS = 300_000L;
 	private final int unackTimeout;
 
 	private final QueueDAO queue;
@@ -154,7 +155,7 @@ public class HttpTask extends GenericHttpTask {
 
 			if (param != null && (Boolean) param) {
 				ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
-				executorService.scheduleWithFixedDelay(() -> updateUnack(task.getTaskId()), 1000, 60000, TimeUnit.MILLISECONDS);
+				executorService.scheduleWithFixedDelay(() -> updateUnack(task.getTaskId()), UNACK_SCHEDULE_MS, UNACK_SCHEDULE_MS, TimeUnit.MILLISECONDS);
 
 				Runtime.getRuntime().addShutdownHook(new Thread(() -> {
 					try {
