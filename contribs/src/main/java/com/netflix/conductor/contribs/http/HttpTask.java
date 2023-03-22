@@ -156,22 +156,19 @@ public class HttpTask extends GenericHttpTask {
 					+ ",contextUser=" + workflow.getContextUser());
 
 			Object param = task.getInputData().get(LONG_RUNNING_HTTP);
-
+			ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 			if (param != null && (Boolean) param) {
-				ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 				executorService.scheduleWithFixedDelay(() -> updateUnack(task.getTaskId()), initialDelay, updateUnackDelay, TimeUnit.MILLISECONDS);
-
-				Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-					try {
-						logger.info("Closing updateUnack pool");
-						executorService.shutdown();
-						executorService.awaitTermination(5, TimeUnit.SECONDS);
-					} catch (Exception e) {
-						logger.debug("Closing updateUnack pool failed " + e.getMessage(), e);
-					}
-				}));
-				executorService.shutdown();
 			}
+			Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+				try {
+					logger.info("Closing updateUnack pool");
+					executorService.shutdown();
+					executorService.awaitTermination(5, TimeUnit.SECONDS);
+				} catch (Exception e) {
+					logger.debug("Closing updateUnack pool failed " + e.getMessage(), e);
+				}
+			}));
 
 			if (input.getContentType() != null) {
 				if (input.getContentType().equalsIgnoreCase("application/x-www-form-urlencoded")) {
