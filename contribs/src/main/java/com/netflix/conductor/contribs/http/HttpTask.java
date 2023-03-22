@@ -63,7 +63,6 @@ public class HttpTask extends GenericHttpTask {
 	public static final String NAME = "HTTP";
 	private static final String CONDITIONS_PARAMETER = "conditions";
 	static final String LONG_RUNNING_HTTP = "long_runnning_http";
-	private static final Long UNACK_SCHEDULE_MS = 300_000L;
 	private final int unackTimeout;
     private final long initialDelay;
 	private final long updateUnackDelay;
