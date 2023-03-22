@@ -62,16 +62,20 @@ public class HttpTask extends GenericHttpTask {
 			+ "' key wiht HttpTask.Input as value. See documentation for HttpTask for required input parameters";
 	public static final String NAME = "HTTP";
 	private static final String CONDITIONS_PARAMETER = "conditions";
+	static final String LONG_RUNNING_HTTP = "long_runnning_http";
 	private static final Long UNACK_SCHEDULE_MS = 300_000L;
 	private final int unackTimeout;
-
+    private final long initialDelay;
+	private final long updateUnackDelay;
 	private final QueueDAO queue;
 
 	@Inject
 	public HttpTask(RestClientManager rcm, Configuration config, ObjectMapper om, AuthManager authManager, ForeignAuthManager foreignAuthManager, QueueDAO queue) {
-		super(NAME, config, rcm, om, authManager, foreignAuthManager,queue);
+		super(NAME, config, rcm, om, authManager, foreignAuthManager);
 		this.queue =queue;
 		unackTimeout = config.getIntProperty("workflow.system.task.http.unack.timeout", 60);
+		initialDelay = config.getIntProperty("workflow.system.task.http.unack.initialDelay", 300_000);
+		updateUnackDelay = config.getIntProperty("workflow.system.task.http.unack.updateUnackDelay", 300_000);
 		logger.debug("HttpTask initialized...");
 	}
 
@@ -155,7 +159,7 @@ public class HttpTask extends GenericHttpTask {
 
 			if (param != null && (Boolean) param) {
 				ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
-				executorService.scheduleWithFixedDelay(() -> updateUnack(task.getTaskId()), UNACK_SCHEDULE_MS, UNACK_SCHEDULE_MS, TimeUnit.MILLISECONDS);
+				executorService.scheduleWithFixedDelay(() -> updateUnack(task.getTaskId()), initialDelay, updateUnackDelay, TimeUnit.MILLISECONDS);
 
 				Runtime.getRuntime().addShutdownHook(new Thread(() -> {
 					try {
@@ -166,6 +170,7 @@ public class HttpTask extends GenericHttpTask {
 						logger.debug("Closing updateUnack pool failed " + e.getMessage(), e);
 					}
 				}));
+				executorService.shutdown();
 			}
 
 			if (input.getContentType() != null) {
