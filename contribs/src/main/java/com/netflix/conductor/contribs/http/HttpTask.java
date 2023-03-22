@@ -62,7 +62,7 @@ public class HttpTask extends GenericHttpTask {
 			+ "' key wiht HttpTask.Input as value. See documentation for HttpTask for required input parameters";
 	public static final String NAME = "HTTP";
 	private static final String CONDITIONS_PARAMETER = "conditions";
-	static final String LONG_RUNNING_HTTP = "long_runnning_http";
+	static final String LONG_RUNNING_HTTP = "long_running_http";
 	private final int unackTimeout;
     private final long initialDelay;
 	private final long updateUnackDelay;
