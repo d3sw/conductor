@@ -157,7 +157,7 @@ public class HttpTask extends GenericHttpTask {
 
 			Object param = task.getInputData().get(LONG_RUNNING_HTTP);
 			if (param != null && (Boolean) param) {
-				executorService = Executors.newScheduledThreadPool(1);
+				executorService = Executors.newSingleThreadScheduledExecutor();
 				executorService.scheduleWithFixedDelay(() -> updateUnack(task.getTaskId()), initialDelay, updateUnackDelay, TimeUnit.MILLISECONDS);
 			}
 
