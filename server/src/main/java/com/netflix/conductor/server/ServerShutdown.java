@@ -1,5 +1,6 @@
 package com.netflix.conductor.server;
 
+import com.netflix.conductor.contribs.http.HttpTask;
 import com.netflix.conductor.core.events.EventProcessor;
 import com.netflix.conductor.core.execution.WorkflowSweeper;
 import com.netflix.conductor.core.execution.batch.BatchSweeper;
@@ -19,6 +20,7 @@ public class ServerShutdown {
 	private final WorkflowSweeper workflowSweeper;
 	private final EventProcessor eventProcessor;
 	private final BatchSweeper batchSweeper;
+	private final HttpTask httpTask;
 	private final DataSource dataSource;
 
 	@Inject
@@ -26,11 +28,13 @@ public class ServerShutdown {
 						  WorkflowSweeper workflowSweeper,
 						  EventProcessor eventProcessor,
 						  BatchSweeper batchSweeper,
+						  HttpTask httpTask,
 						  DataSource dataSource) {
 		this.taskWorkerCoordinator = taskWorkerCoordinator;
 		this.workflowSweeper = workflowSweeper;
 		this.eventProcessor = eventProcessor;
 		this.batchSweeper = batchSweeper;
+		this.httpTask = httpTask;
 		this.dataSource = dataSource;
 
 		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -47,6 +51,7 @@ public class ServerShutdown {
 		eventProcessor.shutdown();
 		workflowSweeper.shutdown();
 		taskWorkerCoordinator.shutdown();
+		httpTask.shutdown();
 
 		logger.info("Closing primary data source");
 		if (dataSource instanceof HikariDataSource) {

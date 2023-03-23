@@ -67,6 +67,7 @@ public class HttpTask extends GenericHttpTask {
     private final long initialDelay;
 	private final long updateUnackDelay;
 	private final QueueDAO queue;
+	private ScheduledExecutorService executorService ;
 
 	@Inject
 	public HttpTask(RestClientManager rcm, Configuration config, ObjectMapper om, AuthManager authManager, ForeignAuthManager foreignAuthManager, QueueDAO queue) {
@@ -155,19 +156,10 @@ public class HttpTask extends GenericHttpTask {
 					+ ",contextUser=" + workflow.getContextUser());
 
 			Object param = task.getInputData().get(LONG_RUNNING_HTTP);
-			ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 			if (param != null && (Boolean) param) {
+				executorService = Executors.newScheduledThreadPool(1);
 				executorService.scheduleWithFixedDelay(() -> updateUnack(task.getTaskId()), initialDelay, updateUnackDelay, TimeUnit.MILLISECONDS);
 			}
-			Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-				try {
-					logger.info("Closing updateUnack pool");
-					executorService.shutdown();
-					executorService.awaitTermination(5, TimeUnit.SECONDS);
-				} catch (Exception e) {
-					logger.debug("Closing updateUnack pool failed " + e.getMessage(), e);
-				}
-			}));
 
 			if (input.getContentType() != null) {
 				if (input.getContentType().equalsIgnoreCase("application/x-www-form-urlencoded")) {
@@ -250,6 +242,19 @@ public class HttpTask extends GenericHttpTask {
 					task.getTaskDefName(),
 					serviceName,
 					exec_time);
+		}
+		shutdown();
+	}
+
+	public void shutdown() {
+		try {
+			if (executorService != null) {
+				logger.info("Closing updateUnack pool");
+				executorService.shutdown();
+				executorService.awaitTermination(5, TimeUnit.SECONDS);
+			}
+		} catch (Exception e) {
+			logger.debug("Closing updateUnack pool failed " + e.getMessage(), e);
 		}
 	}
 
