@@ -86,7 +86,8 @@ public class InfoResource {
 			boolean status = false;
 
 			try {
-				status = metricsDAO.ping();
+				// bypass datastore ping if it is already closed
+				status = metricsDAO.isDatasourceClosed() ? true : metricsDAO.ping();
 			} catch (Exception e) {
 				logger.error("Db health check failed: " + e.getMessage(), e);
 				throw e;

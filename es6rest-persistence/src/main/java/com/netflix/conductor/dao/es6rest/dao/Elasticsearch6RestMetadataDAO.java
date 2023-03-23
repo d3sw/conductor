@@ -319,6 +319,11 @@ public class Elasticsearch6RestMetadataDAO extends Elasticsearch6RestAbstractDAO
     }
 
     @Override
+    public boolean isDatasourceClosed() {
+        return false;
+    }
+
+    @Override
     public List<EventHandler> getEventHandlersForEvent(String event, boolean activeOnly) {
         if (logger.isDebugEnabled())
             logger.debug("getEventHandlersForEvent: event={}, activeOnly={}", event, activeOnly);
