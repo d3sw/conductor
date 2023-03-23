@@ -28,7 +28,6 @@ import com.netflix.conductor.core.DNSLookup;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.ScriptEvaluator;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
-import com.netflix.conductor.core.utils.QueueUtils;
 import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.service.MetricService;
 import datadog.trace.api.Trace;
@@ -44,7 +43,6 @@ import java.net.URL;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -65,7 +63,7 @@ public class HttpTask extends GenericHttpTask {
 	static final String LONG_RUNNING_HTTP = "long_running_http";
 	private final int unackTimeout;
     private final long initialDelay;
-	private final long updateUnackDelay;
+	private final long updateDelay;
 	private final QueueDAO queue;
 	private ScheduledExecutorService executorService ;
 
@@ -74,8 +72,13 @@ public class HttpTask extends GenericHttpTask {
 		super(NAME, config, rcm, om, authManager, foreignAuthManager);
 		this.queue =queue;
 		unackTimeout = config.getIntProperty("workflow.system.task.http.unack.timeout", 60);
-		initialDelay = config.getIntProperty("workflow.system.task.http.unack.initialDelay", 300_000);
-		updateUnackDelay = config.getIntProperty("workflow.system.task.http.unack.updateUnackDelay", 300_000);
+		long initialDelayCfg = config.getIntProperty("workflow.system.task.http.long.unack.initialDelay", 0);
+		long updateDelayCfg = config.getIntProperty("workflow.system.task.http.long.unack.updateDelay", 0);
+		long unackTimeoutMs = unackTimeout * 1000;
+		initialDelay = (initialDelayCfg <= 0 || initialDelayCfg >= unackTimeoutMs) ? unackTimeoutMs / 2 : initialDelayCfg;
+		updateDelay  = (updateDelayCfg <= 0  || updateDelayCfg  >= unackTimeoutMs) ? unackTimeoutMs : updateDelayCfg;
+
+		executorService = Executors.newScheduledThreadPool(25);
 		logger.debug("HttpTask initialized...");
 	}
 
@@ -144,6 +147,7 @@ public class HttpTask extends GenericHttpTask {
 		}
 
 		long start_time = System.currentTimeMillis();
+		ScheduledFuture<?> scheduledFuture = null;
 		try {
 			HttpResponse response = new HttpResponse();
 			logger.debug("http task starting. WorkflowId=" + workflow.getWorkflowId()
@@ -155,10 +159,9 @@ public class HttpTask extends GenericHttpTask {
 					+ ",traceId=" + workflow.getTraceId()
 					+ ",contextUser=" + workflow.getContextUser());
 
-			Object param = task.getInputData().get(LONG_RUNNING_HTTP);
-			if (param != null && (Boolean) param) {
-				executorService = Executors.newSingleThreadScheduledExecutor();
-				executorService.scheduleWithFixedDelay(() -> updateUnack(task.getTaskId()), initialDelay, updateUnackDelay, TimeUnit.MILLISECONDS);
+			Object isLongRunningTask = task.getInputData().get(LONG_RUNNING_HTTP);
+			if (isLongRunningTask != null && Boolean.valueOf(isLongRunningTask.toString())) {
+				scheduledFuture = executorService.scheduleWithFixedDelay(() -> updateUnack(task.getTaskId()), initialDelay, updateDelay, TimeUnit.MILLISECONDS);
 			}
 
 			if (input.getContentType() != null) {
@@ -242,8 +245,10 @@ public class HttpTask extends GenericHttpTask {
 					task.getTaskDefName(),
 					serviceName,
 					exec_time);
+		}finally{
+			if (scheduledFuture != null && !scheduledFuture.isDone() && !scheduledFuture.isCancelled())
+				scheduledFuture.cancel(true);
 		}
-		shutdown();
 	}
 
 	public void shutdown() {
@@ -254,7 +259,7 @@ public class HttpTask extends GenericHttpTask {
 				executorService.awaitTermination(5, TimeUnit.SECONDS);
 			}
 		} catch (Exception e) {
-			logger.debug("Closing updateUnack pool failed " + e.getMessage(), e);
+			logger.error("Closing updateUnack pool failed " + e.getMessage(), e);
 		}
 	}
 
