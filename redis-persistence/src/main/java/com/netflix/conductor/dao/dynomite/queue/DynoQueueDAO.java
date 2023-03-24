@@ -15,10 +15,7 @@
  */
 package com.netflix.conductor.dao.dynomite.queue;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -154,6 +151,7 @@ public class DynoQueueDAO implements QueueDAO {
 		List<Message> msg = queues.get(queueName).pop(count, timeout, TimeUnit.MILLISECONDS);
 		return msg.stream().map(m -> m.getId()).collect(Collectors.toList());
 	}
+
 
 	@Override
 	public List<com.netflix.conductor.core.events.queue.Message> pollMessages(String queueName, int count, int timeout) {
