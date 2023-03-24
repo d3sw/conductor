@@ -246,7 +246,7 @@ public class HttpTask extends GenericHttpTask {
 					serviceName,
 					exec_time);
 		}finally{
-			if (scheduledFuture != null && !scheduledFuture.isDone() && !scheduledFuture.isCancelled())
+			if (scheduledFuture != null)
 				scheduledFuture.cancel(true);
 		}
 	}
