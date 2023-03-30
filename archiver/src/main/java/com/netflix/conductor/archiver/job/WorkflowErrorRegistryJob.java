@@ -27,27 +27,30 @@ public class WorkflowErrorRegistryJob extends AbstractJob {
     @Override
     public void cleanup() throws Exception {
         long retentionPeriod = System.currentTimeMillis() - Duration.ofDays(config.keepDays()).toMillis();
-        logger.info(String.format("Starting workflow error registry cleanup with configured number of retention period %d, deletion will start from timestamp %s",
-                config.keepDays(), new Timestamp(retentionPeriod)));
+        Timestamp period = new Timestamp(retentionPeriod);
+        logger.info(String.format("Starting workflow error registry cleanup with configured number of retention period %d, deletion will start from records less than timestamp %s",
+                config.keepDays(), period));
 
         // delete affected records
-        deleteRecords();
+        deleteRecords(period);
 
         // wait for all threads to execute
         waitForTasksHandler();
     }
 
-    private void deleteRecords() {
+    private void deleteRecords(Timestamp retentionPeriod) {
         Runnable runnable = () -> {
             try (Connection connection = dataSource.getConnection()) {
                 connection.setAutoCommit(false);
                 try {
                     String query = "DELETE FROM workflow_error_registry WHERE workflow_id NOT IN " +
-                            "(SELECT workflow_id FROM workflow WHERE end_time < (current_date  - interval '? days')) " +
-                            "and end_time < (current_date  - interval '? days')";
+                            "(SELECT workflow_id FROM workflow WHERE end_time < ?) and end_time < ?";
 
-                    executeUpdate(connection, query, config.keepDays());
+                    int recordsDeleted = executeUpdate(connection, query, retentionPeriod);
                     connection.commit();
+
+                    logger.info(String.format("Deleted %d records from workflow_error_registry during cleanup for records older than %s",
+                            recordsDeleted, retentionPeriod));
 
                 } catch (Throwable exception) {
                     connection.rollback();
@@ -70,12 +73,11 @@ public class WorkflowErrorRegistryJob extends AbstractJob {
         threadPoolExecutor.awaitTermination(5, TimeUnit.MINUTES);
     }
 
-    private void executeUpdate(Connection tx, String query, int retentionPeriod) throws SQLException {
+    private int executeUpdate(Connection tx, String query, Timestamp retentionPeriod) throws SQLException {
         try (PreparedStatement statement = tx.prepareStatement(query)) {
-            String period = String.valueOf(retentionPeriod);
-            statement.setString(1, period);
-            statement.setString(2, period);
-            statement.executeUpdate();
+            statement.setTimestamp(1, retentionPeriod);
+            statement.setTimestamp(2, retentionPeriod);
+            return statement.executeUpdate();
         }
     }
 }
