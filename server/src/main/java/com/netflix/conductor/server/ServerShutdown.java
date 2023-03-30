@@ -1,5 +1,8 @@
 package com.netflix.conductor.server;
 
+import com.netflix.conductor.contribs.http.HttpTask;
+import com.netflix.conductor.aurora.AuroraMetadataDAO;
+import com.netflix.conductor.aurora.AuroraQueueDAO;
 import com.netflix.conductor.core.events.EventProcessor;
 import com.netflix.conductor.core.execution.WorkflowSweeper;
 import com.netflix.conductor.core.execution.batch.BatchSweeper;
@@ -14,43 +17,57 @@ import javax.sql.DataSource;
 
 @Singleton
 public class ServerShutdown {
-	private static final Logger logger = LoggerFactory.getLogger(ServerShutdown.class);
-	private final SystemTaskWorkerCoordinator taskWorkerCoordinator;
-	private final WorkflowSweeper workflowSweeper;
-	private final EventProcessor eventProcessor;
-	private final BatchSweeper batchSweeper;
-	private final DataSource dataSource;
+    private static final Logger logger = LoggerFactory.getLogger(ServerShutdown.class);
+    private final SystemTaskWorkerCoordinator taskWorkerCoordinator;
+    private final WorkflowSweeper workflowSweeper;
+    private final EventProcessor eventProcessor;
+    private final BatchSweeper batchSweeper;
+    private final HttpTask httpTask;
+    private final DataSource dataSource;
+    private final AuroraMetadataDAO auroraMetadataDAO;
+    private final AuroraQueueDAO auroraQueueDAO;
 
-	@Inject
-	public ServerShutdown(SystemTaskWorkerCoordinator taskWorkerCoordinator,
-						  WorkflowSweeper workflowSweeper,
-						  EventProcessor eventProcessor,
-						  BatchSweeper batchSweeper,
-						  DataSource dataSource) {
-		this.taskWorkerCoordinator = taskWorkerCoordinator;
-		this.workflowSweeper = workflowSweeper;
-		this.eventProcessor = eventProcessor;
-		this.batchSweeper = batchSweeper;
-		this.dataSource = dataSource;
+    @Inject
+    public ServerShutdown(SystemTaskWorkerCoordinator taskWorkerCoordinator,
+                          WorkflowSweeper workflowSweeper,
+                          EventProcessor eventProcessor,
+                          BatchSweeper batchSweeper,
+                          HttpTask httpTask,
+                          DataSource dataSource,
+                          AuroraMetadataDAO auroraMetadataDAO,
+                          AuroraQueueDAO auroraQueueDAO) {
 
-		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-			try {
-				shutdown();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}));
-	}
+        this.taskWorkerCoordinator = taskWorkerCoordinator;
+        this.workflowSweeper = workflowSweeper;
+        this.eventProcessor = eventProcessor;
+        this.batchSweeper = batchSweeper;
+        this.httpTask = httpTask;
+        this.dataSource = dataSource;
+        this.auroraMetadataDAO = auroraMetadataDAO;
+        this.auroraQueueDAO = auroraQueueDAO;
+    }
 
-	private void shutdown() {
-		batchSweeper.shutdown();
-		eventProcessor.shutdown();
-		workflowSweeper.shutdown();
-		taskWorkerCoordinator.shutdown();
+    public void shutdown() {
+        batchSweeper.shutdown();
+        eventProcessor.shutdown();
+        workflowSweeper.shutdown();
+        taskWorkerCoordinator.shutdown();
+        httpTask.shutdown();
+        auroraMetadataDAO.shutdown();
+        auroraQueueDAO.shutdown();
 
-		logger.info("Closing primary data source");
-		if (dataSource instanceof HikariDataSource) {
-			((HikariDataSource) dataSource).close();
-		}
-	}
+        logger.info("Closing primary data source");
+        if (dataSource instanceof HikariDataSource) {
+            // close all open connections
+            HikariDataSource datasource = (HikariDataSource) dataSource;
+            datasource.getHikariPoolMXBean().softEvictConnections();
+            while (datasource.getHikariPoolMXBean().getActiveConnections() > 0 ||
+                    !auroraMetadataDAO.isTaskTerminated() ||
+                    !auroraQueueDAO.isTaskTerminated()) {
+                logger.debug("waiting for {} active connections to complete shutdown...",
+                        datasource.getHikariPoolMXBean().getActiveConnections());
+            }
+            datasource.close();
+        }
+    }
 }

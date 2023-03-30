@@ -58,6 +58,7 @@ class GenericHttpTask extends WorkflowSystemTask {
 	private final boolean authContextEnabled;
 	private final ForeignAuthManager foreignAuthManager;
 
+
 	private final TypeReference<Map<String, Object>> mapOfObj = new TypeReference<Map<String, Object>>() {
 	};
 

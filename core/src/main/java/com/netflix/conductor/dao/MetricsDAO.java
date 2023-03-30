@@ -30,6 +30,12 @@ public interface MetricsDAO {
 
 	Map<String, Object> getMetrics();
 
+	/**
+	 * Validates if the datasource in use is closed
+	 * @return the status of the datasource
+	 */
+	boolean isDatasourceClosed();
+
 	default List<String> getStuckChecksums(Long startTime, Long endTime) {return new ArrayList<>();}
 
 }

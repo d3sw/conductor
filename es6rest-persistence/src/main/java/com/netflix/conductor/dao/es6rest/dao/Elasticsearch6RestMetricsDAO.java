@@ -193,6 +193,11 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 		return new HashMap<>(metrics);
 	}
 
+	@Override
+	public boolean isDatasourceClosed() {
+		return false;
+	}
+
 	@Deprecated
 	public Map<String, Object> getAdminCounters() {
 		Map<String, AtomicLong> metrics = new ConcurrentHashMap<>();

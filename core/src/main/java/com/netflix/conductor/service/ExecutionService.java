@@ -110,6 +110,10 @@ public class ExecutionService {
 
 	public List<Task> poll(String taskType, String workerId, String domain, int count, int timeoutInMilliSecond) throws Exception {
 
+		// return empty list to polling clients (workflowcomposer) if the datasource is closed
+		if (metadata.isDatasourceClosed())
+			return new ArrayList<>();
+
 		String queueName = QueueUtils.getQueueName(taskType, domain);
 
 		List<String> taskIds = queue.pop(queueName, count, timeoutInMilliSecond);
