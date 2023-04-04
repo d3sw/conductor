@@ -30,6 +30,7 @@ import javax.ws.rs.core.Variant;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
+import com.netflix.conductor.core.exceptions.ServerShutdownException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,7 +64,9 @@ public class GenericExceptionMapper implements ExceptionMapper<Throwable> {
 	@Override
 	public Response toResponse(Throwable t) {
 		logger.error(t.getMessage(), t);
-		ApplicationException e = new ApplicationException(Code.INTERNAL_ERROR, t.getMessage(), t);
+
+		Code code = isShutdownException(t) ? Code.SERVICE_UNAVAILABLE : Code.INTERNAL_ERROR;
+		ApplicationException e = new ApplicationException(code, t.getMessage(), t);
 		MediaType mediaType = context.getRequest().selectVariant(supportedMediaTypes).getMediaType();
 		if(mediaType == null){
 			mediaType = MediaType.APPLICATION_JSON_TYPE;
@@ -79,5 +82,8 @@ public class GenericExceptionMapper implements ExceptionMapper<Throwable> {
 		return Response.status(e.getHttpStatusCode()).entity(entity).type(mediaType).build();
 		
 	}
-	
+
+	private boolean isShutdownException(Throwable t) {
+		return t instanceof ServerShutdownException;
+	}
 }
