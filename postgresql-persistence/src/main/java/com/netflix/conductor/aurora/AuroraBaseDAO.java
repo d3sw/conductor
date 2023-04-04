@@ -3,6 +3,7 @@ package com.netflix.conductor.aurora;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.netflix.conductor.aurora.sql.*;
+import com.netflix.conductor.core.exceptions.ServerShutdownException;
 import com.netflix.conductor.core.execution.ApplicationException;
 import com.zaxxer.hikari.HikariDataSource;
 import org.slf4j.Logger;
@@ -52,7 +53,7 @@ public abstract class AuroraBaseDAO {
 
 	<R> R getWithTransaction(TransactionalFunction<R> function) {
 		if (isDatasourceClosed()) {
-			throw new RuntimeException(DATASOURCE_SHUTDOWN_MSG);
+			throw new ServerShutdownException(DATASOURCE_SHUTDOWN_MSG);
 		}
 
 		Instant start = Instant.now();

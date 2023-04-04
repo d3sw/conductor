@@ -6,6 +6,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.queue.Message;
+import com.netflix.conductor.core.exceptions.ServerShutdownException;
 import com.netflix.conductor.dao.QueueDAO;
 import com.zaxxer.hikari.HikariDataSource;
 import org.apache.commons.collections.CollectionUtils;
@@ -78,7 +79,7 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO, AuroraTas
 	public List<String> pop(String queueName, int count, int timeout) {
 		HikariDataSource datasource = (HikariDataSource) dataSource;
 		if (datasource.isClosed())
-			throw new RuntimeException(DATASOURCE_SHUTDOWN_MSG);
+			throw new ServerShutdownException(DATASOURCE_SHUTDOWN_MSG);
 
 		final String QUERY = "SELECT id FROM queue_message " +
 				"WHERE queue_name = ? AND deliver_on < now() AND popped = false " +
