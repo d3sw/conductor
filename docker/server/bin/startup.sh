@@ -51,5 +51,10 @@ if [[ "$DD_AGENT_HOST" != "" ]]; then
     export JAVA_OPTS="-javaagent:/app/libs/dd-java-agent-0.88.0.jar $JAVA_OPTS"
 fi
 
+# Enable JMX
+if [[ "$JMX_ENABLED" == "true" ]]; then
+    export JAVA_OPTS="$JAVA_OPTS -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=1099 -Dcom.sun.management.jmxremote.rmi.port=1099 -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.authenticate=false -Djava.rmi.server.hostname=127.0.0.1"
+fi
+
 # Run java in the foreground and stream messages directly to stdout
 exec java $JAVA_OPTS -Dlog4j.configuration="file:/app/config/log4j.properties" -Dlog4j.configurationFile="file:/app/config/log4j.properties" -jar conductor-server-*-all.jar $config_file
