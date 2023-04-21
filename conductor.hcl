@@ -226,6 +226,10 @@ job "conductor" {
       port "default" {
         to = 8080
       }
+
+      port "jmx" {
+        to = 1099
+      }
     }
 
     # vault declaration
@@ -304,6 +308,8 @@ job "conductor" {
             tag = "${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}"
           }
         }
+
+        ports = ["jmx"]
       }
 
       env {
@@ -390,6 +396,10 @@ job "conductor" {
       port "default" {
         to = 8080
       }
+
+      port "jmx" {
+        to = 1099
+      }
     }
 
     # vault declaration
@@ -426,6 +436,8 @@ job "conductor" {
             tag = "${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}"
           }
         }
+
+        ports = ["jmx"]
       }
 
       env {
