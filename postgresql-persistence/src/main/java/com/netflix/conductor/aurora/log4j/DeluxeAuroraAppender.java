@@ -114,21 +114,22 @@ public class DeluxeAuroraAppender extends AppenderSkeleton {
 
 	private void shutdownListener() {
 		Signal.handle(new Signal("TERM"), sig -> {
-			if (nonNull(dataSource))
-				dataSource.close();
+			if (nonNull(this))
+				this.close();
 		});
 	}
 
 	private void flush() {
-		if (dataSource.isClosed())
-			return;
-
 		if (buffer.isEmpty()) {
 			return;
 		}
 		if (!initialized.get()) {
 			init();
 		}
+
+		if (dataSource.isClosed())
+			return;
+
 		try (Connection tx = dataSource.getConnection(); PreparedStatement st = tx.prepareStatement(INSERT_QUERY)) {
 
 			LogEntry entry = buffer.poll();
