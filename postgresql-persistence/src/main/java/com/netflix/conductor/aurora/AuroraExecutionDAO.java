@@ -330,6 +330,12 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
     }
 
     @Override
+    public List<String> getRunningWorkflowByName(String workflowName) {
+        Preconditions.checkNotNull(workflowName, "the workflow name must not be null or blank");
+        return getWithTransaction(tx -> getRunningWorkflowByDefName(tx, workflowName));
+    }
+
+    @Override
     public List<String> getRunningWorkflowIds(String workflowName, String startTime, String endDate) {
         return getWithTransaction(tx -> getRunningWorkflowIdsWithFilters(tx, workflowName, startTime, endDate));
     }
@@ -523,6 +529,11 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 
     private List<String> getRunningWorkflowIds(Connection tx, String workflowName) {
         String SQL = "SELECT workflow_id FROM workflow WHERE workflow_type = ? AND workflow_status IN ('RUNNING','PAUSED')";
+        return query(tx, SQL, q -> q.addParameter(workflowName).executeScalarList(String.class));
+    }
+
+    private List<String> getRunningWorkflowByDefName(Connection tx, String workflowName) {
+        String SQL = "SELECT workflow_id FROM workflow WHERE workflow_type = ? LIMIT 10";
         return query(tx, SQL, q -> q.addParameter(workflowName).executeScalarList(String.class));
     }
 
