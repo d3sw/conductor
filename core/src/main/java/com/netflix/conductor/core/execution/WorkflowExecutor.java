@@ -1317,10 +1317,6 @@ public class WorkflowExecutor {
 		return allwf;
 	}
 
-	public List<String> getRunningWorkflowsByName(String workflowName) {
-		return edao.getRunningWorkflowByName(workflowName);
-	}
-
 	public List<String> getWorkflows(String name, Integer version, Long startTime, Long endTime) {
 		List<Workflow> allwf = edao.getWorkflowsByType(name, startTime, endTime);
 		return allwf.stream().filter(wf -> wf.getVersion() == version).map(Workflow::getWorkflowId).collect(Collectors.toList());

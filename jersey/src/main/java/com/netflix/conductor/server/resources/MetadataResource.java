@@ -105,17 +105,6 @@ public class MetadataResource {
 	public List<WorkflowDef> getAll() throws Exception {
 		return service.getWorkflowDefs();
 	}
-
-	@GET
-	@ApiOperation("Retrieves all workflows associated with the given metadata definition")
-	@Path("/workflow/usage/{name}")
-	public List<String> checkUsage(@PathParam("name") String name) throws Exception {
-		List<String> workflowIds =  service.getWorkflowDefInUsage(name);
-		if (CollectionUtils.isEmpty(workflowIds)) {
-			throw new ApplicationException(Code.NOT_FOUND, "Workflow is not currently in use");
-		}
-		return workflowIds;
-	}
 	
 	@POST
 	@Path("/taskdefs")

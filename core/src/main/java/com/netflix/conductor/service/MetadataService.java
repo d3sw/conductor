@@ -134,15 +134,6 @@ public class MetadataService {
 	}
 
 	/**
-	 * Retrieve workflows with the defined metadata definition.
-	 * @param name Name of the workflow to retrieve
-	 * @return the list of workflow ids where the metadata definition is actively being used.
-	 */
-	public List<String> getWorkflowDefInUsage(String name) {
-		return executor.getRunningWorkflowsByName(name);
-	}
-
-	/**
 	 * Remove workflow definition
 	 *
 	 * @param name    workflow name
