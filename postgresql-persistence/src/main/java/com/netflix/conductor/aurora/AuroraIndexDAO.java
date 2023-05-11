@@ -21,6 +21,8 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
+import static java.util.Objects.nonNull;
+
 public class AuroraIndexDAO extends AuroraBaseDAO implements IndexDAO {
 
 	@Inject
@@ -120,7 +122,7 @@ public class AuroraIndexDAO extends AuroraBaseDAO implements IndexDAO {
 		parseQuery(query, SQL, params);
 		parseFreeText(freeText, SQL, params);
 
-		if (!sort.isEmpty()) {
+		if (nonNull(sort) && !sort.isEmpty()) {
 			SQL.append("ORDER BY ");
 			parseSort(sort, SQL);
 			SQL.append(" LIMIT ? OFFSET ?");
