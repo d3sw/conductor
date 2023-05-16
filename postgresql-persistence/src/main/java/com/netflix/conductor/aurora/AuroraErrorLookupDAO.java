@@ -48,23 +48,26 @@ public class AuroraErrorLookupDAO extends AuroraBaseDAO implements ErrorLookupDA
 
 	@Override
 	public List<ErrorLookup> getErrorMatching(String workflow, String errorString) {
-		return getWithTransaction( tx->{
-            ErrorLookupHandler handler = new ErrorLookupHandler();
+		return getWithTransaction(tx -> {
+			ErrorLookupHandler handler = new ErrorLookupHandler();
 			logger.debug("Lookup error details for Workflow: " + workflow + " and Error: " + errorString);
 
 			StringBuilder SQL = new StringBuilder("SELECT * FROM ( ");
 			SQL.append("SELECT SUBSTRING(?, lookup) AS matched_txt, * ");
 			SQL.append("FROM meta_error_registry ");
-			SQL.append("WHERE (WORKFLOW_NAME = ? OR WORKFLOW_NAME IS NULL) ");
+			if (workflow != null) {
+				SQL.append("WHERE (WORKFLOW_NAME = ? OR WORKFLOW_NAME IS NULL) ");
+			}
 			SQL.append(") AS match_results ");
 			SQL.append("WHERE matched_txt IS NOT NULL ");
 			SQL.append("ORDER BY WORKFLOW_NAME, LENGTH(matched_txt) DESC ");
 
 			// remove "null character" that is not supported by Aurora in text fields
 			String normalizedErrorString = errorString.replace("\u0000", "");
-
-			return query( tx, SQL.toString(), q-> q.addParameter(normalizedErrorString).addParameter(workflow).executeAndFetch(handler));
-
+			if (workflow != null) {
+				return query(tx, SQL.toString(), q -> q.addParameter(normalizedErrorString).addParameter(workflow).executeAndFetch(handler));
+			}
+			return query(tx, SQL.toString(), q -> q.addParameter(normalizedErrorString).executeAndFetch(handler));
 		});
 	}
 

@@ -79,7 +79,7 @@ public class ErrorLookupResource {
     @Consumes(MediaType.TEXT_PLAIN)
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Lookup a particular error")
-    public List<ErrorLookup> getErrors(@PathParam("workflowname") String workflowname, @QueryParam("error") String error ) {
+    public List<ErrorLookup> getErrorsByWorkflowName(@PathParam("workflowname") String workflowname, @QueryParam("error") String error ) {
         return errorLookupDAO.getErrorMatching(workflowname, error);
     }
 
