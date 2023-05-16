@@ -7,6 +7,7 @@ import com.netflix.conductor.common.run.ErrorLookup;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.dao.ErrorLookupDAO;
 import com.netflix.conductor.dao.ExecutionDAO;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,7 +56,7 @@ public class AuroraErrorLookupDAO extends AuroraBaseDAO implements ErrorLookupDA
 			StringBuilder SQL = new StringBuilder("SELECT * FROM ( ");
 			SQL.append("SELECT SUBSTRING(?, lookup) AS matched_txt, * ");
 			SQL.append("FROM meta_error_registry ");
-			if (workflow != null) {
+			if (!StringUtils.isEmpty(workflow)) {
 				SQL.append("WHERE (WORKFLOW_NAME = ? OR WORKFLOW_NAME IS NULL) ");
 			}
 			SQL.append(") AS match_results ");
@@ -64,7 +65,7 @@ public class AuroraErrorLookupDAO extends AuroraBaseDAO implements ErrorLookupDA
 
 			// remove "null character" that is not supported by Aurora in text fields
 			String normalizedErrorString = errorString.replace("\u0000", "");
-			if (workflow != null) {
+			if (!StringUtils.isEmpty(workflow)) {
 				return query(tx, SQL.toString(), q -> q.addParameter(normalizedErrorString).addParameter(workflow).executeAndFetch(handler));
 			}
 			return query(tx, SQL.toString(), q -> q.addParameter(normalizedErrorString).executeAndFetch(handler));
