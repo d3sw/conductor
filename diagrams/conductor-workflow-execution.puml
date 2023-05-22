@@ -1,0 +1,65 @@
+@startuml
+autonumber
+title Conductor Workflow Execution
+"Client\n" as client -> "WorkflowController\n" as workflow_controller: <b>GET</b>\n/workflow/{name}
+box "Conductor\n" #LightBlue
+participant workflow_controller
+participant "WorkflowExecutor\n" as execution_service
+participant "ID Generator\n" as id_generator
+participant "Database Execution\n" as aurora_execution
+participant "Metadata\n" as metadata
+participant "Event Handler\n" as event
+participant "Sweeper Queue\n" as sweeper
+end box
+workflow_controller --> execution_service: <b>startWorkflowString</b> (String workflowId, String name, int version, \nString correlationId, Map<String, Object> input, String event, \nMap<String, String> taskToDomain, Map<String, \nObject> authorization, String contextToken, String contextUser, \nString traceId, boolean asyncStart, Integer jobPriority)
+    alt#LightGray  if workflow ID is not defined
+        activate id_generator
+        execution_service -> id_generator:generate() \n(generate a unique ID for the workflow)
+        deactivate  id_generator
+    else workflow ID is defined
+        activate aurora_execution
+        alt#LightGray  retrieve workflow by ID
+            execution_service -> aurora_execution: getWorkflow(String workflowId) \n(retrieve workflow from database by ID)
+        else workflow does not exist
+            execution_service --> workflow_controller: throw exception and return NOT FOUND
+        end
+        deactivate aurora_execution
+    end
+
+    alt#LightGray if there is no input data
+        execution_service --> workflow_controller: throw exception and return BAD REQUEST
+    end
+
+    alt#LightGray retrieve workflow definition
+        activate metadata
+        execution_service -> metadata: returns configured workflow definition
+        deactivate metadata
+    else workflow definition does not exist
+        execution_service --> workflow_controller: throw exception and return NOT FOUND
+    end
+
+    alt#LightGray validate input payload size
+        execution_service --> workflow_controller: throw exception and return BAD REQUEST
+    end
+
+    alt#LightGray if workflow authorization condition not valid
+        execution_service --> workflow_controller: throw exception and return BAD REQUEST
+    end
+
+    alt#LightGray if there are SIMPLE tasks with missing task definitions
+        execution_service --> workflow_controller: throw exception and return BAD REQUEST
+    end
+
+    activate aurora_execution
+    execution_service -> aurora_execution: <b>createWorkflow</b> (Workflow workflow) \nCreate the new workflow in the database
+    deactivate aurora_execution
+
+    activate event
+        execution_service -> event: <b>onWorkflowStarted</b> (Workflow workflow) Publish worflow start message
+    deactivate event
+
+    activate sweeper
+        execution_service -> sweeper: <b>decider/sweeper</b> (String workflowId) Push workflow to sweeper/decider queue \n for subsequent processing
+    deactivate event
+execution_service --> client: workflowId (return the ID of the workflow)
+@enduml

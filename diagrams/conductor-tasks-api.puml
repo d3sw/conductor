@@ -1,0 +1,38 @@
+@startuml
+autonumber
+title Conductor Task Processing
+"WorkflowComposer\n" as workflow_composer -> "TaskController\n" as task_controller: <b>GET</b>\n/tasks/poll/batch/{taskType}
+box "Conductor\n" #LightBlue
+participant task_controller
+participant "ExecutionService\n" as execution_service
+participant "AuroraQueue \n(Manages all tasks types)" as aurora_queue
+participant "Database Execution\n" as aurora_execution
+end box
+task_controller -> execution_service: poll(String taskType, String workerId, \nString domain, \nint count, int timeoutInMilliSecond)
+    alt#LightGray pop tasks based on type from database
+        execution_service -> aurora_queue:pop(String queueName, \nint count, int timeout)
+    alt#LightGray  if popped tasks are empty
+        execution_service --> task_controller: return an empty list of tasks
+    end
+    loop#LightGray  for each retrieved task ID
+
+        execution_service -> aurora_execution: getTask(String taskId) \n(retrieve task from database by ID)
+        alt#LightGray  if task does not exist
+            execution_service -> aurora_queue: remove from queue and \ncontinue to the next task ID
+        else if the status of the popped task is SCHEDULED
+            execution_service -> execution_service: check progress limit
+            alt#LightGray if task has exceeded progress limit
+                execution_service -> aurora_execution: check if the task has \nexceeded in-progress limit
+                alt#LightGray if progress limit is exceeded
+                    execution_service -> aurora_queue: un-pop task from queue and \ncontinue to the next task ID
+                end
+            else if task has exceeded rate limit
+                execution_service -> aurora_execution: check rate limit
+                alt#LightGray if rate limit is exceeded
+                    execution_service -> aurora_queue: un-pop task from queue and \ncontinue to the next task ID
+                end
+            end
+        end
+    end
+execution_service --> workflow_composer: List<Task> (return a list of valid tasks)
+@enduml
