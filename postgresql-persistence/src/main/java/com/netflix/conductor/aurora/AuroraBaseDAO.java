@@ -3,7 +3,9 @@ package com.netflix.conductor.aurora;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.netflix.conductor.aurora.sql.*;
+import com.netflix.conductor.core.exceptions.ServerShutdownException;
 import com.netflix.conductor.core.execution.ApplicationException;
+import com.zaxxer.hikari.HikariDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,6 +28,8 @@ public abstract class AuroraBaseDAO {
 		"toString"
 	);
 
+	public final String DATASOURCE_SHUTDOWN_MSG = "Request cannot be fulfilled at this time, system shutdown in progress. Please retry request";
+
 	protected final Logger logger = LoggerFactory.getLogger(getClass());
 	protected final DataSource dataSource;
 	private final ObjectMapper mapper;
@@ -33,6 +37,11 @@ public abstract class AuroraBaseDAO {
 	public AuroraBaseDAO(DataSource dataSource, ObjectMapper mapper) {
 		this.dataSource = dataSource;
 		this.mapper = mapper;
+	}
+
+	protected boolean isDatasourceClosed() {
+		HikariDataSource datasource = (HikariDataSource) dataSource;
+		return datasource.isClosed();
 	}
 
 	void withTransaction(Consumer<Connection> consumer) {
@@ -43,6 +52,10 @@ public abstract class AuroraBaseDAO {
 	}
 
 	<R> R getWithTransaction(TransactionalFunction<R> function) {
+		if (isDatasourceClosed()) {
+			throw new ServerShutdownException(DATASOURCE_SHUTDOWN_MSG);
+		}
+
 		Instant start = Instant.now();
 		LazyToString callingMethod = getCallingMethod();
 		if (logger.isTraceEnabled())

@@ -20,7 +20,10 @@ package com.netflix.conductor.server;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Guice;
+import com.google.inject.Injector;
 import com.google.inject.servlet.GuiceFilter;
+import com.netflix.conductor.aurora.AuroraMetadataDAO;
+import com.netflix.conductor.aurora.AuroraQueueDAO;
 import com.netflix.conductor.aurora.FlywayService;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.dao.es6rest.Elasticsearch6Embedded;
@@ -46,12 +49,16 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.JedisCommands;
+import sun.misc.Signal;
 
 import javax.servlet.DispatcherType;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.management.ManagementFactory;
 import java.util.*;
+
+import static java.util.Objects.nonNull;
 
 /**
  * @author Viren
@@ -59,6 +66,7 @@ import java.util.*;
 public class ConductorServer {
 
     private static final Logger logger = LoggerFactory.getLogger(ConductorServer.class);
+    private Injector iocInjector;
 
     enum DB {
         redis, dynomite, memory, elasticsearch, aurora
@@ -206,7 +214,7 @@ public class ConductorServer {
         }
 
         try {
-            Guice.createInjector(sm);
+            iocInjector = Guice.createInjector(sm);
         } catch (Exception ex) {
             logger.error("Error creating Guice injector " + ex.getMessage(), ex);
             System.exit(-1);
@@ -248,6 +256,9 @@ public class ConductorServer {
             conn.getConnectionFactory(HttpConnectionFactory.class).getHttpConfiguration().setResponseHeaderSize(max);
         }
 
+        // listen for application shutdown
+        shutdownListener(iocInjector);
+
         server.start();
         logger.info("Started server on http://localhost:" + port + "/");
         MetricService.getInstance().serverStarted();
@@ -265,6 +276,36 @@ public class ConductorServer {
             server.join();
         }
 
+    }
+
+    private static void shutdownListener(Injector iocInjector) {
+        Signal.handle(new Signal("TERM"), sig -> {
+            logger.info("SIGTERM shutdown instruction received ...");
+            // shutdown all managed beans
+            if (nonNull(iocInjector)) {
+                logSystemMetrics();
+
+                // shutdown primary datasource
+                ServerShutdown serverShutdown = iocInjector.getInstance(ServerShutdown.class);
+                serverShutdown.shutdown();
+                return;
+            }
+            throw new RuntimeException("failed to shutdown resources on sigterm, guice IOC not initialized");
+        });
+    }
+
+    private static void logSystemMetrics() {
+        int mb = 1024 * 1024;
+
+        com.sun.management.OperatingSystemMXBean mxBean =
+                (com.sun.management.OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
+        double cpuLoad = mxBean.getProcessCpuLoad();
+
+        Runtime runtime = Runtime.getRuntime();
+        StringBuilder info = new StringBuilder();
+        info.append("Used memory=").append((runtime.totalMemory() - runtime.freeMemory()) / mb).append("mb");
+        info.append(", free memory=").append(runtime.freeMemory() / mb).append("mb");
+        info.append(", cpu load=").append(String.format("%.2f", cpuLoad)).append("%");
     }
 
     public synchronized void stop() throws Exception {

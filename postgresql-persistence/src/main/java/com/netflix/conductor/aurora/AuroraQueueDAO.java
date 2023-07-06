@@ -6,7 +6,9 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.queue.Message;
+import com.netflix.conductor.core.exceptions.ServerShutdownException;
 import com.netflix.conductor.dao.QueueDAO;
+import com.zaxxer.hikari.HikariDataSource;
 import org.apache.commons.collections.CollectionUtils;
 
 import javax.inject.Inject;
@@ -21,11 +23,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
+import static java.util.Objects.nonNull;
+
+public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO, AuroraTaskShutdown {
 	private static final Set<String> queues = ConcurrentHashMap.newKeySet();
 	private static final Long UNACK_SCHEDULE_MS = 300_000L;
 	private static final Long UNACK_TIME_MS = 60_000L;
 	private final Configuration config;
+	private final ScheduledExecutorService executorService;
 
 	@Inject
 	public AuroraQueueDAO(DataSource dataSource, ObjectMapper mapper, Configuration config) {
@@ -33,18 +38,8 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 		this.config = config;
 		loadQueues();
 
-		ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+		executorService = Executors.newSingleThreadScheduledExecutor();
 		executorService.scheduleWithFixedDelay(this::processAllUnacks, UNACK_SCHEDULE_MS, UNACK_SCHEDULE_MS, TimeUnit.MILLISECONDS);
-
-		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-			try {
-				logger.info("Closing processAllUnacks pool");
-				executorService.shutdown();
-				executorService.awaitTermination(5, TimeUnit.SECONDS);
-			} catch (Exception e) {
-				logger.debug("Closing processAllUnacks pool failed " + e.getMessage(), e);
-			}
-		}));
 	}
 
 	@Override
@@ -82,6 +77,10 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 	 */
 	@Override
 	public List<String> pop(String queueName, int count, int timeout) {
+		HikariDataSource datasource = (HikariDataSource) dataSource;
+		if (datasource.isClosed())
+			throw new ServerShutdownException(DATASOURCE_SHUTDOWN_MSG);
+
 		final String QUERY = "SELECT id FROM queue_message " +
 				"WHERE queue_name = ? AND deliver_on < now() AND popped = false " +
 				"ORDER BY priority, deliver_on, id LIMIT ? FOR UPDATE SKIP LOCKED";
@@ -185,6 +184,10 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 
 	@Override
 	public void processUnacks(String queueName) {
+		// do nothing when external queue dependency calls for unack when the datasource is closed
+		if (isDatasourceClosed())
+			return;
+
 		// Process regular queue messages
 		try {
 			long threshold = config.getIntProperty("conductor.queue." + queueName.toLowerCase() + ".unack.threshold", UNACK_TIME_MS.intValue());
@@ -407,6 +410,30 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 	private void processAllUnacks() {
 		// Exclude '.lock' queues as they are handled separately in the processUnacks function
 		queues.stream().filter(q -> !q.endsWith(".lock")).forEach(this::processUnacks);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void shutdown() {
+		if (nonNull(executorService)) {
+			try {
+				logger.info("Closing processAllUnacks pool");
+				executorService.shutdown();
+				executorService.awaitTermination(5, TimeUnit.SECONDS);
+			} catch (Exception e) {
+				logger.error("failed to shutdown processAllUnacks pool");
+			}
+		}
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public boolean isTaskTerminated() {
+		return executorService.isTerminated();
 	}
 
 	private static class QueueMessage {

@@ -23,6 +23,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.AppenderSkeleton;
 import org.apache.log4j.spi.LoggingEvent;
+import sun.misc.Signal;
 
 import javax.sql.DataSource;
 import java.io.PrintWriter;
@@ -37,6 +38,8 @@ import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import static java.util.Objects.nonNull;
 
 /**
  * @author Oleksiy Lysak
@@ -100,19 +103,20 @@ public class DeluxeAuroraAppender extends AppenderSkeleton {
 				poolConfig.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
 
 				dataSource = new HikariDataSource(poolConfig);
-				Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-					try {
-						this.close();
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-				}));
+				shutdownListener();
 			}
 
 			initialized.set(true);
 		} catch (Exception ex) {
 			System.out.println("DeluxeAuroraAppender.init failed " + ex.getMessage() + ", stack=" + throwable2String(ex));
 		}
+	}
+
+	private void shutdownListener() {
+		Signal.handle(new Signal("TERM"), sig -> {
+			if (nonNull(this))
+				this.close();
+		});
 	}
 
 	private void flush() {
@@ -122,6 +126,10 @@ public class DeluxeAuroraAppender extends AppenderSkeleton {
 		if (!initialized.get()) {
 			init();
 		}
+
+		if (dataSource.isClosed())
+			return;
+
 		try (Connection tx = dataSource.getConnection(); PreparedStatement st = tx.prepareStatement(INSERT_QUERY)) {
 
 			LogEntry entry = buffer.poll();

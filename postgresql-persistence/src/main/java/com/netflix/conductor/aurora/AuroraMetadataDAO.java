@@ -23,10 +23,11 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-public class AuroraMetadataDAO extends AuroraBaseDAO implements MetadataDAO {
+public class AuroraMetadataDAO extends AuroraBaseDAO implements MetadataDAO, AuroraTaskShutdown {
 	private static final String PROP_TASKDEF_CACHE_REFRESH = "conductor.taskdef.cache.refresh.time.seconds";
 	private static final int DEFAULT_TASKDEF_CACHE_REFRESH_SECONDS = 60;
 	private final ConcurrentHashMap<String, TaskDef> taskDefCache = new ConcurrentHashMap<>();
+	private final ScheduledExecutorService executorService;
 
 	@Inject
 	public AuroraMetadataDAO(DataSource dataSource, ObjectMapper mapper, Configuration config) {
@@ -34,18 +35,8 @@ public class AuroraMetadataDAO extends AuroraBaseDAO implements MetadataDAO {
 		refreshTaskDefs();
 
 		int cacheRefreshTime = config.getIntProperty(PROP_TASKDEF_CACHE_REFRESH, DEFAULT_TASKDEF_CACHE_REFRESH_SECONDS);
-		ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+		executorService = Executors.newSingleThreadScheduledExecutor();
 		executorService.scheduleWithFixedDelay(this::refreshTaskDefs, cacheRefreshTime, cacheRefreshTime, TimeUnit.SECONDS);
-
-		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-			try {
-				logger.info("Closing refreshTaskDefs pool");
-				executorService.shutdown();
-				executorService.awaitTermination(5, TimeUnit.SECONDS);
-			} catch (Exception e) {
-				logger.debug("Closing refreshTaskDefs pool failed " + e.getMessage(), e);;
-			}
-		}));
 	}
 
 	@Override
@@ -63,6 +54,28 @@ public class AuroraMetadataDAO extends AuroraBaseDAO implements MetadataDAO {
 		validate(taskDef);
 		taskDef.setUpdateTime(System.currentTimeMillis());
 		return insertOrUpdateTaskDef(taskDef);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void shutdown() {
+		try {
+			logger.info("Closing refreshTaskDefs pool");
+			executorService.shutdown();
+			executorService.awaitTermination(5, TimeUnit.SECONDS);
+		} catch (Exception e) {
+			logger.error("failed to shutdown refreshTaskDefs pool");
+		}
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public boolean isTaskTerminated() {
+		return executorService.isTerminated();
 	}
 
 	@Override
@@ -249,6 +262,11 @@ public class AuroraMetadataDAO extends AuroraBaseDAO implements MetadataDAO {
 	}
 
 	@Override
+	public boolean isDatasourceClosed() {
+		return super.isDatasourceClosed();
+	}
+
+	@Override
 	public List<EventHandler> getEventHandlersForEvent(String event, boolean activeOnly) {
 		final String SQL = "SELECT json_data FROM meta_event_handler WHERE event = ?";
 		return queryWithTransaction(SQL, q -> {
@@ -346,6 +364,10 @@ public class AuroraMetadataDAO extends AuroraBaseDAO implements MetadataDAO {
 	}
 
 	private void refreshTaskDefs() {
+		// do nothing when a request to refresh task-defs is received once datasource is closed
+		if (isDatasourceClosed())
+			return;
+
 		try {
 			List<TaskDef> taskDefs = getAllTaskDefs();
 

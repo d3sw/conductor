@@ -28,6 +28,7 @@ import com.netflix.conductor.core.DNSLookup;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.ScriptEvaluator;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
+import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.service.MetricService;
 import datadog.trace.api.Trace;
 import org.apache.commons.lang3.StringUtils;
@@ -43,6 +44,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static java.util.Objects.isNull;
@@ -58,18 +60,32 @@ public class HttpTask extends GenericHttpTask {
 			+ "' key wiht HttpTask.Input as value. See documentation for HttpTask for required input parameters";
 	public static final String NAME = "HTTP";
 	private static final String CONDITIONS_PARAMETER = "conditions";
+	static final String LONG_RUNNING_HTTP = "long_running_http";
 	private final int unackTimeout;
+    private final long initialDelay;
+	private final long updateDelay;
+	private final QueueDAO queue;
+	private ScheduledExecutorService executorService ;
 
 	@Inject
-	public HttpTask(RestClientManager rcm, Configuration config, ObjectMapper om, AuthManager authManager, ForeignAuthManager foreignAuthManager) {
+	public HttpTask(RestClientManager rcm, Configuration config, ObjectMapper om, AuthManager authManager, ForeignAuthManager foreignAuthManager, QueueDAO queue) {
 		super(NAME, config, rcm, om, authManager, foreignAuthManager);
+		this.queue =queue;
 		unackTimeout = config.getIntProperty("workflow.system.task.http.unack.timeout", 60);
+		long initialDelayCfg = config.getIntProperty("workflow.system.task.http.long.unack.initialDelay", 0);
+		long updateDelayCfg = config.getIntProperty("workflow.system.task.http.long.unack.updateDelay", 0);
+		long unackTimeoutMs = unackTimeout * 1000;
+		initialDelay = (initialDelayCfg <= 0 || initialDelayCfg >= unackTimeoutMs) ? unackTimeoutMs / 2 : initialDelayCfg;
+		updateDelay  = (updateDelayCfg <= 0  || updateDelayCfg  >= unackTimeoutMs) ? unackTimeoutMs : updateDelayCfg;
+
+		executorService = Executors.newScheduledThreadPool(25);
 		logger.debug("HttpTask initialized...");
 	}
 
 	@Trace(operationName = "Start Http Task", resourceName = "httpTask")
 	@Override
 	public void start(Workflow workflow, Task task, WorkflowExecutor executor) throws Exception {
+
 		Instant start = Instant.now();
 		Object request = task.getInputData().get(REQUEST_PARAMETER_NAME);
 		task.setWorkerId(config.getServerId());
@@ -131,6 +147,7 @@ public class HttpTask extends GenericHttpTask {
 		}
 
 		long start_time = System.currentTimeMillis();
+		ScheduledFuture<?> scheduledFuture = null;
 		try {
 			HttpResponse response = new HttpResponse();
 			logger.debug("http task starting. WorkflowId=" + workflow.getWorkflowId()
@@ -141,6 +158,11 @@ public class HttpTask extends GenericHttpTask {
 					+ ",correlationId=" + workflow.getCorrelationId()
 					+ ",traceId=" + workflow.getTraceId()
 					+ ",contextUser=" + workflow.getContextUser());
+
+			Object isLongRunningTask = task.getInputData().get(LONG_RUNNING_HTTP);
+			if (isLongRunningTask != null && Boolean.valueOf(isLongRunningTask.toString())) {
+				scheduledFuture = executorService.scheduleWithFixedDelay(() -> updateUnack(task.getTaskId()), initialDelay, updateDelay, TimeUnit.MILLISECONDS);
+			}
 
 			if (input.getContentType() != null) {
 				if (input.getContentType().equalsIgnoreCase("application/x-www-form-urlencoded")) {
@@ -223,7 +245,28 @@ public class HttpTask extends GenericHttpTask {
 					task.getTaskDefName(),
 					serviceName,
 					exec_time);
+		}finally{
+			if (scheduledFuture != null)
+				scheduledFuture.cancel(true);
 		}
+	}
+
+	public void shutdown() {
+		try {
+			if (executorService != null) {
+				logger.info("Closing updateUnack pool");
+				executorService.shutdown();
+				executorService.awaitTermination(5, TimeUnit.SECONDS);
+			}
+		} catch (Exception e) {
+			logger.error("Closing updateUnack pool failed " + e.getMessage(), e);
+		}
+	}
+
+
+	public void updateUnack(String taskId)
+	{
+		queue.setUnackTimeout("http", taskId, unackTimeout * 1000L);
 	}
 
 	@Override
