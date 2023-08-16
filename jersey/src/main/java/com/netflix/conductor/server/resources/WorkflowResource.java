@@ -836,7 +836,7 @@ public class WorkflowResource {
 
     @POST
     @Path("/cancelByJobId")
-    @ApiOperation(value = "Cancel multiple workflows execution by Job Id")
+    @ApiOperation(value = "Cancel multiple workflows execution by Job Id", hidden = true)
     @ApiResponses(value = {
             @ApiResponse(code = 404, message = "NOT_FOUND", response = Error.class),
             @ApiResponse(code = 400, message = "INVALID_INPUT", response = Error.class),
