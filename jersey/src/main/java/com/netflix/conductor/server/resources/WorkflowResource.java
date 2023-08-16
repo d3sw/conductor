@@ -835,6 +835,45 @@ public class WorkflowResource {
     }
 
     @POST
+    @Path("/cancelByJobId")
+    @ApiOperation(value = "Cancel multiple workflows execution by Job Id")
+    @ApiResponses(value = {
+            @ApiResponse(code = 404, message = "NOT_FOUND", response = Error.class),
+            @ApiResponse(code = 400, message = "INVALID_INPUT", response = Error.class),
+            @ApiResponse(code = 409, message = "CONFLICT", response = Error.class),
+            @ApiResponse(code = 500, message = "INTERNAL_ERROR", response = Error.class),
+            @ApiResponse(code = 401, message = "UNAUTHORIZED", response = Error.class),
+            @ApiResponse(code = 501, message = "NOT_IMPLEMENTED", response = Error.class),
+            @ApiResponse(code = 204, message = "SUCCESS", response = String.class)})
+    @ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),
+            @ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header"),
+            @ApiImplicitParam(name = "Platform-Trace-Id", dataType = "string", paramType = "header")})
+    @Produces({MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
+    public Response cancelWorkflowsByJobId(@Context HttpHeaders headers, List<String> jobIds, @QueryParam("workflowType") String workflowType, @QueryParam("reason") String reason) throws Exception {
+        Response.ResponseBuilder builder = Response.noContent();
+        for (String jobId : jobIds) {
+            NDC.push("rest-cancel-" + UUID.randomUUID().toString());
+            try {
+                List<String> mainWorkflowsIds = executor.getMainWorkflowIdsByJobId(jobId, workflowType);
+                for (String mainWorkflowId : mainWorkflowsIds) {
+                    handleCorrelationId(mainWorkflowId, headers, builder);
+                    if (!bypassAuth(headers)) {
+                        String primarRole = executor.checkUserRoles(headers);
+                        if (!primarRole.endsWith("admin")) {
+                            throw new ApplicationException(Code.UNAUTHORIZED, "User does not have access privileges");
+                        }
+                        executor.validateAuth(mainWorkflowId, headers);
+                    }
+                    executor.cancelWorkflow(mainWorkflowId, StringUtils.defaultIfEmpty(reason, "Cancelled from api"));
+                }
+            } finally {
+                NDC.remove();
+            }
+        }
+        return builder.build();
+    }
+
+    @POST
     @Path("/complete")
     @ApiOperation("Force complete multiple workflows execution")
     @ApiResponses(value = {

@@ -2228,6 +2228,14 @@ public class WorkflowExecutor {
 		return taskDetails;
 	}
 
+	public List<String> getMainWorkflowIdsByJobId(String jobId, String workflowType) throws Exception {
+		if (jobId == null) {
+			throw new ApplicationException(Code.INVALID_INPUT, "Job Id is a required parameter.");
+		}
+		List<String> mainWorkflowIds = edao.searchMainWorkflowByJobId(jobId, workflowType, WorkflowStatus.RUNNING.name());
+		return mainWorkflowIds;
+	}
+
 	private Optional<WorkflowErrorRegistry> findSubWorkflow(String workflowId, List<WorkflowErrorRegistry> workflowErrorRegistries){
 		return workflowErrorRegistries.stream()
 				.filter(workflowErrorRegistry -> workflowId.equals(workflowErrorRegistry.getParentWorkflowId()))

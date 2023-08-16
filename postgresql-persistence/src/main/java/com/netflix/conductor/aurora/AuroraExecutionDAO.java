@@ -1183,6 +1183,49 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
         });
     }
 
+    public List<String> searchMainWorkflowByJobId(String jobId, String workflowType, String status) {
+        StringBuilder SQL = new StringBuilder("select workflow_id from workflow where parent_workflow_id is null ");
+        LinkedList<Object> params = new LinkedList<>();
+        if (jobId != null) {
+            SQL.append("AND correlation_id ilike ? ");
+            params.add("%jobId:" + jobId + "%");
+        } else {
+            return new ArrayList<String>();
+        }
+
+        if (workflowType != null) {
+            SQL.append("AND workflow_type ilike ? ");
+            params.add("%" + workflowType + "%");
+        }
+
+        if (status != null) {
+            SQL.append("AND  workflow_status =  ? ");
+            params.add(status);
+        }
+
+        return queryWithTransaction(SQL.toString(), q -> {
+            params.forEach(p -> {
+                if (p instanceof Timestamp) {
+                    q.addParameter((Timestamp) p);
+                } else if (p instanceof List) {
+                    q.addParameter((Collection<String>) p);
+                } else if (p instanceof String) {
+                    q.addParameter((String) p);
+                } else if (p instanceof Long) {
+                    q.addParameter((Long) p);
+                }
+            });
+
+            return q.executeAndFetch(rs -> {
+                List<String> mainWorkflowIds = new LinkedList<>();
+                while (rs.next()) {
+                    mainWorkflowIds.add(rs.getString("workflow_id"));
+                }
+                return mainWorkflowIds;
+            });
+        });
+    }
+
     private List<Workflow> loadWorkflows(String workflowName, List<String> workflowIds) {
         List<Workflow> workflows = new LinkedList<>();
         workflowIds.forEach(workflowId -> {
