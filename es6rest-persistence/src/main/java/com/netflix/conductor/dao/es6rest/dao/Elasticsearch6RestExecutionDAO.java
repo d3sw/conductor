@@ -1062,6 +1062,10 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
 		return null;
 	}
 
+	public List<Workflow> searchMainWorkflowByJobId(String jobId, String workflowType, String status) {
+		return null;
+	}
+
 	@Override
 	public List<WorkflowErrorRegistry> findSubWorkflows(List<String> parent_workflow_ids) {
 		return null;
