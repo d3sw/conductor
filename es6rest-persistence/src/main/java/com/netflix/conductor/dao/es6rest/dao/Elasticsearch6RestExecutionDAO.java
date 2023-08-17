@@ -1062,7 +1062,7 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
 		return null;
 	}
 
-	public List<String> searchMainWorkflowByJobId(String jobId, String workflowType, String status) {
+	public List<Workflow> searchMainWorkflowByJobId(String jobId, String workflowType, String status) {
 		return null;
 	}
 

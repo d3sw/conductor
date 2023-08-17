@@ -1183,14 +1183,14 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
         });
     }
 
-    public List<String> searchMainWorkflowByJobId(String jobId, String workflowType, String status) {
-        StringBuilder SQL = new StringBuilder("select workflow_id from workflow where parent_workflow_id is null ");
+    public List<Workflow> searchMainWorkflowByJobId(String jobId, String workflowType, String status) {
+        StringBuilder SQL = new StringBuilder("select workflow_id, workflow_type, json_data::jsonb->'version' as version from workflow where parent_workflow_id is null ");
         LinkedList<Object> params = new LinkedList<>();
         if (jobId != null) {
             SQL.append("AND correlation_id ilike ? ");
             params.add("%jobId:" + jobId + "%");
         } else {
-            return new ArrayList<String>();
+            return new ArrayList<Workflow>();
         }
 
         if (workflowType != null) {
@@ -1217,11 +1217,15 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
             });
 
             return q.executeAndFetch(rs -> {
-                List<String> mainWorkflowIds = new LinkedList<>();
+                List<Workflow> workflowList = new LinkedList<>();
                 while (rs.next()) {
-                    mainWorkflowIds.add(rs.getString("workflow_id"));
+                    Workflow workflow = new Workflow();
+                    workflow.setWorkflowId(rs.getString("workflow_id"));
+                    workflow.setWorkflowType(rs.getString("workflow_type"));
+                    workflow.setVersion(rs.getInt("version"));
+                    workflowList.add(workflow);
                 }
-                return mainWorkflowIds;
+                return workflowList;
             });
         });
     }

@@ -380,5 +380,5 @@ public interface ExecutionDAO {
 
     List<TaskDetails> searchTaskDetails(String jobId, String workflowId, String workflowType, String taskName, Boolean includeOutput);
 
-    List<String> searchMainWorkflowByJobId(String jobId, String workflowType, String status);
+    List<Workflow> searchMainWorkflowByJobId(String jobId, String workflowType, String status);
 }

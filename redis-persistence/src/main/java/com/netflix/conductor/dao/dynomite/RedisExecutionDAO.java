@@ -618,7 +618,7 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 		return null;
 	}
 
-	public List<String> searchMainWorkflowByJobId(String jobId, String workflowType, String status) {
+	public List<Workflow> searchMainWorkflowByJobId(String jobId, String workflowType, String status) {
 		return null;
 	}
 

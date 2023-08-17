@@ -2228,12 +2228,27 @@ public class WorkflowExecutor {
 		return taskDetails;
 	}
 
-	public List<String> getMainWorkflowIdsByJobId(String jobId, String workflowType) throws Exception {
+	public List<String> getMainWorkflowIdsByJobId(String jobId, String workflowType, boolean isValidateAuth, HttpHeaders headers) throws Exception {
 		if (jobId == null) {
 			throw new ApplicationException(Code.INVALID_INPUT, "Job Id is a required parameter.");
 		}
-		List<String> mainWorkflowIds = edao.searchMainWorkflowByJobId(jobId, workflowType, WorkflowStatus.RUNNING.name());
-		return mainWorkflowIds;
+		List<Workflow> mainWorkflows = edao.searchMainWorkflowByJobId(jobId, workflowType, WorkflowStatus.RUNNING.name());
+		if (isValidateAuth) {
+			Collection<Workflow> uniqueWorkflows = mainWorkflows.stream().collect(Collectors.toMap(Workflow::getWorkflowType, p -> p, (p, q) -> p))
+					.values();
+			for (Workflow workflow : uniqueWorkflows) {
+				authValidation(workflow, headers);
+			}
+		}
+		return mainWorkflows.stream().map(Workflow::getWorkflowId).collect(Collectors.toList());
+	}
+
+	public void authValidation(Workflow workflow, HttpHeaders headers) throws Exception {
+		WorkflowDef workflowDef = metadata.get(workflow.getWorkflowType(), workflow.getVersion());
+		if (workflowDef == null) {
+			throw new ApplicationException(Code.NOT_FOUND, "No such workflow definition found by name=" + workflow.getWorkflowType() + ", version=" + workflow.getVersion());
+		}
+		validateAuth(workflowDef, headers);
 	}
 
 	private Optional<WorkflowErrorRegistry> findSubWorkflow(String workflowId, List<WorkflowErrorRegistry> workflowErrorRegistries){
