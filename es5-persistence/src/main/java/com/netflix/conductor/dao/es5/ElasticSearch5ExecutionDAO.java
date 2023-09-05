@@ -667,6 +667,11 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 	}
 
 	@Override
+	public List<Workflow> searchMainWorkflowByJobId(String jobId, String workflowType, String status) {
+		return null;
+	}
+
+	@Override
 	public void addErrorRegistry(WorkflowErrorRegistry workflowErrorRegistry){}
 
 	@Override

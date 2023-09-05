@@ -379,4 +379,6 @@ public interface ExecutionDAO {
     List<WorkflowErrorRegistry> findSubWorkflows(List<String> parent_workflow_ids);
 
     List<TaskDetails> searchTaskDetails(String jobId, String workflowId, String workflowType, String taskName, Boolean includeOutput);
+
+    List<Workflow> searchMainWorkflowByJobId(String jobId, String workflowType, String status);
 }

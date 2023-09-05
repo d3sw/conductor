@@ -618,6 +618,10 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 		return null;
 	}
 
+	public List<Workflow> searchMainWorkflowByJobId(String jobId, String workflowType, String status) {
+		return null;
+	}
+
 	@Override
 	public List<WorkflowErrorRegistry> findSubWorkflows(List<String> parent_workflow_ids) {
 		return null;
