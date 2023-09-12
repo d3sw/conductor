@@ -10,6 +10,7 @@ import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.service.ExecutionService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,7 +71,7 @@ public class ErrorLookupResource {
     @Consumes(MediaType.TEXT_PLAIN)
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Lookup a particular error")
-    public List<ErrorLookup> getErrors(@QueryParam("error") String error) {
+    public List<ErrorLookup> getErrors(@ApiParam(value = "Error search string")@QueryParam("error") String error) {
         return errorLookupDAO.getErrorMatching(error);
     }
 
@@ -79,7 +80,7 @@ public class ErrorLookupResource {
     @Consumes(MediaType.TEXT_PLAIN)
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Lookup a particular error")
-    public List<ErrorLookup> getErrorsByWorkflowName(@PathParam("workflowname") String workflowname, @QueryParam("error") String error ) {
+    public List<ErrorLookup> getErrorsByWorkflowName(@ApiParam(value = "Workflow name")@PathParam("workflowname") String workflowname,@ApiParam(value = "Error search string") @QueryParam("error") String error ) {
         return errorLookupDAO.getErrorMatching(workflowname, error);
     }
 
@@ -88,7 +89,7 @@ public class ErrorLookupResource {
     @Consumes(MediaType.TEXT_PLAIN)
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Lookup a particular error")
-    public List<ErrorLookup> getErrorByCode(@PathParam("error_code") String errorCode) {
+    public List<ErrorLookup> getErrorByCode(@ApiParam(value = "Error code")@PathParam("error_code") String errorCode) {
         return errorLookupDAO.getErrorByCode(errorCode);
     }
 
@@ -96,7 +97,7 @@ public class ErrorLookupResource {
     @Path("/error")
     @Consumes(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Create a new error")
-    public void addError(ErrorLookup errorLookup) {
+    public void addError(@ApiParam(value = "Error lookup")ErrorLookup errorLookup) {
         logger.debug("Called getErrors");
         errorLookupDAO.addError(errorLookup);
     }
@@ -105,7 +106,7 @@ public class ErrorLookupResource {
     @Path("/error")
     @Consumes(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Create a new error")
-    public void updateError(ErrorLookup errorLookup) {
+    public void updateError(@ApiParam(value = "Error lookup")ErrorLookup errorLookup) {
         logger.debug("Called getErrors");
         errorLookupDAO.addError(errorLookup);
     }

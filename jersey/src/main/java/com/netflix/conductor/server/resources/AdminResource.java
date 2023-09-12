@@ -124,8 +124,8 @@ public class AdminResource {
     @Consumes({MediaType.WILDCARD})
     @ApiOperation(value = "Add the configuration parameter")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
-    public void addConfig(@PathParam("name") String name, String value, @Context HttpHeaders headers) {
+            @ApiImplicitParam(name = "Authorization",  value = "Authorization token", dataType = "string", paramType = "header")})
+    public void addConfig(@ApiParam(value = "Config name")@PathParam("name") String name,@ApiParam(value = "Config value") String value,@ApiParam(value = "HTTP headers") @Context HttpHeaders headers) {
         if (!bypassAuth(headers)) {
             String primarRole = executor.checkUserRoles(headers);
             if (!primarRole.endsWith("admin")) {
@@ -142,8 +142,8 @@ public class AdminResource {
     @Consumes({MediaType.WILDCARD})
     @ApiOperation(value = "Update the configuration parameter")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
-    public void updateConfig(@PathParam("name") String name,  String value, @Context HttpHeaders headers) {
+            @ApiImplicitParam(name = "Authorization", value = "Authorization token", dataType = "string", paramType = "header")})
+    public void updateConfig(@ApiParam(value = "Config name")@PathParam("name") String name,@ApiParam(value = "Config value")  String value, @ApiParam(value = "HTTP headers")@Context HttpHeaders headers) {
         if (!bypassAuth(headers)) {
             String primarRole = executor.checkUserRoles(headers);
             if (!primarRole.endsWith("admin")) {
@@ -160,8 +160,8 @@ public class AdminResource {
     @Consumes({MediaType.WILDCARD})
     @ApiOperation(value = "Delete the configuration parameter")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
-    public void deleteConfig(@PathParam("name") String name, @Context HttpHeaders headers) {
+            @ApiImplicitParam(name = "Authorization", value = "Authorization token", dataType = "string", paramType = "header")})
+    public void deleteConfig(@ApiParam(value = "Config name")@PathParam("name") String name,@ApiParam(value = "HTTP headers") @Context HttpHeaders headers) {
         if (!bypassAuth(headers)) {
             String primarRole = executor.checkUserRoles(headers);
             if (!primarRole.endsWith("admin")) {
@@ -177,9 +177,9 @@ public class AdminResource {
     @Consumes({MediaType.WILDCARD})
     @ApiOperation(value = "Reload configuration parameters from the database")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
+            @ApiImplicitParam(name = "Authorization", value = "Authorization token", dataType = "string", paramType = "header")})
     @Path("/config")
-    public void reloadAllConfig(@Context HttpHeaders headers) {
+    public void reloadAllConfig(@ApiParam(value = "HTTP headers")@Context HttpHeaders headers) {
         if (!bypassAuth(headers)) {
             String primarRole = executor.checkUserRoles(headers);
             if (!primarRole.endsWith("admin")) {
@@ -195,7 +195,7 @@ public class AdminResource {
     @Path("/task/{tasktype}")
     @ApiOperation("Get the list of pending tasks for a given task type")
     @Consumes({MediaType.WILDCARD})
-    public List<Task> view(@PathParam("tasktype") String taskType, @DefaultValue("0") @QueryParam("start") Integer start, @DefaultValue("100") @QueryParam("count") Integer count) throws Exception {
+    public List<Task> view(@ApiParam(value = "Task type")@PathParam("tasktype") String taskType,@ApiParam(value = "Task start count") @DefaultValue("0") @QueryParam("start") Integer start,@ApiParam(value = "Task count limit") @DefaultValue("100") @QueryParam("count") Integer count) throws Exception {
         List<Task> tasks = service.getPendingTasksForTaskType(taskType);
         int total = start + count;
         total = (tasks.size() > total) ? total : tasks.size();
@@ -209,8 +209,8 @@ public class AdminResource {
     @Consumes({MediaType.WILDCARD})
     @Produces({MediaType.TEXT_PLAIN})
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
-    public String requeueSweep(@PathParam("workflowId") String workflowId, @Context HttpHeaders headers) throws Exception {
+            @ApiImplicitParam(name = "Authorization", value = "Authorization token", dataType = "string", paramType = "header")})
+    public String requeueSweep(@ApiParam(value = "Workflow Id")@PathParam("workflowId") String workflowId,@ApiParam(value = "HTTP headers") @Context HttpHeaders headers) throws Exception {
         if (!bypassAuth(headers)) {
             String primarRole = executor.checkUserRoles(headers);
             if (!primarRole.endsWith("admin")) {
@@ -229,7 +229,7 @@ public class AdminResource {
     @Path("/showVars")
     @ApiOperation("Gets vars")
     @Consumes({MediaType.WILDCARD})
-    public HashMap<String, String> getEnv( @QueryParam("keys") List<String> keys){
+    public HashMap<String, String> getEnv(@ApiParam(value = "Environment keys list") @QueryParam("keys") List<String> keys){
         if (CollectionUtils.isEmpty(keys)){
             return null;
         }
@@ -245,7 +245,7 @@ public class AdminResource {
     @Consumes(MediaType.TEXT_PLAIN)
     @Produces({MediaType.TEXT_PLAIN})
     @ApiOperation(value = "Retrieves the App Config for the key ")
-    public String getAppConfig(@PathParam("key") String key, @Context HttpHeaders headers) {
+    public String getAppConfig(@ApiParam(value = "Appconfig Key")@PathParam("key") String key,@ApiParam(value = "HTTP headers") @Context HttpHeaders headers) {
 
         if (StringUtils.isEmpty(key)){
             return null;
@@ -260,7 +260,7 @@ public class AdminResource {
     @PUT
     @Path("/appconfig/key/{key}/value/{value}")
     @ApiOperation(value = "Adds a new config value to the database")
-    public void setAppConfig(@PathParam("key") String key, @PathParam("value") String value, @Context HttpHeaders headers) {
+    public void setAppConfig(@ApiParam(value = "Appconfig Key")@PathParam("key") String key,@ApiParam(value = "Appconfig value") @PathParam("value") String value,@ApiParam(value = "HTTP headers") @Context HttpHeaders headers) {
         try {
             appConfig.setValue(key, value);
         } catch (Exception e) {
@@ -271,7 +271,7 @@ public class AdminResource {
     @DELETE
     @Path("/appconfig/key/{key}")
     @ApiOperation(value = "Delete the App Config for the key")
-    public void deleteAppConfig(@PathParam("key") String key, @Context HttpHeaders headers) {
+    public void deleteAppConfig(@ApiParam(value = "Appconfig key")@PathParam("key") String key,@ApiParam(value = "HTTP headers") @Context HttpHeaders headers) {
         try {
             appConfig.removeConfig(key);
         } catch (Exception e) {
@@ -283,7 +283,7 @@ public class AdminResource {
     @GET
     @Path("/appconfig/list")
     @ApiOperation(value = "Get the list of all application configs from the database")
-    public Map<String, String> getAppConfigs(@Context HttpHeaders headers) {
+    public Map<String, String> getAppConfigs(@ApiParam(value = "HTTP headers")@Context HttpHeaders headers) {
         try {
             return appConfig.getConfigs();
         } catch (Exception e) {
@@ -294,7 +294,7 @@ public class AdminResource {
     @PUT
     @Path("/appconfig/refresh")
     @ApiOperation(value = "Refresh the cache with list of App Configs from the database")
-    public void refreshAppConfig(@Context HttpHeaders headers) {
+    public void refreshAppConfig(@ApiParam(value = "HTTP headers")@Context HttpHeaders headers) {
         try {
             appConfig.reloadProperties("");
         } catch (SQLException e) {

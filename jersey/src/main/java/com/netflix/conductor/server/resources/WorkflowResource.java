@@ -116,13 +116,13 @@ public class WorkflowResource {
             @ApiResponse(code = 401, message = "UNAUTHORIZED", response = Error.class),
             @ApiResponse(code = 501, message = "NOT_IMPLEMENTED", response = Error.class),
             @ApiResponse(code = 200, message = "SUCCESS", response = String.class)})
-    @ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),
-            @ApiImplicitParam(name = "Authorization-Context", dataType = "string", paramType = "header"),
-            @ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header"),
-            @ApiImplicitParam(name = "Platform-Trace-Id", dataType = "string", paramType = "header"),
-            @ApiImplicitParam(name = "WorkflowId", dataType = "string", paramType = "header"),
-            @ApiImplicitParam(name = "AsyncStart", dataType = "boolean", paramType = "header")})
-    public Response startWorkflow(StartWorkflowRequest request, @Context HttpHeaders headers) throws Exception {
+    @ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", value = "Deluxe correlation Id", dataType = "string", paramType = "header"),
+            @ApiImplicitParam(name = "Authorization-Context", value = "Authorized user details", dataType = "string", paramType = "header"),
+            @ApiImplicitParam(name = "Authorization", value = "Authorization token", dataType = "string", paramType = "header"),
+            @ApiImplicitParam(name = "Platform-Trace-Id", value = "Trace Id", dataType = "string", paramType = "header"),
+            @ApiImplicitParam(name = "WorkflowId", value = "Workflow Id", dataType = "string", paramType = "header"),
+            @ApiImplicitParam(name = "AsyncStart", value = "Start asynchronously", dataType = "boolean", paramType = "header")})
+    public Response startWorkflow(@ApiParam(value = "Workflow start request object")StartWorkflowRequest request, @Context HttpHeaders headers) throws Exception {
         WorkflowDef def = metadata.getWorkflowDef(request.getName(), request.getVersion());
         if (def == null) {
             throw new ApplicationException(Code.NOT_FOUND, "No such workflow found by name=" + request.getName() + ", version=" + request.getVersion());
@@ -210,15 +210,15 @@ public class WorkflowResource {
             @ApiResponse(code = 401, message = "UNAUTHORIZED", response = Error.class),
             @ApiResponse(code = 501, message = "NOT_IMPLEMENTED", response = Error.class),
             @ApiResponse(code = 200, message = "SUCCESS", response = String.class)})
-    @ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),
-            @ApiImplicitParam(name = "Authorization-Context", dataType = "string", paramType = "header"),
-            @ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header"),
-            @ApiImplicitParam(name = "Platform-Trace-Id", dataType = "string", paramType = "header"),
-            @ApiImplicitParam(name = "WorkflowId", dataType = "string", paramType = "header"),
-            @ApiImplicitParam(name = "AsyncStart", dataType = "boolean", paramType = "header")})
+    @ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", value = "Deluxe correlation Id", dataType = "string", paramType = "header"),
+            @ApiImplicitParam(name = "Authorization-Context", value = "Authorized user details", dataType = "string", paramType = "header"),
+            @ApiImplicitParam(name = "Authorization", value = "Authorization token", dataType = "string", paramType = "header"),
+            @ApiImplicitParam(name = "Platform-Trace-Id", value = "Trace Id", dataType = "string", paramType = "header"),
+            @ApiImplicitParam(name = "WorkflowId", value = "Workflow Id", dataType = "string", paramType = "header"),
+            @ApiImplicitParam(name = "AsyncStart", value = "Start asynchronously", dataType = "boolean", paramType = "header")})
     public Response startWorkflow(@Context HttpHeaders headers,
-                                  @PathParam("name") String name, @QueryParam("version") Integer version, @QueryParam("jobPriority") Integer jobPriority,
-                                  @QueryParam("correlationId") String correlationId, Map<String, Object> input) throws Exception {
+                                  @ApiParam(value = "Workflow name")@PathParam("name") String name,  @ApiParam(value = "Workflow version")@QueryParam("version") Integer version,  @ApiParam(value = "Job priority")@QueryParam("jobPriority") Integer jobPriority,
+                                  @ApiParam(value = "Correlation Id") @QueryParam("correlationId") String correlationId, @ApiParam(value = "Workflow Input") Map<String, Object> input) throws Exception {
 
         StartWorkflowRequest request = new StartWorkflowRequest();
         request.setName(name);
@@ -242,14 +242,14 @@ public class WorkflowResource {
             @ApiResponse(code = 401, message = "UNAUTHORIZED", response = Error.class),
             @ApiResponse(code = 501, message = "NOT_IMPLEMENTED", response = Error.class),
             @ApiResponse(code = 200, message = "SUCCESS", response = String.class)})
-    @ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),
-            @ApiImplicitParam(name = "Authorization-Context", dataType = "string", paramType = "header"),
-            @ApiImplicitParam(name = "Platform-Trace-Id", dataType = "string", paramType = "header"),
-            @ApiImplicitParam(name = "WorkflowId", dataType = "string", paramType = "header"),
-            @ApiImplicitParam(name = "AsyncStart", dataType = "boolean", paramType = "header")})
+    @ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", value = "Deluxe correlation Id", dataType = "string", paramType = "header"),
+            @ApiImplicitParam(name = "Authorization-Context", value = "Authorized user details", dataType = "string", paramType = "header"),
+            @ApiImplicitParam(name = "Platform-Trace-Id", value = "Trace Id", dataType = "string", paramType = "header"),
+            @ApiImplicitParam(name = "WorkflowId", value = "Workflow Id", dataType = "string", paramType = "header"),
+            @ApiImplicitParam(name = "AsyncStart", value = "Start asynchronously", dataType = "boolean", paramType = "header")})
     public Response startWorkflowOps(@Context HttpHeaders headers,
-                                     @PathParam("name") String name, @QueryParam("username") String username, @QueryParam("version") Integer version, @QueryParam("jobPriority") Integer jobPriority,
-                                     @QueryParam("correlationId") String correlationId, Map<String, Object> input) throws Exception {
+                                     @ApiParam(value = "Workflow name") @PathParam("name") String name, @ApiParam(value = "User name") @QueryParam("username") String username,@ApiParam(value = "Workflow version") @QueryParam("version") Integer version,@ApiParam(value = "Job Priority") @QueryParam("jobPriority") Integer jobPriority,
+                                     @ApiParam(value = "Correlation Id") @QueryParam("correlationId") String correlationId,@ApiParam(value = "Workflow input") Map<String, Object> input) throws Exception {
 
         if (username == null) {
             throw new ApplicationException(Code.INVALID_INPUT, "Username is mandatory");
@@ -313,12 +313,12 @@ public class WorkflowResource {
             @ApiResponse(code = 401, message = "UNAUTHORIZED", response = Error.class),
             @ApiResponse(code = 501, message = "NOT_IMPLEMENTED", response = Error.class),
             @ApiResponse(code = 200, message = "SUCCESS", responseContainer = "List", response = Workflow.class)})
-    @ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),
-            @ApiImplicitParam(name = "Platform-Trace-Id", dataType = "string", paramType = "header")})
+    @ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", value = "Deluxe correlation Id", dataType = "string", paramType = "header"),
+            @ApiImplicitParam(name = "Platform-Trace-Id", value = "Trace Id", dataType = "string", paramType = "header")})
     @Consumes(MediaType.WILDCARD)
-    public List<Workflow> getWorkflows(@PathParam("name") String name, @PathParam("correlationId") String correlationId,
-                                       @QueryParam("includeClosed") @DefaultValue("false") boolean includeClosed,
-                                       @QueryParam("includeTasks") @DefaultValue("false") boolean includeTasks) throws Exception {
+    public List<Workflow> getWorkflows(@ApiParam(value = "Workflow name") @PathParam("name") String name,@ApiParam(value = "Correlation Id") @PathParam("correlationId") String correlationId,
+                                       @ApiParam(value = "Include closed")  @QueryParam("includeClosed") @DefaultValue("false") boolean includeClosed,
+                                       @ApiParam(value = "Include Tasks") @QueryParam("includeTasks") @DefaultValue("false") boolean includeTasks) throws Exception {
         return service.getWorkflowInstances(name, correlationId, includeClosed, includeTasks);
     }
 
@@ -333,12 +333,12 @@ public class WorkflowResource {
             @ApiResponse(code = 401, message = "UNAUTHORIZED", response = Error.class),
             @ApiResponse(code = 501, message = "NOT_IMPLEMENTED", response = Error.class),
             @ApiResponse(code = 200, message = "SUCCESS", response = Workflow.class)})
-    @ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),
-            @ApiImplicitParam(name = "Platform-Trace-Id", dataType = "string", paramType = "header")})
+    @ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context",value = "Deluxe correlation Id", dataType = "string", paramType = "header"),
+            @ApiImplicitParam(name = "Platform-Trace-Id", value = "Trace Id", dataType = "string", paramType = "header")})
     @Consumes(MediaType.WILDCARD)
     public Workflow getExecutionStatus(
-            @PathParam("workflowId") String workflowId,
-            @QueryParam("includeTasks") @DefaultValue("true") boolean includeTasks) throws Exception {
+            @ApiParam(value = "Workflow Id")  @PathParam("workflowId") String workflowId,
+            @ApiParam(value = "Include Tasks") @QueryParam("includeTasks") @DefaultValue("true") boolean includeTasks) throws Exception {
         return service.getExecutionStatus(workflowId, includeTasks);
     }
 
@@ -353,10 +353,10 @@ public class WorkflowResource {
             @ApiResponse(code = 401, message = "UNAUTHORIZED", response = Error.class),
             @ApiResponse(code = 501, message = "NOT_IMPLEMENTED", response = Error.class),
             @ApiResponse(code = 200, message = "SUCCESS", response = String.class)})
-    @ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),
-            @ApiImplicitParam(name = "Platform-Trace-Id", dataType = "string", paramType = "header")})
+    @ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", value = "Deluxe correlation Id", dataType = "string", paramType = "header"),
+            @ApiImplicitParam(name = "Platform-Trace-Id", value = "Trace Id", dataType = "string", paramType = "header")})
     @Consumes(MediaType.WILDCARD)
-    public Response delete(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId) throws Exception {
+    public Response delete(@Context HttpHeaders headers,@ApiParam(value = "Workflow Id")  @PathParam("workflowId") String workflowId) throws Exception {
         Response.ResponseBuilder builder = Response.noContent();
         NDC.push("rest-remove-" + UUID.randomUUID().toString());
         try {
@@ -378,11 +378,11 @@ public class WorkflowResource {
             @ApiResponse(code = 401, message = "UNAUTHORIZED", response = Error.class),
             @ApiResponse(code = 501, message = "NOT_IMPLEMENTED", response = Error.class),
             @ApiResponse(code = 200, message = "SUCCESS", responseContainer = "List", response = String.class)})
-    @ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),
-            @ApiImplicitParam(name = "Platform-Trace-Id", dataType = "string", paramType = "header")})
+    @ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", value = "Deluxe correlation Id", dataType = "string", paramType = "header"),
+            @ApiImplicitParam(name = "Platform-Trace-Id", value = "Trace Id", dataType = "string", paramType = "header")})
     @Consumes(MediaType.WILDCARD)
-    public List<String> getRunningWorkflows(@PathParam("name") String workflowName, @QueryParam("startTime") String startTime,
-                                            @QueryParam("endTime") String endTime) {
+    public List<String> getRunningWorkflows(@ApiParam(value = "Workflow name")@PathParam("name") String workflowName,@ApiParam(value = "Workflow start time") @QueryParam("startTime") String startTime,
+                                            @ApiParam(value = "Workflow end time") @QueryParam("endTime") String endTime) {
         return executor.getRunningWorkflowIds(workflowName, toTimestamp(startTime), toTimestamp(endTime));
     }
 
@@ -397,10 +397,10 @@ public class WorkflowResource {
             @ApiResponse(code = 401, message = "UNAUTHORIZED", response = Error.class),
             @ApiResponse(code = 501, message = "NOT_IMPLEMENTED", response = Error.class),
             @ApiResponse(code = 204, message = "SUCCESS")})
-    @ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),
-            @ApiImplicitParam(name = "Platform-Trace-Id", dataType = "string", paramType = "header")})
+    @ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context",value = "Deluxe correlation Id", dataType = "string", paramType = "header"),
+            @ApiImplicitParam(name = "Platform-Trace-Id",value = "Trace Id", dataType = "string", paramType = "header")})
     @Consumes(MediaType.WILDCARD)
-    public void decide(@PathParam("workflowId") String workflowId) throws Exception {
+    public void decide(@ApiParam(value = "Workflow Id")@PathParam("workflowId") String workflowId) throws Exception {
         NDC.push("rest-decide-" + UUID.randomUUID().toString());
         try {
             executor.decide(workflowId);
@@ -420,11 +420,11 @@ public class WorkflowResource {
             @ApiResponse(code = 401, message = "UNAUTHORIZED", response = Error.class),
             @ApiResponse(code = 501, message = "NOT_IMPLEMENTED", response = Error.class),
             @ApiResponse(code = 204, message = "SUCCESS")})
-    @ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),
-            @ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header"),
-            @ApiImplicitParam(name = "Platform-Trace-Id", dataType = "string", paramType = "header")})
+    @ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", value = "Deluxe correlation Id", dataType = "string", paramType = "header"),
+            @ApiImplicitParam(name = "Authorization", value = "Authorization Token", dataType = "string", paramType = "header"),
+            @ApiImplicitParam(name = "Platform-Trace-Id", value = "Trace Id", dataType = "string", paramType = "header")})
     @Consumes(MediaType.WILDCARD)
-    public Response pauseWorkflow(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId) throws Exception {
+    public Response pauseWorkflow(@ApiParam(value = "HTTP headers")@Context HttpHeaders headers,@ApiParam(value = "Workflow Id") @PathParam("workflowId") String workflowId) throws Exception {
         Response.ResponseBuilder builder = Response.noContent();
         String correlationId = handleCorrelationId(workflowId, headers, builder);
         String userInvoked = executor.decodeAuthorizationUser(headers);
@@ -464,11 +464,11 @@ public class WorkflowResource {
             @ApiResponse(code = 401, message = "UNAUTHORIZED", response = Error.class),
             @ApiResponse(code = 501, message = "NOT_IMPLEMENTED", response = Error.class),
             @ApiResponse(code = 204, message = "SUCCESS")})
-    @ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),
-            @ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header"),
-            @ApiImplicitParam(name = "Platform-Trace-Id", dataType = "string", paramType = "header")})
+    @ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context",value = "Deluxe correlation Id", dataType = "string", paramType = "header"),
+            @ApiImplicitParam(name = "Authorization",value = "Authorization Token", dataType = "string", paramType = "header"),
+            @ApiImplicitParam(name = "Platform-Trace-Id", value = "Trace Id", dataType = "string", paramType = "header")})
     @Consumes(MediaType.WILDCARD)
-    public Response resumeWorkflow(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId) throws Exception {
+    public Response resumeWorkflow(@ApiParam(value = "HTTP headers") @Context HttpHeaders headers, @PathParam("workflowId") String workflowId) throws Exception {
         Response.ResponseBuilder builder = Response.noContent();
         String correlationId = handleCorrelationId(workflowId, headers, builder);
         String userInvoked = executor.decodeAuthorizationUser(headers);
@@ -508,11 +508,11 @@ public class WorkflowResource {
             @ApiResponse(code = 401, message = "UNAUTHORIZED", response = Error.class),
             @ApiResponse(code = 501, message = "NOT_IMPLEMENTED", response = Error.class),
             @ApiResponse(code = 415, message = "NO_CONTENT")})
-    @ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),
-            @ApiImplicitParam(name = "Platform-Trace-Id", dataType = "string", paramType = "header")})
+    @ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", value = "Deluxe correlation Id", dataType = "string", paramType = "header"),
+            @ApiImplicitParam(name = "Platform-Trace-Id", value = "Trace Id", dataType = "string", paramType = "header")})
     @Consumes(MediaType.WILDCARD)
-    public void skipTaskFromWorkflow(@PathParam("workflowId") String workflowId, @PathParam("taskReferenceName") String taskReferenceName,
-                                     SkipTaskRequest skipTaskRequest) throws Exception {
+    public void skipTaskFromWorkflow(@ApiParam(value = "Workflow Id") @PathParam("workflowId") String workflowId,@ApiParam(value = "Task reference name")  @PathParam("taskReferenceName") String taskReferenceName,
+                                     @ApiParam(value = "Skip task request")  SkipTaskRequest skipTaskRequest) throws Exception {
         NDC.push("rest-skipTask-" + UUID.randomUUID().toString());
         try {
             executor.skipTaskFromWorkflow(workflowId, taskReferenceName, skipTaskRequest);
@@ -532,12 +532,12 @@ public class WorkflowResource {
             @ApiResponse(code = 401, message = "UNAUTHORIZED", response = Error.class),
             @ApiResponse(code = 501, message = "NOT_IMPLEMENTED", response = Error.class),
             @ApiResponse(code = 200, message = "SUCCESS", response = String.class)})
-    @ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),
-            @ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header"),
-            @ApiImplicitParam(name = "Platform-Trace-Id", dataType = "string", paramType = "header")})
+    @ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", value = "Deluxe correlation Id", dataType = "string", paramType = "header"),
+            @ApiImplicitParam(name = "Authorization", value = "Authorization token", dataType = "string", paramType = "header"),
+            @ApiImplicitParam(name = "Platform-Trace-Id", value = "Trace Id", dataType = "string", paramType = "header")})
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
-    public Response rerun(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId, RerunWorkflowRequest request) throws Exception {
+    public Response rerun(@ApiParam(value = "HTTP headers") @Context HttpHeaders headers,@ApiParam(value = "Workflow Id")  @PathParam("workflowId") String workflowId, @ApiParam(value = "Workflow rerun request") RerunWorkflowRequest request) throws Exception {
         Response.ResponseBuilder builder = Response.ok(workflowId);
         String correlationId = handleCorrelationId(workflowId, headers, builder);
         request.setReRunFromWorkflowId(workflowId);
@@ -579,11 +579,11 @@ public class WorkflowResource {
             @ApiResponse(code = 401, message = "UNAUTHORIZED", response = Error.class),
             @ApiResponse(code = 501, message = "NOT_IMPLEMENTED", response = Error.class),
             @ApiResponse(code = 204, message = "SUCCESS")})
-    @ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),
-            @ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header"),
-            @ApiImplicitParam(name = "Platform-Trace-Id", dataType = "string", paramType = "header")})
+    @ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", value = "Deluxe correlation Id", dataType = "string", paramType = "header"),
+            @ApiImplicitParam(name = "Authorization", value = "Authorization token", dataType = "string", paramType = "header"),
+            @ApiImplicitParam(name = "Platform-Trace-Id",value = "Trace Id", dataType = "string", paramType = "header")})
     @Consumes(MediaType.WILDCARD)
-    public Response restart(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId) throws Exception {
+    public Response restart(@ApiParam(value = "HTTP headers") @Context HttpHeaders headers,@ApiParam(value = "Workflow Id")  @PathParam("workflowId") String workflowId) throws Exception {
         Response.ResponseBuilder builder = Response.noContent();
         String correlationId = handleCorrelationId(workflowId, headers, builder);
         String userInvoked = executor.decodeAuthorizationUser(headers);
@@ -624,11 +624,11 @@ public class WorkflowResource {
             @ApiResponse(code = 401, message = "UNAUTHORIZED", response = Error.class),
             @ApiResponse(code = 501, message = "NOT_IMPLEMENTED", response = Error.class),
             @ApiResponse(code = 204, message = "SUCCESS")})
-    @ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),
-            @ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header"),
-            @ApiImplicitParam(name = "Platform-Trace-Id", dataType = "string", paramType = "header")})
+    @ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context",  value = "Deluxe correlation Id", dataType = "string", paramType = "header"),
+            @ApiImplicitParam(name = "Authorization", value = "Authorization token", dataType = "string", paramType = "header"),
+            @ApiImplicitParam(name = "Platform-Trace-Id", value = "Trace Id", dataType = "string", paramType = "header")})
     @Consumes(MediaType.WILDCARD)
-    public Response clone(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId) throws Exception {
+    public Response clone(@ApiParam(value = "HTTP headers") @Context HttpHeaders headers,@ApiParam(value = "Workflow Id")  @PathParam("workflowId") String workflowId) throws Exception {
         Response.ResponseBuilder builder = Response.noContent();
         String userInvoked = executor.decodeAuthorizationUser(headers);
         Workflow cloneWorkflow = executor.getWorkflow(workflowId, false);
@@ -672,11 +672,11 @@ public class WorkflowResource {
             @ApiResponse(code = 401, message = "UNAUTHORIZED", response = Error.class),
             @ApiResponse(code = 501, message = "NOT_IMPLEMENTED", response = Error.class),
             @ApiResponse(code = 204, message = "SUCCESS")})
-    @ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),
-            @ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header"),
-            @ApiImplicitParam(name = "Platform-Trace-Id", dataType = "string", paramType = "header")})
+    @ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", value = "Deluxe correlation Id", dataType = "string", paramType = "header"),
+            @ApiImplicitParam(name = "Authorization", value = "Trace Id", dataType = "string", paramType = "header"),
+            @ApiImplicitParam(name = "Platform-Trace-Id", value = "Authorization token", dataType = "string", paramType = "header")})
     @Consumes(MediaType.WILDCARD)
-    public Response retry(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId) throws Exception {
+    public Response retry(@ApiParam(value = "HTTP headers") @Context HttpHeaders headers,@ApiParam(value = "Workflow Id")  @PathParam("workflowId") String workflowId) throws Exception {
         Response.ResponseBuilder builder = Response.noContent();
         String correlationId = handleCorrelationId(workflowId, headers, builder);
         String userInvoked = executor.decodeAuthorizationUser(headers);
@@ -716,11 +716,11 @@ public class WorkflowResource {
             @ApiResponse(code = 401, message = "UNAUTHORIZED", response = Error.class),
             @ApiResponse(code = 501, message = "NOT_IMPLEMENTED", response = Error.class),
             @ApiResponse(code = 204, message = "SUCCESS")})
-    @ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),
-            @ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header"),
-            @ApiImplicitParam(name = "Platform-Trace-Id", dataType = "string", paramType = "header")})
+    @ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", value = "Deluxe correlation Id", dataType = "string", paramType = "header"),
+            @ApiImplicitParam(name = "Authorization", value = "Authorization token", dataType = "string", paramType = "header"),
+            @ApiImplicitParam(name = "Platform-Trace-Id", value = "Trace Id", dataType = "string", paramType = "header")})
     @Consumes(MediaType.WILDCARD)
-    public Response terminate(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId, @QueryParam("reason") String reason) throws Exception {
+    public Response terminate(@ApiParam(value = "HTTP headers") @Context HttpHeaders headers,@ApiParam(value = "Workflow Id")  @PathParam("workflowId") String workflowId,@ApiParam(value = "Reason for termination")  @QueryParam("reason") String reason) throws Exception {
         Response.ResponseBuilder builder = Response.noContent();
         handleCorrelationId(workflowId, headers, builder);
         String userInvoked = executor.decodeAuthorizationUser(headers);
@@ -760,11 +760,11 @@ public class WorkflowResource {
             @ApiResponse(code = 401, message = "UNAUTHORIZED", response = Error.class),
             @ApiResponse(code = 501, message = "NOT_IMPLEMENTED", response = Error.class),
             @ApiResponse(code = 204, message = "SUCCESS", response = String.class)})
-    @ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),
-            @ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header"),
-            @ApiImplicitParam(name = "Platform-Trace-Id", dataType = "string", paramType = "header")})
+    @ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", value = "Deluxe correlation Id", dataType = "string", paramType = "header"),
+            @ApiImplicitParam(name = "Authorization", value = "Authorization token", dataType = "string", paramType = "header"),
+            @ApiImplicitParam(name = "Platform-Trace-Id", value = "Trace Id", dataType = "string", paramType = "header")})
     @Produces({MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
-    public Response terminateWorkflows(@Context HttpHeaders headers, List<String> workflowIds, @QueryParam("reason") String reason) throws Exception {
+    public Response terminateWorkflows(@ApiParam(value = "HTTP headers")@Context HttpHeaders headers,@ApiParam(value = "List of workflow Ids") List<String> workflowIds,@ApiParam(value = "Reason for termination") @QueryParam("reason") String reason) throws Exception {
         Response.ResponseBuilder builder = Response.noContent();
         for (int i = 0; i < workflowIds.size(); i++) {
             handleCorrelationId(workflowIds.get(i), headers, builder);
@@ -802,11 +802,11 @@ public class WorkflowResource {
             @ApiResponse(code = 401, message = "UNAUTHORIZED", response = Error.class),
             @ApiResponse(code = 501, message = "NOT_IMPLEMENTED", response = Error.class),
             @ApiResponse(code = 204, message = "SUCCESS", response = String.class)})
-    @ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),
-            @ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header"),
-            @ApiImplicitParam(name = "Platform-Trace-Id", dataType = "string", paramType = "header")})
+    @ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", value = "Deluxe correlation Id", dataType = "string", paramType = "header"),
+            @ApiImplicitParam(name = "Authorization", value = "Authorization token", dataType = "string", paramType = "header"),
+            @ApiImplicitParam(name = "Platform-Trace-Id", value = "Trace Id", dataType = "string", paramType = "header")})
     @Produces({MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
-    public Response cancelWorkflows(@Context HttpHeaders headers, List<String> workflowIds, @QueryParam("reason") String reason) throws Exception {
+    public Response cancelWorkflows(@ApiParam(value = "HTTP headers") @Context HttpHeaders headers,@ApiParam(value = "List of workflow Ids")  List<String> workflowIds,@ApiParam(value = "Reason for cancellation")  @QueryParam("reason") String reason) throws Exception {
         Response.ResponseBuilder builder = Response.noContent();
         for (int i = 0; i < workflowIds.size(); i++) {
             handleCorrelationId(workflowIds.get(i), headers, builder);
@@ -893,11 +893,11 @@ public class WorkflowResource {
             @ApiResponse(code = 401, message = "UNAUTHORIZED", response = Error.class),
             @ApiResponse(code = 501, message = "NOT_IMPLEMENTED", response = Error.class),
             @ApiResponse(code = 204, message = "SUCCESS", response = String.class)})
-    @ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),
-            @ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header"),
-            @ApiImplicitParam(name = "Platform-Trace-Id", dataType = "string", paramType = "header")})
+    @ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", value = "Deluxe correlation Id", dataType = "string", paramType = "header"),
+            @ApiImplicitParam(name = "Authorization", value = "Authorization token", dataType = "string", paramType = "header"),
+            @ApiImplicitParam(name = "Platform-Trace-Id", value = "Trace Id", dataType = "string", paramType = "header")})
     @Produces({MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
-    public Response completeWorkflows(@Context HttpHeaders headers, List<String> workflowIds, @QueryParam("reason") String reason) throws Exception {
+    public Response completeWorkflows(@ApiParam(value = "HTTP headers")@Context HttpHeaders headers,@ApiParam(value = "List of workflow Ids") List<String> workflowIds,@ApiParam(value = "Reason for completion") @QueryParam("reason") String reason) throws Exception {
         Response.ResponseBuilder builder = Response.noContent();
         for (int i = 0; i < workflowIds.size(); i++) {
             handleCorrelationId(workflowIds.get(i), headers, builder);
@@ -938,11 +938,11 @@ public class WorkflowResource {
             @ApiResponse(code = 401, message = "UNAUTHORIZED", response = Error.class),
             @ApiResponse(code = 501, message = "NOT_IMPLEMENTED", response = Error.class),
             @ApiResponse(code = 200, message = "SUCCESS", response = String.class)})
-    @ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),
-            @ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header"),
-            @ApiImplicitParam(name = "Platform-Trace-Id", dataType = "string", paramType = "header")})
+    @ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", value = "Deluxe correlation Id", dataType = "string", paramType = "header"),
+            @ApiImplicitParam(name = "Authorization", value = "Authorization token", dataType = "string", paramType = "header"),
+            @ApiImplicitParam(name = "Platform-Trace-Id", value = "Trace id", dataType = "string", paramType = "header")})
     @Produces({MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
-    public Response cancel(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId, @QueryParam("reason") String reason) throws Exception {
+    public Response cancel(@ApiParam(value = "HTTP headers")@Context HttpHeaders headers, @ApiParam(value = "workflowId to cancel")@PathParam("workflowId") String workflowId, @ApiParam(value = "Reason for cancellation")@QueryParam("reason") String reason) throws Exception {
         Response.ResponseBuilder builder = Response.ok(workflowId);
         handleCorrelationId(workflowId, headers, builder);
         String userInvoked = executor.decodeAuthorizationUser(headers);
@@ -984,11 +984,11 @@ public class WorkflowResource {
             @ApiResponse(code = 401, message = "UNAUTHORIZED", response = Error.class),
             @ApiResponse(code = 501, message = "NOT_IMPLEMENTED", response = Error.class),
             @ApiResponse(code = 200, message = "SUCCESS", response = String.class)})
-    @ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),
-            @ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header"),
-            @ApiImplicitParam(name = "Platform-Trace-Id", dataType = "string", paramType = "header")})
+    @ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", value = "Deluxe correlation Id", dataType = "string", paramType = "header"),
+            @ApiImplicitParam(name = "Authorization", value = "Authorization token", dataType = "string", paramType = "header"),
+            @ApiImplicitParam(name = "Platform-Trace-Id", value = "Trace Id", dataType = "string", paramType = "header")})
     @Produces(MediaType.TEXT_PLAIN)
-    public Response complete(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId) throws Exception {
+    public Response complete(@ApiParam(value = "HTTP headers") @Context HttpHeaders headers,@ApiParam(value = "Workflow Id")  @PathParam("workflowId") String workflowId) throws Exception {
         Response.ResponseBuilder builder = Response.ok(workflowId);
         handleCorrelationId(workflowId, headers, builder);
         String userInvoked = executor.decodeAuthorizationUser(headers);
@@ -1026,20 +1026,20 @@ public class WorkflowResource {
             @ApiResponse(code = 401, message = "UNAUTHORIZED", response = Error.class),
             @ApiResponse(code = 501, message = "NOT_IMPLEMENTED", response = Error.class),
             @ApiResponse(code = 200, message = "SUCCESS", responseContainer = "List", response = WorkflowSummary.class)})
-    @ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),
-            @ApiImplicitParam(name = "Platform-Trace-Id", dataType = "string", paramType = "header")})
+    @ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", value = "Deluxe correlation Id", dataType = "string", paramType = "header"),
+            @ApiImplicitParam(name = "Platform-Trace-Id", value = "Trace Id", dataType = "string", paramType = "header")})
     @GET
     @Consumes(MediaType.WILDCARD)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/search")
     public SearchResult<WorkflowSummary> search(
-            @QueryParam("start") @DefaultValue("0") int start,
-            @QueryParam("size") @DefaultValue("100") int size,
-            @QueryParam("sort") String sort,
-            @QueryParam("freeText") @DefaultValue("*") String freeText,
-            @QueryParam("query") String query,
-            @QueryParam("from") String from,
-            @QueryParam("end") String end
+            @ApiParam(value = "Start workflow count") @QueryParam("start") @DefaultValue("0") int start,
+            @ApiParam(value = "Workflow count limit") @QueryParam("size") @DefaultValue("100") int size,
+            @ApiParam(value = "Sorting order") @QueryParam("sort") String sort,
+            @ApiParam(value = "Search string") @QueryParam("freeText") @DefaultValue("*") String freeText,
+            @ApiParam(value = "Workflow search query") @QueryParam("query") String query,
+            @ApiParam(value = "workflow created date from") @QueryParam("from") String from,
+            @ApiParam(value = "workflow created date to") @QueryParam("end") String end
     ) {
 
         if (size > maxSearchSize) {
@@ -1059,11 +1059,11 @@ public class WorkflowResource {
             @ApiResponse(code = 401, message = "UNAUTHORIZED", response = Error.class),
             @ApiResponse(code = 501, message = "NOT_IMPLEMENTED", response = Error.class),
             @ApiResponse(code = 200, message = "SUCCESS", responseContainer = "List", response = String.class)})
-    @ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),
-            @ApiImplicitParam(name = "Platform-Trace-Id", dataType = "string", paramType = "header")})
+    @ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", value = "Deluxe correlation Id", dataType = "string", paramType = "header"),
+            @ApiImplicitParam(name = "Platform-Trace-Id", value = "Trace Id", dataType = "string", paramType = "header")})
     @Consumes(MediaType.WILDCARD)
-    public List<String> getWorkflowIds(@PathParam("name") String workflowName, @QueryParam("state") @DefaultValue("RUNNING,PAUSED") String state,
-                                     @QueryParam("startedBefore") String startedBefore, @QueryParam("startedAfter") String startedAfter) {
+    public List<String> getWorkflowIds(@ApiParam(value = "Workflow name") @PathParam("name") String workflowName,@ApiParam(value = "Workflow status")  @QueryParam("state") @DefaultValue("RUNNING,PAUSED") String state,
+                                       @ApiParam(value = "Workflow started before date")  @QueryParam("startedBefore") String startedBefore,@ApiParam(value = "Workflow started after date")  @QueryParam("startedAfter") String startedAfter) {
         if ( StringUtils.isEmpty(startedBefore) && StringUtils.isEmpty(startedAfter)){
             throw new ApplicationException(Code.INVALID_INPUT, "One of startedBefore or StartedAfter is required  ");
         }
@@ -1086,8 +1086,8 @@ public class WorkflowResource {
     @ApiOperation("Search error registry")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
-    public List<WorkflowError> searchErrorRegistry(WorkflowErrorRegistry workflowErrorRegistry, @Context HttpHeaders headers) throws Exception {
+            @ApiImplicitParam(name = "Authorization", value = "Authorization token", dataType = "string", paramType = "header")})
+    public List<WorkflowError> searchErrorRegistry(@ApiParam(value = "Workflow error registry request body") WorkflowErrorRegistry workflowErrorRegistry,@ApiParam(value = "HTTP headers")  @Context HttpHeaders headers) throws Exception {
         if (!bypassAuth(headers)) {
             String primarRole = executor.checkUserRoles(headers);
             if (!primarRole.endsWith("admin")) {
@@ -1104,8 +1104,8 @@ public class WorkflowResource {
     @ApiOperation("Get error registry list")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
-    public List<WorkflowErrorRegistry> searchErrorRegistryList(WorkflowErrorRegistry workflowErrorRegistry, @Context HttpHeaders headers) throws Exception {
+            @ApiImplicitParam(name = "Authorization", value = "Deluxe correlation Id", dataType = "string", paramType = "header")})
+    public List<WorkflowErrorRegistry> searchErrorRegistryList(@ApiParam(value = "Workflow error registry request body")WorkflowErrorRegistry workflowErrorRegistry,@ApiParam(value = "HTTP headers") @Context HttpHeaders headers) throws Exception {
         if (!bypassAuth(headers)) {
             String primarRole = executor.checkUserRoles(headers);
             if (!primarRole.endsWith("admin")) {
@@ -1122,7 +1122,7 @@ public class WorkflowResource {
     @Consumes(MediaType.TEXT_PLAIN)
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Search for a particular task details")
-    public List<TaskDetails> searchTaskDetails(@QueryParam("jobId") String jobId, @QueryParam("workflowId") String workflowId, @QueryParam("workflowType") String workflowType, @QueryParam("taskName") String taskName, @DefaultValue("false") @QueryParam("includeOutput") Boolean includeOutput) throws Exception {
+    public List<TaskDetails> searchTaskDetails(@ApiParam(value = "Job Id")@QueryParam("jobId") String jobId,@ApiParam(value = "Workflow id") @QueryParam("workflowId") String workflowId,@ApiParam(value = "Workflow type") @QueryParam("workflowType") String workflowType,@ApiParam(value = "Task reference name") @QueryParam("taskName") String taskName,@ApiParam(value = "Include task output") @DefaultValue("false") @QueryParam("includeOutput") Boolean includeOutput) throws Exception {
         return executor.searchTaskDetails(jobId, workflowId, workflowType, taskName, includeOutput);
     }
 

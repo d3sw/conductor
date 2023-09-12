@@ -62,8 +62,8 @@ public class MetadataResource {
 	@Path("/workflow")
 	@ApiOperation("Create a new workflow definition")
 	@ApiImplicitParams({
-			@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
-	public void create(WorkflowDef def,@Context HttpHeaders headers) throws Exception{
+			@ApiImplicitParam(name = "Authorization", value = "Authorization token", dataType = "string", paramType = "header")})
+	public void create(@ApiParam(value = "Workflow definition body") WorkflowDef def,@ApiParam(value = "HTTP headers") @Context HttpHeaders headers) throws Exception{
 		if (!bypassAuth(headers)) {
 			String primarRole = executor.checkUserRoles(headers);
 			if (!primarRole.endsWith("admin")) {
@@ -79,8 +79,8 @@ public class MetadataResource {
 	@Path("/workflow")
 	@ApiOperation("Create or update workflow definition")
 	@ApiImplicitParams({
-			@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
-	public void update(List<WorkflowDef> defs,@Context HttpHeaders headers) throws Exception{
+			@ApiImplicitParam(name = "Authorization",value = "Authorization token", dataType = "string", paramType = "header")})
+	public void update(@ApiParam(value = "List of workflow definitions") List<WorkflowDef> defs,@ApiParam(value = "HTTP headers") @Context HttpHeaders headers) throws Exception{
 		if (!bypassAuth(headers)) {
 			String primarRole = executor.checkUserRoles(headers);
 			if (!primarRole.endsWith("admin")) {
@@ -95,7 +95,7 @@ public class MetadataResource {
 	@GET
 	@ApiOperation("Retrieves workflow definition along with blueprint")
 	@Path("/workflow/{name}")
-	public WorkflowDef get(@PathParam("name") String name, @QueryParam("version") Integer version) throws Exception {
+	public WorkflowDef get(@ApiParam(value = "Workflow name")@PathParam("name") String name,@ApiParam(value = "Workflow version") @QueryParam("version") Integer version) throws Exception {
 		return service.getWorkflowDef(name, version);
 	}
 
@@ -109,7 +109,7 @@ public class MetadataResource {
 	@GET
 	@ApiOperation("Retrieves all workflows associated with the given metadata definition")
 	@Path("/workflow/usage/{name}")
-	public List<String> checkUsage(@PathParam("name") String name) throws Exception {
+	public List<String> checkUsage(@ApiParam(value = "Workflow name")@PathParam("name") String name) throws Exception {
 		List<String> workflowIds =  service.getWorkflowDefInUsage(name);
 		if (CollectionUtils.isEmpty(workflowIds)) {
 			throw new ApplicationException(Code.NOT_FOUND, "Workflow is not currently in use");
@@ -121,8 +121,8 @@ public class MetadataResource {
 	@Path("/taskdefs")
 	@ApiOperation("Create new task definition(s)")
 	@ApiImplicitParams({
-			@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
-	public void registerTaskDef(List<TaskDef> taskDefs,@Context HttpHeaders headers) throws Exception {
+			@ApiImplicitParam(name = "Authorization", value = "Authorization token", dataType = "string", paramType = "header")})
+	public void registerTaskDef(@ApiParam(value = "Task definition list")List<TaskDef> taskDefs,@Context HttpHeaders headers) throws Exception {
 		if (!bypassAuth(headers)) {
 			String primarRole = executor.checkUserRoles(headers);
 			if (!primarRole.endsWith("admin")) {
@@ -138,8 +138,8 @@ public class MetadataResource {
 	@Path("/taskdefs")
 	@ApiOperation("Update an existing task")
 	@ApiImplicitParams({
-			@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
-	public void registerTaskDef(TaskDef taskDef,@Context HttpHeaders headers) throws Exception {
+			@ApiImplicitParam(name = "Authorization", value = "Authorization token", dataType = "string", paramType = "header")})
+	public void registerTaskDef(@ApiParam(value = "Task definition") TaskDef taskDef,@ApiParam(value = "HTTP headers") @Context HttpHeaders headers) throws Exception {
 		if (!bypassAuth(headers)) {
 			String primarRole = executor.checkUserRoles(headers);
 			if (!primarRole.endsWith("admin")) {
@@ -163,7 +163,7 @@ public class MetadataResource {
 	@Path("/taskdefs/{tasktype}")
 	@ApiOperation("Gets the task definition")
 	@Consumes({MediaType.WILDCARD})
-	public TaskDef getTaskDef(@PathParam("tasktype") String taskType) throws Exception {
+	public TaskDef getTaskDef(@ApiParam(value = "Task type") @PathParam("tasktype") String taskType) throws Exception {
 		return service.getTaskDef(taskType);
 	}
 	
@@ -171,8 +171,8 @@ public class MetadataResource {
 	@Path("/taskdefs/{tasktype}")
 	@ApiOperation("Remove a task definition")
 	@ApiImplicitParams({
-			@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
-	public void unregisterTaskDef(@PathParam("tasktype") String taskType,@Context HttpHeaders headers){
+			@ApiImplicitParam(name = "Authorization", value = "Authorization token", dataType = "string", paramType = "header")})
+	public void unregisterTaskDef(@ApiParam(value = "Task type") @PathParam("tasktype") String taskType,@ApiParam(value = "HTTP headers") @Context HttpHeaders headers){
 		if (!bypassAuth(headers)) {
 			String primarRole = executor.checkUserRoles(headers);
 			if (!primarRole.endsWith("admin")) {
@@ -188,8 +188,8 @@ public class MetadataResource {
 	@Path("/workflow/{name}")
 	@ApiOperation("Remove a workflow definition")
 	@ApiImplicitParams({
-			@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
-	public void unregisterWorkflow(@PathParam("name") String name, @QueryParam("version") Integer version,@Context HttpHeaders headers){
+			@ApiImplicitParam(name = "Authorization", value = "Authorization token", dataType = "string", paramType = "header")})
+	public void unregisterWorkflow(@ApiParam(value = "Workflow name")@PathParam("name") String name,@ApiParam(value = "Workflow version") @QueryParam("version") Integer version,@ApiParam(value = "HTTP headers")@Context HttpHeaders headers){
 		if (!bypassAuth(headers)) {
 			String primarRole = executor.checkUserRoles(headers);
 			if (!primarRole.endsWith("admin")) {

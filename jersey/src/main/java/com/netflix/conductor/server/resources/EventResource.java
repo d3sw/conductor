@@ -79,8 +79,8 @@ public class EventResource {
 	@POST
 	@ApiOperation("Add a new event handler.")
 	@ApiImplicitParams({
-			@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
-	public void addEventHandler(EventHandler eventHandler,@Context HttpHeaders headers) throws Exception {
+			@ApiImplicitParam(name = "Authorization", value = "Authorization token",dataType = "string", paramType = "header")})
+	public void addEventHandler(@ApiParam(value = "Event handler definition")EventHandler eventHandler,@ApiParam(value = "HTTP headers")@Context HttpHeaders headers) throws Exception {
 		if (!bypassAuth(headers)) {
 			String primarRole = executor.checkUserRoles(headers);
 			if (!primarRole.endsWith("admin")) {
@@ -95,8 +95,8 @@ public class EventResource {
 	@PUT
 	@ApiOperation("Update an existing event handler.")
 	@ApiImplicitParams({
-			@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
-	public void updateEventHandler(EventHandler eventHandler,@Context HttpHeaders headers) throws Exception {
+			@ApiImplicitParam(name = "Authorization", value = "Authorization token", dataType = "string", paramType = "header")})
+	public void updateEventHandler(@ApiParam(value = "Event handler definition")EventHandler eventHandler,@ApiParam(value = "HTTP headers")@Context HttpHeaders headers) throws Exception {
 		if (!bypassAuth(headers)) {
 			String primarRole = executor.checkUserRoles(headers);
 			if (!primarRole.endsWith("admin")) {
@@ -112,8 +112,8 @@ public class EventResource {
 	@Path("/{name}/disable")
 	@ApiOperation("Disable an event handler")
 	@ApiImplicitParams({
-			@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
-	public void disable(@PathParam("name") String name,@Context HttpHeaders headers) throws Exception{
+			@ApiImplicitParam(name = "Authorization", value = "Authorization token", dataType = "string", paramType = "header")})
+	public void disable(@ApiParam(value = "Event handler name")@PathParam("name") String name,@ApiParam(value = "HTTP headers")@Context HttpHeaders headers) throws Exception{
 		if (!bypassAuth(headers)) {
 			String primarRole = executor.checkUserRoles(headers);
 			if (!primarRole.endsWith("admin")) {
@@ -129,8 +129,8 @@ public class EventResource {
 	@Path("/{name}/enable")
 	@ApiOperation("Enable an event handler")
 	@ApiImplicitParams({
-			@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
-	public void enable(@PathParam("name") String name,@Context HttpHeaders headers) throws Exception{
+			@ApiImplicitParam(name = "Authorization", value = "Authorization token", dataType = "string", paramType = "header")})
+	public void enable(@ApiParam(value = "Event handler name")@PathParam("name") String name,@ApiParam(value = "HTTp headers")@Context HttpHeaders headers) throws Exception{
 		if (!bypassAuth(headers)) {
 			String primarRole = executor.checkUserRoles(headers);
 			if (!primarRole.endsWith("admin")) {
@@ -146,8 +146,8 @@ public class EventResource {
 	@Path("/refresh")
 	@ApiOperation("Force conductor to refresh event handlers")
 	@ApiImplicitParams({
-			@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
-	public void refresh(@Context HttpHeaders headers) throws Exception{
+			@ApiImplicitParam(name = "Authorization", value = "Authorization token", dataType = "string", paramType = "header")})
+	public void refresh(@ApiParam(value = "HTTP headers")@Context HttpHeaders headers) throws Exception{
 		if (!bypassAuth(headers)) {
 			String primarRole = executor.checkUserRoles(headers);
 			if (!primarRole.endsWith("admin")) {
@@ -163,8 +163,8 @@ public class EventResource {
 	@Path("/{name}")
 	@ApiOperation("Remove an event handler")
 	@ApiImplicitParams({
-			@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
-	public void removeEventHandlerStatus(@PathParam("name") String name,@Context HttpHeaders headers) throws Exception{
+			@ApiImplicitParam(name = "Authorization", value = "Authorization token", dataType = "string", paramType = "header")})
+	public void removeEventHandlerStatus(@ApiParam(value = "Event handler name")@PathParam("name") String name,@ApiParam(value = "HTTP headers")@Context HttpHeaders headers) throws Exception{
 		if (!bypassAuth(headers)) {
 			String primarRole = executor.checkUserRoles(headers);
 			if (!primarRole.endsWith("admin")) {
@@ -185,14 +185,14 @@ public class EventResource {
 	@GET
 	@Path("/{event}")
 	@ApiOperation("Get event handlers for a given event")
-	public List<EventHandler> getEventHandlersForEvent(@PathParam("event") String event, @QueryParam("activeOnly") @DefaultValue("true") boolean activeOnly) {
+	public List<EventHandler> getEventHandlersForEvent(@ApiParam(value = "Event handler name")@PathParam("event") String event,@ApiParam(value = "Only active handers") @QueryParam("activeOnly") @DefaultValue("true") boolean activeOnly) {
 		return service.getEventHandlersForEvent(event, activeOnly);
 	}
 	
 	@GET
 	@Path("/queues")
 	@ApiOperation("Get registered queues")
-	public Map<String, ?> getEventQueues(@QueryParam("verbose") @DefaultValue("false") boolean verbose) {
+	public Map<String, ?> getEventQueues(@ApiParam(value = "Verbose required")@QueryParam("verbose") @DefaultValue("false") boolean verbose) {
 		return (verbose ? ep.getQueueSizes() : ep.getQueues());
 	}
 

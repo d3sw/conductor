@@ -72,7 +72,7 @@ public class TaskResource {
     @Path("/poll/{tasktype}")
     @ApiOperation("Poll for a task of a certain type")
     @Consumes({MediaType.WILDCARD})
-    public Task poll(@PathParam("tasktype") String taskType, @QueryParam("workerid") String workerId, @QueryParam("domain") String domain) throws Exception {
+    public Task poll(@ApiParam(value = "Task type")@PathParam("tasktype") String taskType,@ApiParam(value = "Worker Id for task poll") @QueryParam("workerid") String workerId,@ApiParam(value = "Domain") @QueryParam("domain") String domain) throws Exception {
         List<Task> tasks = taskService.poll(taskType, workerId, domain, 1, 100);
         if (tasks.isEmpty()) {
             return null;
@@ -85,11 +85,11 @@ public class TaskResource {
     @ApiOperation("batch Poll for a task of a certain type")
     @Consumes({MediaType.WILDCARD})
     public List<Task> batchPoll(
-            @PathParam("tasktype") String taskType,
-            @QueryParam("workerid") String workerId,
-            @QueryParam("domain") String domain,
-            @DefaultValue("1") @QueryParam("count") Integer count,
-            @DefaultValue("100") @QueryParam("timeout") Integer timeout
+            @ApiParam(value = "Task type")@PathParam("tasktype") String taskType,
+            @ApiParam(value = "Worker Id for task poll") @QueryParam("workerid") String workerId,
+            @ApiParam(value = "domain") @QueryParam("domain") String domain,
+            @ApiParam(value = "Task start count")@DefaultValue("1") @QueryParam("count") Integer count,
+            @ApiParam(value = "Task timeout in secs")@DefaultValue("100") @QueryParam("timeout") Integer timeout
 
     ) throws Exception {
         return taskService.poll(taskType, workerId, domain, count, timeout);
@@ -99,8 +99,8 @@ public class TaskResource {
     @Path("/in_progress/{tasktype}")
     @ApiOperation("Get in progress tasks.  The results are paginated.")
     @Consumes({MediaType.WILDCARD})
-    public List<Task> getTasks(@PathParam("tasktype") String taskType, @QueryParam("startKey") String startKey,
-                               @QueryParam("count") @DefaultValue("100") Integer count) throws Exception {
+    public List<Task> getTasks(@ApiParam(value = "Task type")@PathParam("tasktype") String taskType,@ApiParam(value = "Start key") @QueryParam("startKey") String startKey,
+                               @ApiParam(value = "Task count limit") @QueryParam("count") @DefaultValue("100") Integer count) throws Exception {
         return taskService.getTasks(taskType, startKey, count);
     }
 
@@ -108,7 +108,7 @@ public class TaskResource {
     @Path("/in_progress/{workflowId}/{taskRefName}")
     @ApiOperation("Get in progress task for a given workflow id.")
     @Consumes({MediaType.WILDCARD})
-    public Task getPendingTaskForWorkflow(@PathParam("workflowId") String workflowId, @PathParam("taskRefName") String taskReferenceName)
+    public Task getPendingTaskForWorkflow(@ApiParam(value = "Workflow Id")@PathParam("workflowId") String workflowId,@ApiParam(value = "Task reference name") @PathParam("taskRefName") String taskReferenceName)
             throws Exception {
         return taskService.getPendingTaskForWorkflow(taskReferenceName, workflowId);
     }
@@ -116,8 +116,8 @@ public class TaskResource {
     @POST
     @ApiOperation("Update a task")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
-    public String updateTask(TaskResult task, @Context HttpHeaders headers) throws Exception {
+            @ApiImplicitParam(name = "Authorization", value = "Authorization token", dataType = "string", paramType = "header")})
+    public String updateTask(@ApiParam(value = "Task result body for update")TaskResult task,@ApiParam(value = "HTTP headers") @Context HttpHeaders headers) throws Exception {
         if (!bypassAuth(headers)) {
             String primarRole = executor.checkUserRoles(headers);
             if (!primarRole.endsWith("admin")) {
@@ -146,8 +146,8 @@ public class TaskResource {
     @ApiOperation("Ack Task is recieved")
     @Consumes({MediaType.WILDCARD})
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
-    public String ack(@PathParam("taskId") String taskId, @QueryParam("workerid") String workerId, @Context HttpHeaders headers) throws Exception {
+            @ApiImplicitParam(name = "Authorization", value = "Authorization token", dataType = "string", paramType = "header")})
+    public String ack(@ApiParam(value = "Task Id")@PathParam("taskId") String taskId,@ApiParam(value = "Worker Id") @QueryParam("workerid") String workerId,@ApiParam(value = "HTTP headers") @Context HttpHeaders headers) throws Exception {
         if (!bypassAuth(headers)) {
             String primarRole = executor.checkUserRoles(headers);
             if (!primarRole.endsWith("admin")) {
@@ -163,8 +163,8 @@ public class TaskResource {
     @Path("/{taskId}/log")
     @ApiOperation("Log Task Execution Details")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
-    public void log(@PathParam("taskId") String taskId, String log, @Context HttpHeaders headers) throws Exception {
+            @ApiImplicitParam(name = "Authorization",value = "Authorization token", dataType = "string", paramType = "header")})
+    public void log(@ApiParam(value = "Task Id")@PathParam("taskId") String taskId,@ApiParam(value = "Log messgae") String log,@ApiParam(value = "HTTP headers") @Context HttpHeaders headers) throws Exception {
         if (!bypassAuth(headers)) {
             String primarRole = executor.checkUserRoles(headers);
             if (!primarRole.endsWith("admin")) {
@@ -179,7 +179,7 @@ public class TaskResource {
     @GET
     @Path("/{taskId}/log")
     @ApiOperation("Get Task Execution Logs")
-    public List<TaskExecLog> getTaskLogs(@PathParam("taskId") String taskId) throws Exception {
+    public List<TaskExecLog> getTaskLogs(@ApiParam(value = "Task Id")@PathParam("taskId") String taskId) throws Exception {
         return taskService.getTaskLogs(taskId);
     }
 
@@ -187,7 +187,7 @@ public class TaskResource {
     @Path("/{taskId}")
     @ApiOperation("Get task by Id")
     @Consumes({MediaType.WILDCARD})
-    public Task getTask(@PathParam("taskId") String taskId) throws Exception {
+    public Task getTask(@ApiParam(value = "Task Id") @PathParam("taskId") String taskId) throws Exception {
         return taskService.getTask(taskId);
     }
 
@@ -195,9 +195,9 @@ public class TaskResource {
     @Path("/queue/{taskType}/{taskId}")
     @ApiOperation("Remove Task from a Task type queue")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
+            @ApiImplicitParam(name = "Authorization",value = "Authorization token", dataType = "string", paramType = "header")})
     @Consumes({MediaType.WILDCARD})
-    public void remvoeTaskFromQueue(@PathParam("taskType") String taskType, @PathParam("taskId") String taskId, @Context HttpHeaders headers) throws Exception {
+    public void remvoeTaskFromQueue(@ApiParam(value = "Task type")@PathParam("taskType") String taskType,@ApiParam(value = "Task Id") @PathParam("taskId") String taskId,@ApiParam(value = "HTTP headers") @Context HttpHeaders headers) throws Exception {
         if (!bypassAuth(headers)) {
             String primarRole = executor.checkUserRoles(headers);
             if (!primarRole.endsWith("admin")) {
@@ -213,7 +213,7 @@ public class TaskResource {
     @Path("/queue/sizes")
     @ApiOperation("Get Task type queue sizes")
     @Consumes({MediaType.WILDCARD})
-    public Map<String, Integer> size(@QueryParam("taskType") List<String> taskTypes) throws Exception {
+    public Map<String, Integer> size(@ApiParam(value = "List of task type")@QueryParam("taskType") List<String> taskTypes) throws Exception {
         return taskService.getTaskQueueSizes(taskTypes);
     }
 
@@ -249,7 +249,7 @@ public class TaskResource {
     @Path("/queue/polldata")
     @ApiOperation("Get the last poll data for a given task type")
     @Consumes({MediaType.WILDCARD})
-    public List<PollData> getPollData(@QueryParam("taskType") String taskType) throws Exception {
+    public List<PollData> getPollData(@ApiParam(value = "Task type")@QueryParam("taskType") String taskType) throws Exception {
         return taskService.getPollData(taskType);
     }
 
@@ -268,8 +268,8 @@ public class TaskResource {
     @Consumes({MediaType.WILDCARD})
     @Produces({MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
-    public String requeue(@Context HttpHeaders headers) throws Exception {
+            @ApiImplicitParam(name = "Authorization",value = "Authorization token", dataType = "string", paramType = "header")})
+    public String requeue(@ApiParam(value = "HTTP headers")@Context HttpHeaders headers) throws Exception {
         if (!bypassAuth(headers)) {
             String primarRole = executor.checkUserRoles(headers);
             if (!primarRole.endsWith("admin")) {
@@ -287,8 +287,8 @@ public class TaskResource {
     @Consumes({MediaType.WILDCARD})
     @Produces({MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
-    public String requeue(@PathParam("taskType") String taskType, @Context HttpHeaders headers) throws Exception {
+            @ApiImplicitParam(name = "Authorization",value = "Authorization token", dataType = "string", paramType = "header")})
+    public String requeue(@ApiParam(value = "Task type")@PathParam("taskType") String taskType,@ApiParam(value = "HTTP headers") @Context HttpHeaders headers) throws Exception {
         if (!bypassAuth(headers)) {
             String primarRole = executor.checkUserRoles(headers);
             if (!primarRole.endsWith("admin")) {
