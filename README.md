@@ -4,83 +4,37 @@
 ## Conductor
 Conductor is an _orchestration_ engine that runs in the cloud.
 
-[![Build Status](https://travis-ci.org/Netflix/conductor.svg?branch=master)](https://travis-ci.org/Netflix/conductor)
-
 ## Documentation & Getting Started
-[http://netflix.github.io/conductor/](http://netflix.github.io/conductor/)
 
-[Getting Started](http://netflix.github.io/conductor/intro) guide.
+[Getting Started](https://conductor.netflix.com/devguide/concepts/index.html) guide.
 
-## Get Conductor
-Binaries are available from Maven Central and jcenter.
+[Usage](https://bydeluxe.atlassian.net/wiki/spaces/ENG/pages/17288931838/Netflix+Conductor) guide.
 
-|Group|Artifact|Latest Stable Version|
-|-----------|---------------|---------------------|
-|com.netflix.conductor|conductor-*|1.5.+|
+[High Level Architecture](https://bydeluxe.atlassian.net/wiki/spaces/ENG/pages/17288925905/High+Level+Architecture+Diagram)
 
-Below are the various artifacts published:
+## Prerequisite
+Conductor runs on Java 1.8
 
-|Artifact|Description|
-|-----------|---------------|
-|conductor-common|Common models used by various conductor modules|
-|conductor-core|Core Conductor module|
-|conductor-redis-persistence|Persistence using Redis/Dynomite and Elasticsearch|
-|conductor-jersey|Jersey JAX-RS resources for the core services|
-|conductor-ui|node.js based UI for Conductor|
-|conductor-contribs|Optional contrib package that holds extended workflow tasks and support for SQS|
-|conductor-client|Java client for Conductor that includes helpers for running a worker tasks|
-|conductor-server|Self contained Jetty server|
-|conductor-test-harness|Used for building test harness and an in-memory kitchensink demo|
+Refer to [this](https://bydeluxe.atlassian.net/wiki/spaces/ENG/pages/17661723086/Support+multiple+Java+versions+on+Mac+OS+using+sdkMan+tool) document for running multiple versions of Java on MacOs
 
-## Building
-To build the server, use the following dependencies in your classpath:
+## Local Setup
 
-* conductor-common
-* conductor-core
-* conductor-jersey
-* conductor-redis-persistence (_unless using your own persistence module_)
-* conductor-contribs (_optional_)
+There are a couple of ways to run conductor locally.
 
-### Deploying Jersey JAX-RS resources
-Add the following packages to classpath scan:
+1. Using containers (Conductor Docker Build/Start/Kill Scripts).Refer to [this](https://bydeluxe.atlassian.net/wiki/spaces/ENG/pages/17288930751)
+2. Run through IDE (IntelliJ) running the gradle server task.Refer to [this](https://bydeluxe.atlassian.net/wiki/spaces/ENG/pages/17288929826/Setup+Local+Conductor)
+3. Run through IDE (IntelliJ) by setting up an application to run.Refer to [this](https://bydeluxe.atlassian.net/wiki/spaces/ENG/pages/17288929826/Setup+Local+Conductor)
+4. Run through IDE (IntelliJ) running as remote application.Refer to [this](https://bydeluxe.atlassian.net/wiki/spaces/ENG/pages/17288925271/Project+Setup+Trouble+shooting)
 
-```java
-com.netflix.conductor.server.resources
-com.netflix.workflow.contribs.queue
-```
-Conductor relies on the guice (4.0+) for the dependency injection.
-Persistence has a guice module to wire up appropriate interfaces:
+## Setup Local Database
 
-```java
-com.netflix.conductor.dao.RedisESWorkflowModule
-```
-## Database Requirements
+1. Install PostgresQL on the local machine
+2. The conductor-local.env file attached below uses the following db configs.. Please update the env file with your local db details if it differs
+   database:conductor
+   user:conductor
+   password:conductor
+3. Use conductor/postgresql-persistence/src/main/resources/initial_schema.sql to create the tables
 
-* The default persistence used is [Dynomite](https://github.com/Netflix/dynomite)
-* For queues, we are relying on [dyno-queues](https://github.com/Netflix/dyno-queues)
-* The indexing backend is [Elasticsearch](https://www.elastic.co/) (2.+)
-
-## Other Requirements
-* JDK 1.8+
-* Servlet Container
-
-## Get Support
-Conductor is maintained by Content Platform Engineering team at Netflix.  Use github issue tracking for any support request.  
-
-## LICENSE
-
-Copyright (c) 2016 Netflix, Inc.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-<http://www.apache.org/licenses/LICENSE-2.0>
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-
+## Starting Conductor UI
+Refer  to [this](https://bydeluxe.atlassian.net/wiki/spaces/ENG/pages/17288929826/Setup+Local+Conductor) to setup and run conductor UI in local
 
