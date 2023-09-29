@@ -289,6 +289,12 @@ CREATE TABLE IF NOT EXISTS workflow_error_registry (
 	CONSTRAINT workflow_error_registry_pkey PRIMARY KEY (id)
 );
 
+CREATE TABLE IF NOT EXISTS app_config (
+	"key" varchar(255) NOT NULL,
+	value text NULL
+);
+
+
 CREATE OR REPLACE FUNCTION get_error_details(p_error_str text, p_workflow_name text)
     RETURNS text
     LANGUAGE sql
@@ -304,7 +310,7 @@ ORDER BY WORKFLOW_NAME, LENGTH(matched_txt) DESC
 $function$
 ;
 
-    
+
 ---------------------------------------
 --------- POPULATE METADATA -----------
 ---------------------------------------
