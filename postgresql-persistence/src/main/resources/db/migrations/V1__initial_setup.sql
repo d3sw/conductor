@@ -290,7 +290,7 @@ CREATE TABLE IF NOT EXISTS workflow_error_registry (
 );
 
 CREATE TABLE IF NOT EXISTS app_config (
-	"key" varchar(255) NOT NULL,
+	"key" varchar(255) NOT NULL primary key,
 	value text NULL
 );
 
