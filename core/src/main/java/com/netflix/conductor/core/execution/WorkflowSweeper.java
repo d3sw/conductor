@@ -22,6 +22,7 @@ import com.netflix.conductor.core.WorkflowContext;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.execution.ApplicationException.Code;
 import com.netflix.conductor.dao.QueueDAO;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.NDC;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -112,9 +113,10 @@ public class WorkflowSweeper {
 
         List<Future<?>> futures = new LinkedList<>();
         for (String workflowId : workflowIds) {
-            Future<?> future = es.submit(() -> {
 
+            Future<?> future = es.submit(() -> {
                 NDC.push("sweep-" + UUID.randomUUID().toString());
+                logger.debug("Calling decider from sweeper for workflow {}", workflowId);
                 try {
 
                     WorkflowContext ctx = new WorkflowContext(config.getAppId());
