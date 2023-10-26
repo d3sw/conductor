@@ -112,9 +112,10 @@ public class WorkflowSweeper {
 
         List<Future<?>> futures = new LinkedList<>();
         for (String workflowId : workflowIds) {
-            Future<?> future = es.submit(() -> {
 
+            Future<?> future = es.submit(() -> {
                 NDC.push("sweep-" + UUID.randomUUID().toString());
+                logger.debug("Calling decider from sweeper for workflow {}", workflowId);
                 try {
 
                     WorkflowContext ctx = new WorkflowContext(config.getAppId());
