@@ -204,7 +204,6 @@ class GenericHttpTask extends WorkflowSystemTask {
 				return response;
 			} else {
 				String reason = cr.getEntity(String.class);
-				logger.error("HTTP task failed for workflowId{}, taskId {}, taskRefname {}, url {}, errorMessage {}", workflow.getWorkflowId(), task.getTaskId(), task.getReferenceTaskName(), input.getUri(), ex.getMessage());
 				throw new Exception(reason);
 			}
 		} catch (Exception ex) {
