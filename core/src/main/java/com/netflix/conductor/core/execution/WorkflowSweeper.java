@@ -115,7 +115,9 @@ public class WorkflowSweeper {
 
             Future<?> future = es.submit(() -> {
                 NDC.push("sweep-" + UUID.randomUUID().toString());
-                logger.debug("Calling decider from sweeper for workflow {}", workflowId);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Calling decider from sweeper for workflow {}", workflowId);
+                }
                 try {
 
                     WorkflowContext ctx = new WorkflowContext(config.getAppId());
