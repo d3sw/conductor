@@ -16,4 +16,4 @@ jobs:
         dd_service: conductor
         dd_env: ci
         dd_site: datadoghq.com
-        cpu_count: 2
+        cpu_count: 4
