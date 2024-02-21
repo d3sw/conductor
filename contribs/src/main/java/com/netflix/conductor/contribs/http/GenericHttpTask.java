@@ -191,7 +191,7 @@ class GenericHttpTask extends WorkflowSystemTask {
 			response.headers = cr.getHeaders();
 			return response;
 		} catch (UniformInterfaceException ex) {
-			logger.error(ex.getMessage(), ex);
+			logger.error("HTTP task failed for workflowId{}, taskId {}, taskRefname {}, url {}, errorMessage {}", workflow.getWorkflowId(), task.getTaskId(), task.getReferenceTaskName(), input.getUri(), ex.getMessage());
 			ClientResponse cr = ex.getResponse();
 			logger.error("Status Code: {}", cr.getStatus());
 			if (cr.getStatus() > 199 && cr.getStatus() < 300) {
@@ -204,11 +204,10 @@ class GenericHttpTask extends WorkflowSystemTask {
 				return response;
 			} else {
 				String reason = cr.getEntity(String.class);
-				logger.error(reason, ex);
 				throw new Exception(reason);
 			}
 		} catch (Exception ex) {
-			logger.error(ex.getMessage(), ex);
+			logger.error("HTTP task failed for workflowId{}, taskId {}, taskRefname {}, url {}, errorMessage {}", workflow.getWorkflowId(), task.getTaskId(), task.getReferenceTaskName(), input.getUri(), ex.getMessage());
 			response.body = null;
 			response.headers = null;
 			response.statusCode = -1;
