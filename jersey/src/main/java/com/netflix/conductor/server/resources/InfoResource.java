@@ -20,6 +20,7 @@ package com.netflix.conductor.server.resources;
 
 import com.google.common.collect.ImmutableMap;
 import com.netflix.conductor.core.config.Configuration;
+import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.dao.MetricsDAO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -49,11 +50,17 @@ public class InfoResource {
 	private final MetricsDAO metricsDAO;
 	private final Configuration config;
 	private String fullVersion;
+	private String conductorInitializerVersion;
+	private String workflowComposerVersion;
+	private MetadataDAO metadata;
+
+
 
 	@Inject
-	public InfoResource(Configuration config, MetricsDAO metricsDAO) {
+	public InfoResource(Configuration config, MetricsDAO metricsDAO, MetadataDAO metadata) {
 		this.config = config;
 		this.metricsDAO = metricsDAO;
+		this.metadata = metadata;
 		try {
 			InputStream propertiesIs = this.getClass().getClassLoader().getResourceAsStream("META-INF/conductor-core.properties");
 			Properties prop = new Properties();
@@ -61,6 +68,7 @@ public class InfoResource {
 			String version = prop.getProperty("Implementation-Version");
 			String change = prop.getProperty("Change");
 			fullVersion = config.getProperty("APP.VERSION", version + "-" + change);
+
 		} catch (Exception e) {
 			logger.error("Failed to read conductor-core.properties" + e.getMessage(), e);
 		}
@@ -71,7 +79,16 @@ public class InfoResource {
 	@ApiOperation(value = "Get the status")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Map<String, Object> status() {
-		return Collections.singletonMap("version", fullVersion);
+		Map<String, Object> versionMap = new HashMap<>();
+		metadata.getConfigs().forEach(entry -> {
+			if(entry.getLeft().equalsIgnoreCase("initializer_app_version")) {
+				conductorInitializerVersion = entry.getRight();
+			}
+		});
+		versionMap.put("conductor_core_version", fullVersion);
+		versionMap.put("conductor_initializer_version", conductorInitializerVersion);
+		versionMap.put("workflow_composer_version", fullVersion);
+		return versionMap;
 	}
 
 	@GET

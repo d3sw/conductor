@@ -12,9 +12,8 @@ class Footer extends Component {
       username: null
     };
 
-    http.get('/api/sys/').then((data) => {
+    http.get('/api/sys/versions').then((data) => {
       this.state.sys = data.sys;
-      window.sys = this.state.sys;
     });
   }
 
@@ -31,16 +30,19 @@ class Footer extends Component {
             <a href={this.state.sys.server} target="_new" className="small"
                style={{color: 'white'}}>{this.state.sys.server}</a>
           </div>
-          <div className="col-md-4">
+          <div className="col-md-6">
             <span className="Footer-text">User: </span>
             <span className="small" style={{color: 'white'}}>{this.props.username}</span>
           </div>
-          <div className="col-md-4 right">
-            <span className="Footer-text">Version: </span>
-            <span className="small" style={{color: 'white'}}>{this.state.sys.version}</span>
-            <span className="Footer-text"> | </span>
-            <span className="Footer-text">Build Date: </span>
-            <span className="small" style={{color: 'white'}}>{this.state.sys.buildDate}</span>
+          <div className="col-md-2">
+            <span className="Footer-text">Conductor Version: </span>
+            <span className="small" style={{color: 'white'}}>{this.state.sys.version}</span>&nbsp;&nbsp;
+            <br/>
+            <span className="Footer-text">Initializer Version: </span>
+            <span className="small" style={{color: 'white'}}>{this.state.sys.initializerVersion}</span> &nbsp;&nbsp;
+            <br/>
+            <span className="Footer-text">Composer Version: </span>
+            <span className="small" style={{color: 'white'}}>{this.state.sys.composerVersion}</span>&nbsp;&nbsp;
           </div>
         </div>
       </div>
