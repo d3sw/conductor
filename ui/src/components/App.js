@@ -5,12 +5,14 @@ import ErrorPage from './common/Error'
 import LeftMenu from './common/LeftMenu'
 import {connect} from 'react-redux';
 import * as authHelper from '../core/AuthHelper';
+import http from '../core/HttpClient';
 
 const App = React.createClass({
 
   getInitialState() {
     return {
-      minimize: false
+      minimize: false,
+      sys :{}
     };
   },
 
@@ -54,7 +56,6 @@ const App = React.createClass({
     if ((this.isAuthenticated() && this.isAuthorized()) || token != null) {
       const version = packageJSON.version;
       const marginLeft = this.props.minimize ? '52px' : '177px';
-
       return !this.props.error ? (
         <div style={{height: '100%'}}>
           <div style={{height: '100%'}}>
@@ -70,7 +71,7 @@ const App = React.createClass({
               {this.props.children}
             </div>
           </div>
-          <Footer username={this.props.user.name}/>
+          <Footer username={this.props.user.name} sys={this.props.sys}/>
         </div>
       ) : this.props.children;
     } else {
