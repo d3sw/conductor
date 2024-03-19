@@ -25,6 +25,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Viren
@@ -177,6 +178,10 @@ public interface MetadataDAO {
 
 	default List<Pair<String, String>> getConfigs() {
 		return Collections.emptyList();
+	}
+
+	default Map<String, String> getConfigByName(String name) {
+		return null;
 	}
 
 

@@ -30,9 +30,8 @@ router.get('/versions', async (req, res, next) => {
       env: process.env
     };
     const config = await http.get(server + 'v1/status');
-    result.version = config.conductor_core_version;
-    result.initializerVersion = config.conductor_initializer_version;
-    result.composerVersion = config.workflow_composer_version;
+    result.version = config.version;
+    result.initializerVersion = config.initializerVersion;
     result.buildDate = config.buildDate;
     res.status(200).send({sys: result});
   } catch (err) {

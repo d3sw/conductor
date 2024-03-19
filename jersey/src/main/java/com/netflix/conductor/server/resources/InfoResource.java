@@ -24,6 +24,7 @@ import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.dao.MetricsDAO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,10 +51,8 @@ public class InfoResource {
 	private final MetricsDAO metricsDAO;
 	private final Configuration config;
 	private String fullVersion;
-	private String conductorInitializerVersion;
-	private String workflowComposerVersion;
 	private MetadataDAO metadata;
-
+	public static final String INITIALIZER_VERSION_NAME = "initializer_app_version";
 
 
 	@Inject
@@ -80,14 +79,9 @@ public class InfoResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Map<String, Object> status() {
 		Map<String, Object> versionMap = new HashMap<>();
-		metadata.getConfigs().forEach(entry -> {
-			if(entry.getLeft().equalsIgnoreCase("initializer_app_version")) {
-				conductorInitializerVersion = entry.getRight();
-			}
-		});
-		versionMap.put("conductor_core_version", fullVersion);
-		versionMap.put("conductor_initializer_version", conductorInitializerVersion);
-		versionMap.put("workflow_composer_version", fullVersion);
+		versionMap.put("version", fullVersion);
+		Map<String, String> configMap = metadata.getConfigByName(INITIALIZER_VERSION_NAME);
+		versionMap.put("initializerVersion", configMap != null ? configMap.get(INITIALIZER_VERSION_NAME) : "");
 		return versionMap;
 	}
 
