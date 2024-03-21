@@ -11,7 +11,10 @@ import {
   authLogoutSucceeded,
   authRedirectFailed,
   authRedirectSucceeded,
+  getSystemInfo,
 } from '../actions/AuthActions';
+import http from '../core/HttpClient';
+
 
 const authTokenKey = "AUTH_TOKEN";
 const idTokenKey = "ID_TOKEN";
@@ -106,6 +109,9 @@ export const authLogin = (isAuthenticated) => {
       dispatch(authRedirectSucceeded(code));
       authToken(code)(dispatch);
     }
+     http.get('/api/sys/versions').then((data) => {
+                                 dispatch(getSystemInfo(data.sys));
+     });
   };
 };
 
@@ -297,6 +303,7 @@ const authUserInfo = (idToken, accessToken) => (dispatch) => {
                 }
                 dispatch(authAuthorizationSuccessful());
                 dispatch(authInfoSucceeded(data.name, data.preferred_username, data.email, data.roles, primary_role));
+
             } else {
                 removeTokensLocally();
                 dispatch(authAuthorizationReset());
@@ -308,6 +315,7 @@ const authUserInfo = (idToken, accessToken) => (dispatch) => {
             dispatch(authAuthorizationReset());
             window.location.href = '/Unauthorized.html';
         }
+
     })
     .catch(error => {
       console.error(`Retrieval of user info failed. error = ${error}`);

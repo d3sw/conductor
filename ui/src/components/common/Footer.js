@@ -11,11 +11,6 @@ class Footer extends Component {
       sys: {},
       username: null
     };
-
-    http.get('/api/sys/').then((data) => {
-      this.state.sys = data.sys;
-      window.sys = this.state.sys;
-    });
   }
 
   handleLogoutClick() {
@@ -26,21 +21,33 @@ class Footer extends Component {
     return (
       <div className="Footer navbar-fixed-bottom">
         <div className="row">
-          <div className="col-md-4">
-            <span className="Footer-text">Server: </span>
-            <a href={this.state.sys.server} target="_new" className="small"
-               style={{color: 'white'}}>{this.state.sys.server}</a>
-          </div>
-          <div className="col-md-4">
+        <div className="col-md-4">
+        {
+          this.props.sys !== null && (
+           <div>
+             <span className="Footer-text">Server: </span>
+              <a href={this.props.sys.server} target="_new" className="small"
+                 style={{color: 'white'}}>{this.props.sys.server}</a>
+            </div>
+          )
+        }
+         </div>
+          <div className="col-md-6">
             <span className="Footer-text">User: </span>
             <span className="small" style={{color: 'white'}}>{this.props.username}</span>
           </div>
-          <div className="col-md-4 right">
-            <span className="Footer-text">Version: </span>
-            <span className="small" style={{color: 'white'}}>{this.state.sys.version}</span>
-            <span className="Footer-text"> | </span>
-            <span className="Footer-text">Build Date: </span>
-            <span className="small" style={{color: 'white'}}>{this.state.sys.buildDate}</span>
+          <div className="col-md-2">
+              {
+                    this.props.sys !== null && (
+                      <div>
+                        <span className="Footer-text">Conductor Version:</span>
+                         <span className="small" style={{color: 'white'}}>{this.props.sys.version}</span>
+                        <br/>
+                        <span className="Footer-text">Initializer Version: </span>
+                          <span className="small" style={{color: 'white'}}>{this.props.sys.initializerVersion}</span>
+                      </div>
+                    )
+                  }
           </div>
         </div>
       </div>

@@ -13,10 +13,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import javax.inject.Inject;
 import javax.sql.DataSource;
 import java.sql.Connection;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -297,6 +294,19 @@ public class AuroraMetadataDAO extends AuroraBaseDAO implements MetadataDAO, Aur
 
 			return configs;
 		}));
+	}
+
+	@Override
+	public Map<String, String> getConfigByName(String name){
+		final String SQL = "SELECT * FROM meta_config where name = ?";
+		return queryWithTransaction(SQL, q -> q.addParameter(name).executeAndFetch(rs -> {
+			Map<String, String> config = new HashMap<>();
+			while (rs.next()) {
+				config.put(rs.getString(1), rs.getString(2));
+			}
+			return config;
+		}));
+
 	}
 
 	@Override

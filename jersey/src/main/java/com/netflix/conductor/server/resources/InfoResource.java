@@ -20,9 +20,11 @@ package com.netflix.conductor.server.resources;
 
 import com.google.common.collect.ImmutableMap;
 import com.netflix.conductor.core.config.Configuration;
+import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.dao.MetricsDAO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,11 +51,15 @@ public class InfoResource {
 	private final MetricsDAO metricsDAO;
 	private final Configuration config;
 	private String fullVersion;
+	private MetadataDAO metadata;
+	public static final String INITIALIZER_VERSION_NAME = "initializer_app_version";
+
 
 	@Inject
-	public InfoResource(Configuration config, MetricsDAO metricsDAO) {
+	public InfoResource(Configuration config, MetricsDAO metricsDAO, MetadataDAO metadata) {
 		this.config = config;
 		this.metricsDAO = metricsDAO;
+		this.metadata = metadata;
 		try {
 			InputStream propertiesIs = this.getClass().getClassLoader().getResourceAsStream("META-INF/conductor-core.properties");
 			Properties prop = new Properties();
@@ -61,6 +67,7 @@ public class InfoResource {
 			String version = prop.getProperty("Implementation-Version");
 			String change = prop.getProperty("Change");
 			fullVersion = config.getProperty("APP.VERSION", version + "-" + change);
+
 		} catch (Exception e) {
 			logger.error("Failed to read conductor-core.properties" + e.getMessage(), e);
 		}
@@ -71,7 +78,11 @@ public class InfoResource {
 	@ApiOperation(value = "Get the status")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Map<String, Object> status() {
-		return Collections.singletonMap("version", fullVersion);
+		Map<String, Object> versionMap = new HashMap<>();
+		versionMap.put("version", fullVersion);
+		Map<String, String> configMap = metadata.getConfigByName(INITIALIZER_VERSION_NAME);
+		versionMap.put("initializerVersion", configMap != null ? configMap.get(INITIALIZER_VERSION_NAME) : "");
+		return versionMap;
 	}
 
 	@GET
