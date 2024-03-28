@@ -11,7 +11,8 @@ import {
   AUTH_REFRESH_FAILED,
   AUTH_REFRESH_SUCCEEDED,
   AUTH_USER_DEV,
-  AUTH_USER_INACTIVE
+  AUTH_USER_INACTIVE,
+  GET_SYSTEM_INFO
 } from '../actions/AuthActions';
 
 const initialState = {
@@ -33,7 +34,8 @@ const initialState = {
     roles: [],
     primary_role:''
   },
-  inActiveTime: ''
+  inActiveTime: '',
+  sys :null
 };
 
 export default function global(state = initialState, action) {
@@ -64,6 +66,11 @@ export default function global(state = initialState, action) {
         refreshToken: action.payload.refreshToken,
         refreshExpiresIn: action.payload.refreshExpiresIn
       });
+
+    case GET_SYSTEM_INFO:
+      return Object.assign({}, state, {
+         sys: action.payload.sys
+    });
 
     case AUTH_LOGIN_FAILED:
       return Object.assign({}, state, {

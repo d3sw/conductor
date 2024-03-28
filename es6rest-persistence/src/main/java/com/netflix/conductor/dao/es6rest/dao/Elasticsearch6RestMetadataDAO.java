@@ -463,4 +463,9 @@ public class Elasticsearch6RestMetadataDAO extends Elasticsearch6RestAbstractDAO
         }
         return result;
     }
+
+    @Override
+    public Map<String, String> getConfigByName(String name){
+       return null;
+    }
 }

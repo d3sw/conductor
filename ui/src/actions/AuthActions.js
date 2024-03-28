@@ -13,6 +13,8 @@ export const AUTH_LOGOUT_FAILED = 'AUTH_LOGOUT_FAILED';
 
 export const AUTH_USER_INACTIVE = 'AUTH_USER_INACTIVE';
 export const AUTH_USER_DEV = 'AUTH_USER_DEVELOPER';
+export const GET_SYSTEM_INFO = 'GET_SYSTEM_INFO';
+
 
 export function authRedirectSucceeded(code) {
   return {
@@ -41,6 +43,15 @@ export function authLoginSucceeded(authToken, expiresIn) {
     payload: {
       authToken: authToken,
       expiresIn: expiresIn
+    }
+  };
+}
+
+export function getSystemInfo(sys) {
+  return {
+    type: GET_SYSTEM_INFO,
+    payload: {
+      sys: sys
     }
   };
 }
