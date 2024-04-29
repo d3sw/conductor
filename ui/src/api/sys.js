@@ -32,6 +32,7 @@ router.get('/versions', async (req, res, next) => {
     const config = await http.get(server + 'v1/status');
     result.version = config.version;
     result.initializerVersion = config.initializerVersion;
+    result.composerVersion = config.composerVersion;
     result.buildDate = config.buildDate;
     res.status(200).send({sys: result});
   } catch (err) {
