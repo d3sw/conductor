@@ -45,6 +45,9 @@ class Footer extends Component {
                         <br/>
                         <span className="Footer-text">Initializer Version: </span>
                           <span className="small" style={{color: 'white'}}>{this.props.sys.initializerVersion}</span>
+                         <br/>
+                         <span className="Footer-text">Composer Version: </span>
+                             <span className="small" style={{color: 'white'}}>{this.props.sys.composerVersion}</span>
                       </div>
                     )
                   }

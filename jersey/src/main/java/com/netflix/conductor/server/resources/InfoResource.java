@@ -18,13 +18,20 @@
  */
 package com.netflix.conductor.server.resources;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
+import com.netflix.conductor.core.DNSLookup;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.dao.MetricsDAO;
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.client.apache4.ApacheHttpClient4;
+import com.sun.jersey.client.apache4.config.DefaultApacheHttpClient4Config;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,6 +41,8 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriBuilder;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
@@ -77,12 +86,46 @@ public class InfoResource {
 	@Path("/status")
 	@ApiOperation(value = "Get the status")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Map<String, Object> status() {
+	public Map<String, Object> status(){
 		Map<String, Object> versionMap = new HashMap<>();
 		versionMap.put("version", fullVersion);
 		Map<String, String> configMap = metadata.getConfigByName(INITIALIZER_VERSION_NAME);
 		versionMap.put("initializerVersion", configMap != null ? configMap.get(INITIALIZER_VERSION_NAME) : "");
+		try {
+			String composerServiceUrl = "workflowcomposer.service." + Optional.ofNullable(System.getenv("TLD")).orElse("default");
+			versionMap.put("composerVersion", getComposerVersion(composerServiceUrl));
+		} catch (Exception e) {
+			logger.error("Failed to retrieve composer version", e);
+			versionMap.put("composerVersion", "Error retrieving version");
+		}
 		return versionMap;
+	}
+
+	private String getComposerVersion(String service) {
+		UriBuilder uriBuilder = UriBuilder.fromUri(DNSLookup.lookup(service)).path("/v1/status");
+		try {
+			Client client = ApacheHttpClient4.create(new DefaultApacheHttpClient4Config());
+			WebResource webResource = client.resource(uriBuilder.build());
+			ClientResponse response = webResource.accept(MediaType.APPLICATION_JSON)
+					.get(ClientResponse.class);
+
+			if (response.getStatus() == Response.Status.NO_CONTENT.getStatusCode() || !response.hasEntity()) {
+				return "";
+			}
+
+			if (response.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL) {
+				String json = response.getEntity(String.class);
+				ObjectMapper objectMapper = new ObjectMapper();
+				Map<String, Object> versionMap = objectMapper.readValue(json, new TypeReference<Map<String, Object>>() {
+				});
+				return (String) versionMap.get("version");
+			} else {
+				throw new RuntimeException("Failed to fetch version: HTTP error code " + response.getStatus());
+			}
+		} catch (Exception e) {
+			logger.error("Error while fetching composer version info", e);
+			throw new RuntimeException("Error fetching version", e);
+		}
 	}
 
 	@GET
