@@ -82,6 +82,10 @@ public class InfoResource {
 		versionMap.put("version", fullVersion);
 		Map<String, String> configMap = metadata.getConfigByName(INITIALIZER_VERSION_NAME);
 		versionMap.put("initializerVersion", configMap != null ? configMap.get(INITIALIZER_VERSION_NAME) : "");
+		String initializerVersion = configMap != null ? configMap.get(INITIALIZER_VERSION_NAME) : "n/a";
+		versionMap.put("initializerVersion", initializerVersion);
+		versionMap.put("version", fullVersion + " (i:" + initializerVersion + ")");
+
 		return versionMap;
 	}
 
