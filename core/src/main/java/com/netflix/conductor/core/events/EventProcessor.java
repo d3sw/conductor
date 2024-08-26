@@ -299,8 +299,6 @@ public class EventProcessor {
 					// see below when ack or unack decided
 					if (retryEnabled) {
 						boolean anyRunning = es.anyRunningWorkflowsByTags(tags);
-						logger.debug("Number of Running Workflows " + anyRunning);
-
 						if (!anyRunning) {
 							logger.debug("Handler did not find running workflows with tags. Handler={}, tags={}", handler.getName(), tags);
 							MetricService.getInstance()
