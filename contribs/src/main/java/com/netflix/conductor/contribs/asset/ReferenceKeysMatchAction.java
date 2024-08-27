@@ -257,76 +257,80 @@ public class ReferenceKeysMatchAction implements JavaEventAction {
 
 			if (isFeature && isSupplemental) {
 				return (isNotEmpty(trk.titleKeys.featureId) &&
-					Objects.equals(trk.titleVersion.supplementalSubType, erk.titleVersion.supplementalSubType) &&
-					Objects.equals(trk.titleKeys.featureId, erk.titleKeys.featureId) &&
-					Objects.equals(trk.titleVersion.type, erk.titleVersion.type)) || (isNoneEmpty(trk.titleKeys.featureId, trk.titleKeys.featureVersionId) &&
-					Objects.equals(trk.titleKeys.featureVersionId, erk.titleKeys.featureVersionId) &&
-					Objects.equals(trk.titleKeys.featureId, erk.titleKeys.featureId));
+						equals(trk.titleVersion.supplementalSubType, erk.titleVersion.supplementalSubType) &&
+						equals(trk.titleKeys.featureId, erk.titleKeys.featureId) &&
+						equals(trk.titleVersion.type, erk.titleVersion.type)) || (isNoneEmpty(trk.titleKeys.featureId, trk.titleKeys.featureVersionId) &&
+						equals(trk.titleKeys.featureVersionId, erk.titleKeys.featureVersionId) &&
+						equals(trk.titleKeys.featureId, erk.titleKeys.featureId));
 
 			} else if (isEpisodic && isSupplemental) {
 				return (isNoneEmpty(trk.titleKeys.episodeId, trk.titleKeys.seasonId, trk.titleKeys.seriesId) &&
-					Objects.equals(trk.titleVersion.supplementalSubType, erk.titleVersion.supplementalSubType) &&
-					Objects.equals(trk.titleVersion.type, erk.titleVersion.type) &&
-					Objects.equals(trk.titleKeys.episodeId, erk.titleKeys.episodeId) &&
-					Objects.equals(trk.titleKeys.seasonId, erk.titleKeys.seasonId) &&
-					Objects.equals(trk.titleKeys.seriesId, erk.titleKeys.seriesId)) || (isNoneEmpty(trk.titleKeys.episodeId, trk.titleKeys.seasonId, trk.titleKeys.seriesId, trk.titleKeys.episodeVersionId) &&
-					Objects.equals(trk.titleKeys.episodeVersionId, erk.titleKeys.episodeVersionId) &&
-					Objects.equals(trk.titleKeys.seriesId, erk.titleKeys.seriesId) &&
-					Objects.equals(trk.titleKeys.seasonId, erk.titleKeys.seasonId) &&
-					Objects.equals(trk.titleKeys.episodeId, erk.titleKeys.episodeId));
+						equals(trk.titleVersion.supplementalSubType, erk.titleVersion.supplementalSubType) &&
+						equals(trk.titleVersion.type, erk.titleVersion.type) &&
+						equals(trk.titleKeys.episodeId, erk.titleKeys.episodeId) &&
+						equals(trk.titleKeys.seasonId, erk.titleKeys.seasonId) &&
+						equals(trk.titleKeys.seriesId, erk.titleKeys.seriesId)) || (isNoneEmpty(trk.titleKeys.episodeId, trk.titleKeys.seasonId, trk.titleKeys.seriesId, trk.titleKeys.episodeVersionId) &&
+						equals(trk.titleKeys.episodeVersionId, erk.titleKeys.episodeVersionId) &&
+						equals(trk.titleKeys.seriesId, erk.titleKeys.seriesId) &&
+						equals(trk.titleKeys.seasonId, erk.titleKeys.seasonId) &&
+						equals(trk.titleKeys.episodeId, erk.titleKeys.episodeId));
 
 			} else if (isSeries && isSupplemental) {
 				return (isNotEmpty(trk.titleKeys.seriesId) &&
-					Objects.equals(trk.titleVersion.supplementalSubType, erk.titleVersion.supplementalSubType) &&
-					Objects.equals(trk.titleKeys.seriesId, erk.titleKeys.seriesId) &&
-					Objects.equals(trk.titleVersion.type, erk.titleVersion.type)) || (isNoneEmpty(trk.titleKeys.seriesId, trk.titleKeys.seriesVersionId) &&
-					Objects.equals(trk.titleKeys.seriesVersionId, erk.titleKeys.seriesVersionId) &&
-					Objects.equals(trk.titleKeys.seriesId, erk.titleKeys.seriesId));
+						equals(trk.titleVersion.supplementalSubType, erk.titleVersion.supplementalSubType) &&
+						equals(trk.titleKeys.seriesId, erk.titleKeys.seriesId) &&
+						equals(trk.titleVersion.type, erk.titleVersion.type)) || (isNoneEmpty(trk.titleKeys.seriesId, trk.titleKeys.seriesVersionId) &&
+						equals(trk.titleKeys.seriesVersionId, erk.titleKeys.seriesVersionId) &&
+						equals(trk.titleKeys.seriesId, erk.titleKeys.seriesId));
 
 			} else if (isFranchise && isSupplemental) {
 				return (isNotEmpty(trk.titleKeys.franchiseId) &&
-					Objects.equals(trk.titleVersion.supplementalSubType, erk.titleVersion.supplementalSubType) &&
-					Objects.equals(trk.titleKeys.franchiseId, erk.titleKeys.franchiseId) &&
-					Objects.equals(trk.titleVersion.type, erk.titleVersion.type)) || (isNoneEmpty(trk.titleKeys.franchiseId, trk.titleKeys.franchiseVersionId) &&
-					Objects.equals(trk.titleKeys.franchiseVersionId, erk.titleKeys.franchiseVersionId) &&
-					Objects.equals(trk.titleKeys.franchiseId, erk.titleKeys.franchiseId));
+						equals(trk.titleVersion.supplementalSubType, erk.titleVersion.supplementalSubType) &&
+						equals(trk.titleKeys.franchiseId, erk.titleKeys.franchiseId) &&
+						equals(trk.titleVersion.type, erk.titleVersion.type)) || (isNoneEmpty(trk.titleKeys.franchiseId, trk.titleKeys.franchiseVersionId) &&
+						equals(trk.titleKeys.franchiseVersionId, erk.titleKeys.franchiseVersionId) &&
+						equals(trk.titleKeys.franchiseId, erk.titleKeys.franchiseId));
 
 			} else if (isSeason && isSupplemental) {
 				return (isNoneEmpty(trk.titleKeys.seasonId, trk.titleKeys.seriesId) &&
-					Objects.equals(trk.titleVersion.supplementalSubType, erk.titleVersion.supplementalSubType) &&
-					Objects.equals(trk.titleKeys.seasonId, erk.titleKeys.seasonId) &&
-					Objects.equals(trk.titleKeys.seriesId, erk.titleKeys.seriesId) &&
-					Objects.equals(trk.titleVersion.type, erk.titleVersion.type)) || (isNoneEmpty(trk.titleKeys.seasonId, trk.titleKeys.seriesId, trk.titleKeys.seasonVersionId) &&
-					Objects.equals(trk.titleKeys.seasonVersionId, erk.titleKeys.seasonVersionId) &&
-					Objects.equals(trk.titleKeys.seriesId, erk.titleKeys.seriesId) &&
-					Objects.equals(trk.titleKeys.seasonId, erk.titleKeys.seasonId));
+						equals(trk.titleVersion.supplementalSubType, erk.titleVersion.supplementalSubType) &&
+						equals(trk.titleKeys.seasonId, erk.titleKeys.seasonId) &&
+						equals(trk.titleKeys.seriesId, erk.titleKeys.seriesId) &&
+						equals(trk.titleVersion.type, erk.titleVersion.type)) || (isNoneEmpty(trk.titleKeys.seasonId, trk.titleKeys.seriesId, trk.titleKeys.seasonVersionId) &&
+						equals(trk.titleKeys.seasonVersionId, erk.titleKeys.seasonVersionId) &&
+						equals(trk.titleKeys.seriesId, erk.titleKeys.seriesId) &&
+						equals(trk.titleKeys.seasonId, erk.titleKeys.seasonId));
 
 			} else if (isFeature) {
 				return isNoneEmpty(trk.titleKeys.featureId, trk.titleKeys.featureVersionId) &&
-					Objects.equals(trk.titleKeys.featureVersionId, erk.titleKeys.featureVersionId) &&
-					Objects.equals(trk.titleKeys.featureId, erk.titleKeys.featureId);
+						equals(trk.titleKeys.featureVersionId, erk.titleKeys.featureVersionId) &&
+						equals(trk.titleKeys.featureId, erk.titleKeys.featureId);
 			} else if (isEpisodic) {
 				return isNoneEmpty(trk.titleKeys.episodeId, trk.titleKeys.seasonId, trk.titleKeys.seriesId, trk.titleKeys.episodeVersionId) &&
-					Objects.equals(trk.titleKeys.episodeVersionId, erk.titleKeys.episodeVersionId) &&
-					Objects.equals(trk.titleKeys.seriesId, erk.titleKeys.seriesId) &&
-					Objects.equals(trk.titleKeys.seasonId, erk.titleKeys.seasonId) &&
-					Objects.equals(trk.titleKeys.episodeId, erk.titleKeys.episodeId);
+						equals(trk.titleKeys.episodeVersionId, erk.titleKeys.episodeVersionId) &&
+						equals(trk.titleKeys.seriesId, erk.titleKeys.seriesId) &&
+						equals(trk.titleKeys.seasonId, erk.titleKeys.seasonId) &&
+						equals(trk.titleKeys.episodeId, erk.titleKeys.episodeId);
 			} else if (isSeries) {
 				return isNoneEmpty(trk.titleKeys.seriesId, trk.titleKeys.seriesVersionId) &&
-					Objects.equals(trk.titleKeys.seriesVersionId, erk.titleKeys.seriesVersionId) &&
-					Objects.equals(trk.titleKeys.seriesId, erk.titleKeys.seriesId);
+						equals(trk.titleKeys.seriesVersionId, erk.titleKeys.seriesVersionId) &&
+						equals(trk.titleKeys.seriesId, erk.titleKeys.seriesId);
 			} else if (isFranchise) {
 				return isNoneEmpty(trk.titleKeys.franchiseId, trk.titleKeys.franchiseVersionId) &&
-					Objects.equals(trk.titleKeys.franchiseVersionId, erk.titleKeys.franchiseVersionId) &&
-					Objects.equals(trk.titleKeys.franchiseId, erk.titleKeys.franchiseId);
+						equals(trk.titleKeys.franchiseVersionId, erk.titleKeys.franchiseVersionId) &&
+						equals(trk.titleKeys.franchiseId, erk.titleKeys.franchiseId);
 			} else if (isSeason) {
 				return isNoneEmpty(trk.titleKeys.seasonId, trk.titleKeys.seriesId, trk.titleKeys.seasonVersionId) &&
-					Objects.equals(trk.titleKeys.seasonVersionId, erk.titleKeys.seasonVersionId) &&
-					Objects.equals(trk.titleKeys.seriesId, erk.titleKeys.seriesId) &&
-					Objects.equals(trk.titleKeys.seasonId, erk.titleKeys.seasonId);
+						equals(trk.titleKeys.seasonVersionId, erk.titleKeys.seasonVersionId) &&
+						equals(trk.titleKeys.seriesId, erk.titleKeys.seriesId) &&
+						equals(trk.titleKeys.seasonId, erk.titleKeys.seasonId);
 			}
 			return false;
 		});
+	}
+
+	private static boolean equals(String s1, String s2){
+		return "*".equals(s1) || Objects.equals(s1, s2);
 	}
 
 	private static class ActionParams {
