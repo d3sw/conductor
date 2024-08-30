@@ -62,14 +62,14 @@ public class ReferenceKeysMatchAction implements JavaEventAction {
 		} else {
 			taskStatus = Task.Status.COMPLETED;
 		}
-
+		logger.debug("ReferenceKeysMatchAction: Task Status " + taskStatus);
 		Map<String, Object> titleKeysMap = ScriptEvaluator.evaluateMap(params.titleKeys, payload);
 		Map<String, Object> titleVersionMap = ScriptEvaluator.evaluateMap(params.titleVersion, payload);
 
 		ReferenceKey eventRefKeys = new ReferenceKey();
 		eventRefKeys.titleKeys = mapper.convertValue(titleKeysMap, TitleKeys.class);
 		eventRefKeys.titleVersion = mapper.convertValue(titleVersionMap, TitleVersion.class);
-
+		logger.debug("ReferenceKeysMatchAction: Task titleKeysMap " + titleKeysMap);
 		// Get the current logging context (owner)
 		String ndcValue = NDC.peek();
 
@@ -82,7 +82,7 @@ public class ReferenceKeysMatchAction implements JavaEventAction {
 		} else {
 			tasks = executor.getPendingSystemTasks(Wait.NAME);
 		}
-
+		logger.debug("ReferenceKeysMatchAction: List of tasks " + tasks);
 		boolean taskNamesDefined = CollectionUtils.isNotEmpty(params.taskRefNames);
 		tasks.parallelStream().forEach(task -> {
 			boolean ndcCleanup = false;
@@ -91,50 +91,52 @@ public class ReferenceKeysMatchAction implements JavaEventAction {
 					ndcCleanup = true;
 					NDC.push(ndcValue);
 				}
+				logger.debug("ReferenceKeysMatchAction: Check for referenceKeys");
 				if (!task.getInputData().containsKey("referenceKeys")) {
 					return;
 				}
-
+				logger.debug("ReferenceKeysMatchAction: Check for taskNamesDefined");
 				if (taskNamesDefined && !params.taskRefNames.contains(task.getReferenceTaskName())) {
 					return;
 				}
-
+				logger.debug("ReferenceKeysMatchAction: Check for Workflows");
 				Workflow workflow = executor.getWorkflow(task.getWorkflowInstanceId(), false);
 				if (workflow == null) {
-					logger.debug("No workflow found with id " + task.getWorkflowInstanceId() + ", skipping " + task);
+					logger.debug("ReferenceKeysMatchAction: No workflow found with id " + task.getWorkflowInstanceId() + ", skipping " + task);
 					return;
 				}
-
+				logger.debug("ReferenceKeysMatchAction: Check for isTeminal");
 				if (workflow.getStatus().isTerminal()) {
 					return;
 				}
+				logger.debug("ReferenceKeysMatchAction: Get taskReferenceKeys");
 				Object taskReferenceKeys = task.getInputData().get("referenceKeys");
 				if (taskReferenceKeys == null) {
 					return;
 				}
 				if (!(taskReferenceKeys instanceof List)) {
-					logger.warn("Task input referenceKeys is not a list for " + task);
+					logger.warn("ReferenceKeysMatchAction: Task input referenceKeys is not a list for " + task);
 					return;
 				}
 				List<ReferenceKey> taskRefKeys = mapper.convertValue(taskReferenceKeys, new TypeReference<List<ReferenceKey>>() {
 				});
-
+				logger.debug("ReferenceKeysMatchAction: Perform Array Match");
 				// Array match
 				if (!matches(taskRefKeys, eventRefKeys)) {
 					return;
 				}
-
+				logger.debug("ReferenceKeysMatchAction: Update Task Status " + taskStatus);
 				//Otherwise update the task as we found it
 				task.setStatus(taskStatus);
 				task.getOutputData().put("conductor.event.name", ee.getEvent());
 				task.getOutputData().put("conductor.event.payload", payload);
 				task.getOutputData().put("conductor.event.messageId", ee.getMessageId());
 				logger.debug("Updating task " + task + ". workflowId=" + workflow.getWorkflowId()
-					+ ",correlationId=" + workflow.getCorrelationId()
-					+ ",traceId=" + workflow.getTraceId()
-					+ ",contextUser=" + workflow.getContextUser()
-					+ ",messageId=" + ee.getMessageId()
-					+ ",payload=" + payload);
+						+ ",correlationId=" + workflow.getCorrelationId()
+						+ ",traceId=" + workflow.getTraceId()
+						+ ",contextUser=" + workflow.getContextUser()
+						+ ",messageId=" + ee.getMessageId()
+						+ ",payload=" + payload);
 
 				// Set the reason if task failed. It should be provided in the event
 				if (Task.Status.FAILED.equals(taskStatus)) {
@@ -152,7 +154,7 @@ public class ReferenceKeysMatchAction implements JavaEventAction {
 
 			} catch (Exception ex) {
 				String msg = String.format("Reference Keys Match failed for taskId=%s, messageId=%s, event=%s, workflowId=%s, correlationId=%s, payload=%s",
-					task.getTaskId(), ee.getMessageId(), ee.getEvent(), task.getWorkflowInstanceId(), task.getCorrelationId(), payload);
+						task.getTaskId(), ee.getMessageId(), ee.getEvent(), task.getWorkflowInstanceId(), task.getCorrelationId(), payload);
 				logger.warn(msg, ex);
 			} finally {
 				if (ndcCleanup) {
@@ -330,6 +332,8 @@ public class ReferenceKeysMatchAction implements JavaEventAction {
 	}
 
 	private static boolean equals(String s1, String s2){
+		boolean eval = "*".equals(s1) || Objects.equals(s1, s2);
+		logger.debug("Strings " + s1 + ",  " + s2 + "  = " + eval);
 		return "*".equals(s1) || Objects.equals(s1, s2);
 	}
 
@@ -350,9 +354,9 @@ public class ReferenceKeysMatchAction implements JavaEventAction {
 		@Override
 		public String toString() {
 			return "{" +
-				"titleKeys=" + titleKeys +
-				", titleVersion=" + titleVersion +
-				'}';
+					"titleKeys=" + titleKeys +
+					", titleVersion=" + titleVersion +
+					'}';
 		}
 	}
 
@@ -373,17 +377,17 @@ public class ReferenceKeysMatchAction implements JavaEventAction {
 		@Override
 		public String toString() {
 			return "TitleKeys{" +
-				"featureId='" + featureId + '\'' +
-				", featureVersionId='" + featureVersionId + '\'' +
-				", seriesId='" + seriesId + '\'' +
-				", seasonId='" + seasonId + '\'' +
-				", episodeId='" + episodeId + '\'' +
-				", episodeVersionId='" + episodeVersionId + '\'' +
-				", franchiseId='" + franchiseId + '\'' +
-				", franchiseVersionId='" + franchiseVersionId + '\'' +
-				", seriesVersionId='" + seriesVersionId + '\'' +
-				", seasonVersionId='" + seasonVersionId + '\'' +
-				'}';
+					"featureId='" + featureId + '\'' +
+					", featureVersionId='" + featureVersionId + '\'' +
+					", seriesId='" + seriesId + '\'' +
+					", seasonId='" + seasonId + '\'' +
+					", episodeId='" + episodeId + '\'' +
+					", episodeVersionId='" + episodeVersionId + '\'' +
+					", franchiseId='" + franchiseId + '\'' +
+					", franchiseVersionId='" + franchiseVersionId + '\'' +
+					", seriesVersionId='" + seriesVersionId + '\'' +
+					", seasonVersionId='" + seasonVersionId + '\'' +
+					'}';
 		}
 	}
 
@@ -394,9 +398,9 @@ public class ReferenceKeysMatchAction implements JavaEventAction {
 		@Override
 		public String toString() {
 			return "TitleVersion{" +
-				"type='" + type + '\'' +
-				", supplementalSubType='" + supplementalSubType + '\'' +
-				'}';
+					"type='" + type + '\'' +
+					", supplementalSubType='" + supplementalSubType + '\'' +
+					'}';
 		}
 	}
 }
