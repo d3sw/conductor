@@ -336,10 +336,10 @@ public class WorkflowResource {
     @ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),
             @ApiImplicitParam(name = "Platform-Trace-Id", dataType = "string", paramType = "header")})
     @Consumes(MediaType.WILDCARD)
-    public Workflow getExecutionStatus(
+    public WorkflowDetails getExecutionStatus(
             @PathParam("workflowId") String workflowId,
             @QueryParam("includeTasks") @DefaultValue("true") boolean includeTasks) throws Exception {
-        return service.getExecutionStatus(workflowId, includeTasks);
+        return service.getExecutionStatusDetails(workflowId, includeTasks);
     }
 
     @DELETE
