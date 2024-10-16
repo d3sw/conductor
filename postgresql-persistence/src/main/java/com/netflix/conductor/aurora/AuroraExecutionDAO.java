@@ -9,10 +9,7 @@ import com.netflix.conductor.common.metadata.tasks.PollData;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
-import com.netflix.conductor.common.run.TaskDetails;
-import com.netflix.conductor.common.run.Workflow;
-import com.netflix.conductor.common.run.WorkflowError;
-import com.netflix.conductor.common.run.WorkflowErrorRegistry;
+import com.netflix.conductor.common.run.*;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.execution.ApplicationException;
 import com.netflix.conductor.dao.ExecutionDAO;
@@ -315,6 +312,17 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
     @Override
     public Workflow getWorkflow(String workflowId, boolean includeTasks) {
         Workflow workflow = getWithTransaction(tx -> readWorkflow(tx, workflowId));
+        if (workflow != null && includeTasks) {
+            List<Task> tasks = getTasksForWorkflow(workflowId);
+            tasks.sort(Comparator.comparingLong(Task::getScheduledTime).thenComparingInt(Task::getSeq));
+            workflow.setTasks(tasks);
+        }
+        return workflow;
+    }
+
+    @Override
+    public WorkflowDetails getWorkflowDetails(String workflowId, boolean includeTasks) {
+        WorkflowDetails workflow = getWithTransaction(tx -> readWorkflowDetails(tx, workflowId));
         if (workflow != null && includeTasks) {
             List<Task> tasks = getTasksForWorkflow(workflowId);
             tasks.sort(Comparator.comparingLong(Task::getScheduledTime).thenComparingInt(Task::getSeq));
@@ -779,6 +787,13 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
         String SQL = "SELECT json_data FROM workflow WHERE workflow_id = ?";
 
         return query(tx, SQL, q -> q.addParameter(workflowId).executeAndFetchFirst(Workflow.class));
+    }
+
+
+    private WorkflowDetails readWorkflowDetails(Connection tx, String workflowId) {
+        String SQL = "SELECT json_data FROM workflow WHERE workflow_id = ?";
+
+        return query(tx, SQL, q -> q.addParameter(workflowId).executeAndFetchFirst(WorkflowDetails.class));
     }
 
     private void removeWorkflow(Connection tx, String workflowId) {

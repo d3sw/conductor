@@ -38,10 +38,7 @@ import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
-import com.netflix.conductor.common.run.WorkflowError;
-import com.netflix.conductor.common.run.WorkflowErrorRegistry;
-import com.netflix.conductor.common.run.Workflow;
-import com.netflix.conductor.common.run.TaskDetails;
+import com.netflix.conductor.common.run.*;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.execution.ApplicationException;
@@ -368,6 +365,11 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 			workflow.getTasks().clear();
 		}
 		return workflow;
+	}
+
+	@Override
+	public WorkflowDetails getWorkflowDetails(String workflowId, boolean includeTasks) {
+		return null;
 	}
 
 	@Override
