@@ -5,7 +5,7 @@ buildscript {
 }
 
 plugins {
-    id 'com.github.johnrengelman.shadow' version '1.2.3'
+    id 'com.github.johnrengelman.shadow' version '5.0.0' // Updated for Gradle 5 compatibility
 }
 
 configurations.all {
@@ -29,45 +29,46 @@ dependencies {
     }
 
     // Log4j
-    compile 'org.apache.logging.log4j:log4j-core:2.9.0'
-    compile 'org.apache.logging.log4j:log4j-jul:2.9.0'
-    compile 'org.slf4j:jul-to-slf4j:1.7.25'
+    implementation 'org.apache.logging.log4j:log4j-core:2.9.0'
+    implementation 'org.apache.logging.log4j:log4j-jul:2.9.0'
+    implementation 'org.slf4j:jul-to-slf4j:1.7.25'
 
-    //Conductor
-    compile project(':conductor-core')
-    compile project(':conductor-jersey')
-    compile project(':conductor-redis-persistence')
-    compile project(':conductor-contribs')
-    compile project(':conductor-es6rest-persistence')
-    compile project(':conductor-postgresql-persistence')
+    // Conductor
+    implementation project(':conductor-core')
+    implementation project(':conductor-jersey')
+    implementation project(':conductor-redis-persistence')
+    implementation project(':conductor-contribs')
+    implementation project(':conductor-es6rest-persistence')
+    implementation project(':conductor-postgresql-persistence')
 
-    //Jetty
-    compile 'org.eclipse.jetty:jetty-server:9.3.9.v20160517'
-    compile 'org.eclipse.jetty:jetty-servlet:9.3.9.v20160517'
+    // Jetty
+    implementation 'org.eclipse.jetty:jetty-server:9.3.9.v20160517'
+    implementation 'org.eclipse.jetty:jetty-servlet:9.3.9.v20160517'
 
-    //Guice
-    compile 'com.sun.jersey.contribs:jersey-guice:1.19.4'
-    compile 'com.google.inject:guice:4.1.0'
-    compile 'com.google.inject.extensions:guice-servlet:4.1.0'
+    // Guice
+    implementation 'com.sun.jersey.contribs:jersey-guice:1.19.4'
+    implementation 'com.google.inject:guice:4.1.0'
+    implementation 'com.google.inject.extensions:guice-servlet:4.1.0'
 
-    //Swagger
-    compile 'io.swagger:swagger-jersey-jaxrs:1.5.0'
+    // Swagger
+    implementation 'io.swagger:swagger-jersey-jaxrs:1.5.0'
 
-    //In memory
-    compile 'org.rarefiedredis.redis:redis-java:0.0.17'
+    // In memory
+    implementation 'org.rarefiedredis.redis:redis-java:0.0.17'
 
     // JNA library for EmbeddedElasticSearch
-    compile 'net.java.dev.jna:jna:4.1.0'
+    implementation 'net.java.dev.jna:jna:4.1.0'
 }
 
 shadowJar {
     mergeServiceFiles()
-    configurations = [project.configurations.compile]
+    configurations = [project.configurations.implementation] // Updated to use `implementation`
     manifest {
         attributes 'Description': 'Self contained Conductor server jar'
         attributes 'Main-Class': 'com.netflix.conductor.server.Main'
     }
 }
+
 publishing {
     publications {
         nebula(MavenPublication) {
@@ -82,13 +83,11 @@ gretty {
     scanDirs = ['**/src/main/resources/**']
     scanDependencies = true
     port = 8080
-    // More properties can be found here:
-    // http://akhikhl.github.io/gretty-doc/Gretty-configuration.html
 }
+
 configurations.grettyRunnerTomcat8 {
     exclude group: 'org.slf4j', module: 'log4j-over-slf4j'
 }
-
 
 build.dependsOn('shadowJar')
 

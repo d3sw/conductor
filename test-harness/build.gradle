@@ -5,20 +5,20 @@ configurations.all {
 }
 dependencies {
 
-	testCompile project(':conductor-core')
-	testCompile project(':conductor-jersey')
-	testCompile project(':conductor-redis-persistence')
-	testCompile project(':conductor-client')
-	testCompile project(':conductor-server')
-	
-	testCompile 'org.eclipse.jetty:jetty-server:9.3.9.v20160517'
-	testCompile 'org.eclipse.jetty:jetty-servlet:9.3.9.v20160517'
-	testCompile 'org.rarefiedredis.redis:redis-java:0.0.17'
-	testCompile 'com.sun.jersey.contribs:jersey-guice:1.19.4'
+	testImplementation project(':conductor-core')
+	testImplementation project(':conductor-jersey')
+	testImplementation project(':conductor-redis-persistence')
+	testImplementation project(':conductor-client')
+	testImplementation project(':conductor-server')
 
-	testCompile 'com.google.inject:guice:4.1.0'
-	testCompile 'com.google.inject.extensions:guice-servlet:4.1.0'
-	testCompile 'io.swagger:swagger-jersey-jaxrs:1.5.0'
+	testImplementation 'org.eclipse.jetty:jetty-server:9.3.9.v20160517'
+	testImplementation 'org.eclipse.jetty:jetty-servlet:9.3.9.v20160517'
+	testImplementation 'org.rarefiedredis.redis:redis-java:0.0.17'
+	testImplementation 'com.sun.jersey.contribs:jersey-guice:1.19.4'
+
+	testImplementation 'com.google.inject:guice:4.1.0'
+	testImplementation 'com.google.inject.extensions:guice-servlet:4.1.0'
+	testImplementation 'io.swagger:swagger-jersey-jaxrs:1.5.0'
 }
 
 task server(type: JavaExec) {

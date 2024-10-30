@@ -1,12 +1,15 @@
 dependencies {
+	// Project dependencies
+	implementation project(':conductor-common')
 
-	compile project (':conductor-common')
-	compile 'com.sun.jersey:jersey-client:1.19.4'
-	compile 'org.slf4j:slf4j-api:1.7.28'
-	compile 'com.netflix.spectator:spectator-api:0.68.0'
-	compile 'com.netflix.eureka:eureka-client:latest.release'
-	compile ('com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:2.7.5') {force=true}
-	compile 'com.netflix.archaius:archaius-core:0.7.5' 
-	
-	testCompile 'org.slf4j:slf4j-log4j12:1.8.0-alpha1'
+	// External dependencies
+	implementation 'com.sun.jersey:jersey-client:1.19.4'
+	implementation 'org.slf4j:slf4j-api:1.7.28'
+	implementation 'com.netflix.spectator:spectator-api:0.68.0'
+	implementation 'com.netflix.eureka:eureka-client:latest.release'
+	implementation('com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:2.7.5') { force = true }
+	implementation 'com.netflix.archaius:archaius-core:0.7.5'
+
+	// Test dependencies
+	testImplementation 'org.slf4j:slf4j-log4j12:1.8.0-alpha1'
 }

@@ -1,13 +1,14 @@
 plugins {
     id 'de.sebastianboegl.shadow.transformer.log4j' version '2.1.1'
-    id 'com.github.johnrengelman.shadow' version '1.2.4'
+    id 'com.github.johnrengelman.shadow' version '5.0.0' // Updated for Gradle 5 compatibility
     id 'application'
     id 'java'
 }
 
 mainClassName = "com.netflix.conductor.archiver.Main"
 
-sourceCompatibility = 1.8
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
 
 repositories {
     mavenCentral()
@@ -24,27 +25,28 @@ dependencies {
     }
 
     // Log4j
-//    compile 'org.apache.logging.log4j:log4j-core:2.11.1'
-    compile 'org.apache.logging.log4j:log4j-slf4j-impl:2.17.0'
+    implementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.17.0'
 
     // PostgreSQL
-    compile group: 'org.postgresql', name: 'postgresql', version: '42.4.0'
-    compile group: 'com.zaxxer', name: 'HikariCP', version: '4.0.3'
+    implementation group: 'org.postgresql', name: 'postgresql', version: '42.4.0'
+    implementation group: 'com.zaxxer', name: 'HikariCP', version: '4.0.3'
 
     // Tools
-    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.2.1'
-    compile group: 'org.apache.commons', name: 'commons-configuration2', version: '2.2'
-    compile group: 'commons-beanutils', name: 'commons-beanutils', version: '1.9.3'
-    compile group: 'com.google.guava', name: 'guava', version: '19.0'
-    compile group: 'commons-io', name: 'commons-io', version: '2.6'
-    compile group: 'joda-time', name: 'joda-time', version: '2.9.9'
+    implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.2.1'
+    implementation group: 'org.apache.commons', name: 'commons-configuration2', version: '2.2'
+    implementation group: 'commons-beanutils', name: 'commons-beanutils', version: '1.9.3'
+    implementation group: 'com.google.guava', name: 'guava', version: '19.0'
+    implementation group: 'commons-io', name: 'commons-io', version: '2.6'
+    implementation group: 'joda-time', name: 'joda-time', version: '2.9.9'
 }
 
 shadowJar {
-    configurations = [project.configurations.compile]
+    configurations = [project.configurations.implementation] // Updated to `implementation`
     manifest {
-        attributes 'Description': 'Self contained conductor archiver jar'
-        attributes 'Main-Class': 'com.netflix.conductor.archiver.Main'
+        attributes(
+                'Description': 'Self-contained conductor archiver jar',
+                'Main-Class': 'com.netflix.conductor.archiver.Main'
+        )
     }
 }
 
