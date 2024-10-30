@@ -22,21 +22,21 @@ dependencies {
     }
 
 //    // Log4j
-    compile 'org.slf4j:slf4j-simple:1.7.26'
+    implementation 'org.slf4j:slf4j-simple:1.7.26'
 
-    compile project(':conductor-postgresql-persistence')
+    implementation project(':conductor-postgresql-persistence')
 
     // ES6 Dependencies
-    compile group: 'org.elasticsearch.client', name: 'elasticsearch-rest-high-level-client', version: '6.3.1'
+    implementation group: 'org.elasticsearch.client', name: 'elasticsearch-rest-high-level-client', version: '6.3.1'
 
     // PostgreSQL
-    compile group: 'org.postgresql', name: 'postgresql', version: '42.4.0'
-    compile group: 'com.zaxxer', name: 'HikariCP', version: '4.0.3'
+    implementation group: 'org.postgresql', name: 'postgresql', version: '42.4.0'
+    implementation group: 'com.zaxxer', name: 'HikariCP', version: '4.0.3'
 
     // Tools
-    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.2.1'
-    compile group: 'org.apache.commons', name: 'commons-configuration2', version: '2.2'
-    compile group: 'commons-beanutils', name: 'commons-beanutils', version: '1.9.3'
-    compile group: 'com.google.guava', name: 'guava', version: '19.0'
-    compile group: 'commons-io', name: 'commons-io', version: '2.6'
+    implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.2.1'
+    implementation group: 'org.apache.commons', name: 'commons-configuration2', version: '2.2'
+    implementation group: 'commons-beanutils', name: 'commons-beanutils', version: '1.9.3'
+    implementation group: 'com.google.guava', name: 'guava', version: '19.0'
+    implementation group: 'commons-io', name: 'commons-io', version: '2.6'
 }

@@ -8,27 +8,32 @@ dependencies {
 		}
 	}
 
-	compile project(':conductor-common')
-	compile project(':conductor-correlation')
+	// Project dependencies
+	implementation project(':conductor-common')
+	implementation project(':conductor-correlation')
 
-	compile 'com.datadoghq:dd-trace-api:0.88.0'
-	compile 'com.datadoghq:java-dogstatsd-client:2.11.0'
-	compile 'io.reactivex:rxjava:1.2.2'
-	compile 'com.google.inject:guice:4.1.0'
-	compile 'com.netflix.spectator:spectator-api:0.68.0'
-	compile 'com.netflix.eureka:eureka-client:latest.release'
-	compile ('com.fasterxml.jackson.core:jackson-databind:2.7.5') {force=true}
-	compile ('com.fasterxml.jackson.core:jackson-core:2.7.5') {force=true}
-	compile 'com.jayway.jsonpath:json-path:2.2.0'
-	compile 'dnsjava:dnsjava:2.1.8'
-	compile 'net.thisptr:jackson-jq:0.0.13'
-	compile 'com.auth0:java-jwt:3.2.0'
-	compile 'commons-collections:commons-collections:3.2.2'
-	compile 'org.apache.commons:commons-lang3:3.2.1'
-	compile 'com.sun.jersey.contribs:jersey-apache-client4:1.19.4'
-	compile 'org.apache.commons:commons-text:1.10.0'
+	// External dependencies
+	implementation 'com.datadoghq:dd-trace-api:0.88.0'
+	implementation 'com.datadoghq:java-dogstatsd-client:2.11.0'
+	implementation 'io.reactivex:rxjava:1.2.2'
+	implementation 'com.google.inject:guice:4.1.0'
+	implementation 'com.netflix.spectator:spectator-api:0.68.0'
+	implementation 'com.netflix.eureka:eureka-client:latest.release'
+	implementation ('com.fasterxml.jackson.core:jackson-databind:2.7.5') { force = true }
+	implementation ('com.fasterxml.jackson.core:jackson-core:2.7.5') { force = true }
+	implementation 'com.jayway.jsonpath:json-path:2.2.0'
+	implementation 'dnsjava:dnsjava:2.1.8'
+	implementation 'net.thisptr:jackson-jq:0.0.13'
+	implementation 'com.auth0:java-jwt:3.2.0'
+	implementation 'commons-collections:commons-collections:3.2.2'
+	implementation 'org.apache.commons:commons-lang3:3.2.1'
+	implementation 'com.sun.jersey.contribs:jersey-apache-client4:1.19.4'
+	implementation 'org.apache.commons:commons-text:1.10.0'
+
+	// Provided dependencies (using `provided` or `compileOnly` depending on the plugin used)
 	provided 'log4j:log4j:1.2.17'
 
-	testCompile 'org.eclipse.jetty:jetty-server:9.3.9.v20160517'
-	testCompile 'org.eclipse.jetty:jetty-servlet:9.3.9.v20160517'
+	// Test dependencies
+	testImplementation 'org.eclipse.jetty:jetty-server:9.3.9.v20160517'
+	testImplementation 'org.eclipse.jetty:jetty-servlet:9.3.9.v20160517'
 }
