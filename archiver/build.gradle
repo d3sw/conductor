@@ -41,7 +41,7 @@ dependencies {
 }
 
 shadowJar {
-    configurations = [project.configurations.implementation] // Updated to `implementation`
+    configurations = [project.configurations.runtimeClasspath] // Use `runtimeClasspath` for Gradle 5 compatibility
     manifest {
         attributes(
                 'Description': 'Self-contained conductor archiver jar',

@@ -62,7 +62,7 @@ dependencies {
 
 shadowJar {
     mergeServiceFiles()
-    configurations = [project.configurations.implementation] // Updated to use `implementation`
+    configurations = [project.configurations.runtimeClasspath] // Use `runtimeClasspath` for Gradle 5 compatibility
     manifest {
         attributes 'Description': 'Self contained Conductor server jar'
         attributes 'Main-Class': 'com.netflix.conductor.server.Main'
