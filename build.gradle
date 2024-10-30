@@ -80,16 +80,16 @@ subprojects {
 
 sonarqube {
     properties {
-        sonar.coverage.jacoco.xmlReportPaths=\
-            archiver/build/reports/jacoco/test/jacocoTestReport.xml,\
-            client/build/reports/jacoco/test/jacocoTestReport.xml,\
-            common/build/reports/jacoco/test/jacocoTestReport.xml,\
-            contribs/build/reports/jacoco/test/jacocoTestReport.xml,\
-            core/build/reports/jacoco/test/jacocoTestReport.xml,\
-            correlation/build/reports/jacoco/test/jacocoTestReport.xml,\
-            postgresql-persistence/build/reports/jacoco/test/jacocoTestReport.xml,\
-            redis-persistence/build/reports/jacoco/test/jacocoTestReport.xml,\
-            server/build/reports/jacoco/test/jacocoTestReport.xml,\
-            ui/build/reports/jacoco/test/jacocoTestReport.xml
+        property "sonar.coverage.jacoco.xmlReportPaths",
+                "archiver/build/reports/jacoco/test/jacocoTestReport.xml," +
+                "client/build/reports/jacoco/test/jacocoTestReport.xml," +
+                "common/build/reports/jacoco/test/jacocoTestReport.xml," +
+                "contribs/build/reports/jacoco/test/jacocoTestReport.xml," +
+                "core/build/reports/jacoco/test/jacocoTestReport.xml," +
+                "correlation/build/reports/jacoco/test/jacocoTestReport.xml," +
+                "postgresql-persistence/build/reports/jacoco/test/jacocoTestReport.xml," +
+                "redis-persistence/build/reports/jacoco/test/jacocoTestReport.xml," +
+                "server/build/reports/jacoco/test/jacocoTestReport.xml," +
+                "ui/build/reports/jacoco/test/jacocoTestReport.xml"
     }
 }
