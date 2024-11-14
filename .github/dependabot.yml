@@ -1,0 +1,85 @@
+# To get started with Dependabot version updates, you'll need to specify which
+# package ecosystems to update and where the package manifests are located.
+# Please see the documentation for all configuration options:
+# https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+
+version: 2
+registries:
+    maven-github:
+        type: maven-repository
+        url: https://maven.pkg.github.com/d3sw
+        username: goutham-sabapathy
+        password: "${{secrets.DEPENDABOT_GITHUB_TOKEN}}"
+    nuget-github:
+        type: nuget-feed
+        url: https://nuget.pkg.github.com/d3sw
+        token: "${{secrets.DEPENDABOT_GITHUB_TOKEN}}"
+    nuget-public:
+        type: nuget-feed
+        url: https://api.nuget.org/v3/index.json # Public NuGet feed
+updates:
+  - package-ecosystem: "nuget"
+    directory: "/" # Adjust this if your .csproj file is not in the root. For example, directory: "/src/"
+    schedule:
+        interval: "weekly" # or "daily" or "monthly"
+    registries:
+      - nuget-github
+      - nuget-public
+    open-pull-requests-limit: 20
+
+  - package-ecosystem: "maven"
+    directory: "/"
+    schedule:
+        interval: "weekly"
+    registries:
+      - maven-github
+    open-pull-requests-limit: 20
+    
+    # If you have multiple Maven projects, you can specify the directory for each project
+    # - package-ecosystem: "maven"
+    #   directory: "/java/"
+    #   schedule:
+    #       interval: "weekly"
+    #   registries:
+    #     - maven-github
+    #   open-pull-requests-limit: 20
+
+  - package-ecosystem: "gomod"
+    directory: "/"
+    schedule:
+        interval: "weekly"
+
+  - package-ecosystem: "composer"
+    directory: "/"
+    schedule:
+        interval: "weekly"
+
+  - package-ecosystem: "cargo"
+    directory: "/"
+    schedule:
+        interval: "weekly"
+
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+        interval: "weekly"
+
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+        interval: "weekly"
+
+  - package-ecosystem: "terraform"
+    directory: "/"
+    schedule:
+        interval: "monthly"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+        interval: "monthly"
+
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+        interval: "monthly"
