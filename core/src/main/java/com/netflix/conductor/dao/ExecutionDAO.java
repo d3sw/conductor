@@ -27,6 +27,7 @@ import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
 import com.netflix.conductor.common.run.*;
 import com.netflix.conductor.core.events.queue.Message;
 
+import java.sql.Connection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -338,6 +339,8 @@ public interface ExecutionDAO {
     List<PollData> getPollData(String taskDefName);
 
     void addErrorRegistry(WorkflowErrorRegistry workflowErrorRegistry);
+
+    void addAlert(AlertRegistry alertRegistry);
 
     List<WorkflowError> searchWorkflowErrorRegistry(WorkflowErrorRegistry workflowErrorRegistry);
 

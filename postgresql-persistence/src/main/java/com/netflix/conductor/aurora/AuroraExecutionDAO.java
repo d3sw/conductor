@@ -937,6 +937,21 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
                 .executeUpdate());
     }
 
+    public void addAlert(AlertRegistry alertRegistry) {
+        withTransaction(tx -> {
+            addAlert(tx, alertRegistry);
+        });
+    }
+
+    private void addAlert(Connection tx, AlertRegistry alertRegistry) {
+        String SQL = "INSERT INTO alerts (message, alert_lookup_id) " +
+                "VALUES (?, ?)";
+
+        execute(tx, SQL, q -> q.addParameter(alertRegistry.getMessage())
+                .addParameter(alertRegistry.getAlertLookUpId())
+                .executeUpdate());
+    }
+
     public List<WorkflowError> searchWorkflowErrorRegistry(WorkflowErrorRegistry workflowErrorRegistryEntry) {
         StringBuilder SQL = new StringBuilder("SELECT meta_error_registry.isRequiredInReporting, meta_error_registry.id, meta_error_registry.lookup,COUNT(workflow_error_registry.id) AS numberOfErrors FROM workflow_error_registry \n" +
                 "LEFT JOIN meta_error_registry ON workflow_error_registry.error_lookup_id = meta_error_registry.id  \n" +
@@ -1006,6 +1021,8 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
         });
 
     }
+
+
 
     public List<WorkflowErrorRegistry> searchWorkflowErrorRegistryList(WorkflowErrorRegistry workflowErrorRegistryEntry) {
         StringBuilder SQL = new StringBuilder("SELECT * FROM workflow_error_registry LEFT JOIN meta_error_registry on workflow_error_registry.error_lookup_id = meta_error_registry.id WHERE 1=1 ");

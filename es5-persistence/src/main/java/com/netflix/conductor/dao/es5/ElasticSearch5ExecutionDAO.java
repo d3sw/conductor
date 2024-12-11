@@ -677,6 +677,9 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 	public void addErrorRegistry(WorkflowErrorRegistry workflowErrorRegistry){}
 
 	@Override
+	public void addAlert(AlertRegistry alertRegistry){}
+
+	@Override
 	public List<WorkflowError> searchWorkflowErrorRegistry(WorkflowErrorRegistry  workflowErrorRegistry){
 		return null;
 	}

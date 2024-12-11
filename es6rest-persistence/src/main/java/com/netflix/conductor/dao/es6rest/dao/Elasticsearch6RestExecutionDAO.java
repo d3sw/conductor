@@ -1052,6 +1052,8 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
 
 	}
 
+	public void addAlert(AlertRegistry alertRegistry){}
+
 	public List<WorkflowError> searchWorkflowErrorRegistry(WorkflowErrorRegistry workflowErrorRegistry) {
 		return null;
 	}
