@@ -1,14 +1,14 @@
 dependencies {
 
-	compile project(':conductor-core')
-	compile 'redis.clients:jedis:2.8.1'
-	compile 'com.google.inject:guice:3.0'
-	compile 'com.netflix.dyno:dyno-core:1.5.8-rc.3'
- 	compile ('com.netflix.dyno-queues:dyno-queues-redis:1.0.6') {
+	implementation project(':conductor-core')
+	implementation 'redis.clients:jedis:2.8.1'
+	implementation 'com.google.inject:guice:3.0'
+	implementation 'com.netflix.dyno:dyno-core:1.5.8-rc.3'
+	implementation ('com.netflix.dyno-queues:dyno-queues-redis:1.0.6') {
  	}
-	compile 'org.elasticsearch:elasticsearch:2.4.6'
+	implementation 'org.elasticsearch:elasticsearch:2.4.6'
 
 	//In memory redis for unit testing
- 	testCompile 'org.rarefiedredis.redis:redis-java:0.0.17'
+	testImplementation 'org.rarefiedredis.redis:redis-java:0.0.17'
 
 }

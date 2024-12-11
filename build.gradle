@@ -1,16 +1,16 @@
 buildscript {
-	
-	repositories {
+    repositories {
         mavenCentral()
         maven { url "https://repo.grails.org/grails/core/" }
     }
-    
+
     dependencies {
         classpath 'com.netflix.nebula:gradle-extra-configurations-plugin:3.0.3'
-        classpath 'org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:2.8'
+        classpath 'org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:3.1.1'
         classpath 'org.apache.ant:ant:1.9.7'
     }
 }
+
 plugins {
     id 'nebula.netflixoss' version '5.1.1'
 }
@@ -20,6 +20,7 @@ ext.githubProjectName = rootProject.name // Change if github project name is not
 
 apply plugin: 'project-report'
 apply plugin: 'org.sonarqube'
+apply plugin: 'jacoco'
 
 subprojects {
 
@@ -29,9 +30,10 @@ subprojects {
     apply plugin: 'idea'
     apply plugin: 'eclipse'
     apply plugin: 'project-report'
+    apply plugin: 'jacoco'
 
-    sourceCompatibility = 1.8
-    targetCompatibility = 1.8
+    sourceCompatibility = '1.8'
+    targetCompatibility = '1.8'
 
     repositories {
         mavenCentral()
@@ -47,23 +49,47 @@ subprojects {
     }
 
     dependencies {
-    	testCompile 'junit:junit-dep:4.10'
-    	testCompile 'org.mockito:mockito-all:1.10.19'
+        testImplementation 'junit:junit-dep:4.10'
+        testImplementation 'org.mockito:mockito-all:1.10.19'
     }
 
     group = "com.netflix.${githubProjectName}"
-    
-    tasks.withType(Test)  {
-        maxParallelForks = 100
-    }
-    
-    license {
-		excludes(['**/*.txt', '**/*.conf', '**/*.properties', '**/*.json', '**/swagger-ui/*'])
-	}
-	
-	task licenseFormatTests (type:nl.javadude.gradle.plugins.license.License) {
-    	source = fileTree(dir: "src/test").include("**/*")
-	}
-	licenseFormat.dependsOn licenseFormatTests
 
+    tasks.withType(Test) {
+        maxParallelForks = 100
+        finalizedBy jacocoTestReport // Ensure JaCoCo runs after tests
+    }
+
+    jacocoTestReport {
+        dependsOn test // Run tests before generating the report
+        reports {
+            xml.enabled = true  // Required for SonarQube
+            html.enabled = true // Optional, for easier local inspection
+        }
+    }
+
+    license {
+        excludes(['**/*.txt', '**/*.conf', '**/*.properties', '**/*.json', '**/swagger-ui/*'])
+    }
+
+    task licenseFormatTests(type: nl.javadude.gradle.plugins.license.License) {
+        source = fileTree(dir: "src/test").include("**/*")
+    }
+    licenseFormat.dependsOn licenseFormatTests
+}
+
+sonarqube {
+    properties {
+        property "sonar.coverage.jacoco.xmlReportPaths",
+                "archiver/build/reports/jacoco/test/jacocoTestReport.xml," +
+                "client/build/reports/jacoco/test/jacocoTestReport.xml," +
+                "common/build/reports/jacoco/test/jacocoTestReport.xml," +
+                "contribs/build/reports/jacoco/test/jacocoTestReport.xml," +
+                "core/build/reports/jacoco/test/jacocoTestReport.xml," +
+                "correlation/build/reports/jacoco/test/jacocoTestReport.xml," +
+                "postgresql-persistence/build/reports/jacoco/test/jacocoTestReport.xml," +
+                "redis-persistence/build/reports/jacoco/test/jacocoTestReport.xml," +
+                "server/build/reports/jacoco/test/jacocoTestReport.xml," +
+                "ui/build/reports/jacoco/test/jacocoTestReport.xml"
+    }
 }

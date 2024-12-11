@@ -1,8 +1,8 @@
 dependencies {
-    compile project(':conductor-core')
+	implementation project(':conductor-core')
 
     // ES6 Dependencies
-	compile group: 'org.elasticsearch', name: 'elasticsearch', version: '6.3.1'
-	compile group: 'org.elasticsearch.plugin', name: 'transport-netty4-client', version: '6.3.1'
-	compile group: 'org.elasticsearch.client', name: 'elasticsearch-rest-high-level-client', version: '6.3.1'
+	implementation group: 'org.elasticsearch', name: 'elasticsearch', version: '6.3.1'
+	implementation group: 'org.elasticsearch.plugin', name: 'transport-netty4-client', version: '6.3.1'
+	implementation group: 'org.elasticsearch.client', name: 'elasticsearch-rest-high-level-client', version: '6.3.1'
 }
