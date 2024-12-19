@@ -3,6 +3,7 @@ package com.netflix.conductor.aurora;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.netflix.conductor.aurora.sql.ResultSetHandler;
 import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.events.EventPublished;
 import com.netflix.conductor.common.metadata.tasks.PollData;
@@ -21,6 +22,7 @@ import org.postgresql.util.PGobject;
 import javax.inject.Inject;
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
@@ -937,19 +939,63 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
                 .executeUpdate());
     }
 
-    public void addAlert(AlertRegistry alertRegistry) {
+    public void addAlert(Alert alert) {
+        int alertId = 0;
+        try {
+            Optional<AlertRegistry> alertRegistryLookup = getAlertMatching(alert.getMessage()).stream().findFirst();
+            if (alertRegistryLookup.isPresent()) {
+                AlertRegistry alertRegistry = alertRegistryLookup.get();
+                alertId = alertRegistry.getId();
+            }
+            alert.setAlertLookUpId(alertId);
+        } catch (Exception ex) {
+        }
         withTransaction(tx -> {
-            addAlert(tx, alertRegistry);
+            addAlert(tx, alert);
         });
     }
 
-    private void addAlert(Connection tx, AlertRegistry alertRegistry) {
+    private void addAlert(Connection tx, Alert alert) {
+
         String SQL = "INSERT INTO alerts (message, alert_lookup_id) " +
                 "VALUES (?, ?)";
-
-        execute(tx, SQL, q -> q.addParameter(alertRegistry.getMessage())
-                .addParameter(alertRegistry.getAlertLookUpId())
+        execute(tx, SQL, q -> q.addParameter(alert.getMessage())
+                .addParameter(alert.getAlertLookUpId())
                 .executeUpdate());
+    }
+
+    public List<AlertRegistry> getAlertMatching(String errorString) {
+        return getWithTransaction(tx -> {
+            AlertRegistryHandler handler = new AlertRegistryHandler();
+
+            StringBuilder SQL = new StringBuilder("SELECT * FROM ( ");
+            SQL.append("SELECT SUBSTRING(?, lookup) AS matched_txt, * ");
+            SQL.append("FROM alert_registry ");
+            SQL.append(") AS match_results ");
+            SQL.append("WHERE matched_txt IS NOT NULL ");
+            SQL.append("ORDER BY general_message, LENGTH(matched_txt) DESC ");
+
+            String normalizedAlertString = errorString.replace("\u0000", "");
+            return query(tx, SQL.toString(), q -> q.addParameter(normalizedAlertString).executeAndFetch(handler));
+        });
+    }
+
+    class AlertRegistryHandler implements ResultSetHandler<ArrayList<AlertRegistry>> {
+
+        public ArrayList<AlertRegistry> apply(ResultSet rs) throws SQLException {
+            ArrayList<AlertRegistry> alertRegistries = new ArrayList<>();
+
+            while( rs.next()){
+                AlertRegistry alertRegistry = new AlertRegistry();
+                alertRegistry.setId( rs.getInt("id"));
+                alertRegistry.setLookup(rs.getString("lookup"));
+                alertRegistry.setGeneral_message(rs.getString("general_message"));
+                alertRegistry.setAlert_count(rs.getInt("alert_count"));
+
+                alertRegistries.add(alertRegistry);
+            }
+            return alertRegistries;
+        }
     }
 
     public List<WorkflowError> searchWorkflowErrorRegistry(WorkflowErrorRegistry workflowErrorRegistryEntry) {
