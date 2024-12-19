@@ -998,6 +998,29 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
         }
     }
 
+    public Integer getAlertCountFromRegistry(Integer lookupId) {
+        String SQL = "SELECT alert_count FROM alert_registry WHERE id = ?";
+        return queryWithTransaction(SQL, q -> q.addParameter(lookupId).executeAndFetch(rs -> {
+            if (rs.next()) {
+                return rs.getInt("alert_count");
+            }
+            return null;
+        }));
+    }
+
+
+    public Map<Integer, Integer> getGroupedAlerts() {
+        String SQL = "SELECT alert_lookup_id, COUNT(*) AS count FROM alerts GROUP BY alert_lookup_id";
+        return queryWithTransaction(SQL, q -> q.executeAndFetch(rs -> {
+            Map<Integer, Integer> groupedAlerts = new HashMap<>();
+            while (rs.next()) {
+                groupedAlerts.put(rs.getInt("alert_lookup_id"), rs.getInt("count"));
+            }
+            return groupedAlerts;
+        }));
+    }
+
+
     public List<WorkflowError> searchWorkflowErrorRegistry(WorkflowErrorRegistry workflowErrorRegistryEntry) {
         StringBuilder SQL = new StringBuilder("SELECT meta_error_registry.isRequiredInReporting, meta_error_registry.id, meta_error_registry.lookup,COUNT(workflow_error_registry.id) AS numberOfErrors FROM workflow_error_registry \n" +
                 "LEFT JOIN meta_error_registry ON workflow_error_registry.error_lookup_id = meta_error_registry.id  \n" +

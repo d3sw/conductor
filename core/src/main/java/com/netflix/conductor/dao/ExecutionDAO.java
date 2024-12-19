@@ -29,6 +29,7 @@ import com.netflix.conductor.core.events.queue.Message;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -340,6 +341,10 @@ public interface ExecutionDAO {
     void addErrorRegistry(WorkflowErrorRegistry workflowErrorRegistry);
 
     void addAlert(Alert alert);
+
+    Integer getAlertCountFromRegistry(Integer lookupId);
+
+    Map<Integer, Integer> getGroupedAlerts();
 
     List<WorkflowError> searchWorkflowErrorRegistry(WorkflowErrorRegistry workflowErrorRegistry);
 
