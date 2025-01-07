@@ -998,6 +998,23 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
         }
     }
 
+    public void markAlertsAsProcessed(Integer alertLookupId) {
+        logger.info("Marking alerts as processed for lookup ID: {}", alertLookupId);
+        String SQL = "UPDATE alerts SET is_processed = true WHERE alert_lookup_id = ? AND is_processed = false";
+        try {
+            withTransaction(tx -> {
+                execute(tx, SQL, q -> {
+                    q.addParameter(alertLookupId);
+                    q.executeUpdate();
+                });
+            });
+            logger.info("Successfully marked alerts as processed for lookup ID: {}", alertLookupId);
+        } catch (Exception e) {
+            logger.error("Failed to mark alerts as processed for lookup ID: {}", alertLookupId, e);
+        }
+    }
+
+
     public AlertRegistry getAlertRegistryFromLookupId(Integer lookupId) {
         String SQL = "SELECT * FROM alert_registry WHERE id = ?";
         return queryWithTransaction(SQL, q -> q.addParameter(lookupId).executeAndFetch(rs -> {
@@ -1018,7 +1035,10 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
     }
 
     public Map<Integer, Integer> getGroupedAlerts() {
-        String SQL = "SELECT alert_lookup_id, COUNT(*) AS count FROM alerts GROUP BY alert_lookup_id";
+        String SQL = "SELECT alert_lookup_id, COUNT(*) AS count " +
+                "FROM alerts " +
+                "WHERE is_processed = false " +
+                "GROUP BY alert_lookup_id";
         return queryWithTransaction(SQL, q -> q.executeAndFetch(rs -> {
             Map<Integer, Integer> groupedAlerts = new HashMap<>();
             while (rs.next()) {

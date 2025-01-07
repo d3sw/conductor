@@ -51,6 +51,7 @@ public class AlertProcessor  {
                         alertLookupId, alertCount, alertRegistry.getAlertCount());
                 try {
                     notifyService(alertLookupId, alertCount, alertRegistry.getGeneralMessage());
+                    edao.markAlertsAsProcessed(alertLookupId);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

@@ -19,6 +19,7 @@ public class Alert {
 
     private String message;
     private int alertLookUpId;
+    private int isProcessed;
 
     public String getMessage() {
         return message;
@@ -34,5 +35,13 @@ public class Alert {
 
     public void setAlertLookUpId(int alertLookUpId) {
         this.alertLookUpId = alertLookUpId;
+    }
+
+    public int getIsProcessed() {
+        return isProcessed;
+    }
+
+    public void setIsProcessed(int isProcessed) {
+        this.isProcessed = isProcessed;
     }
 }

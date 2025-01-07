@@ -346,6 +346,8 @@ public interface ExecutionDAO {
 
     Map<Integer, Integer> getGroupedAlerts();
 
+    void markAlertsAsProcessed(Integer alertLookupId);
+
     List<WorkflowError> searchWorkflowErrorRegistry(WorkflowErrorRegistry workflowErrorRegistry);
 
     List<WorkflowErrorRegistry> searchWorkflowErrorRegistryList(WorkflowErrorRegistry workflowErrorRegistry);

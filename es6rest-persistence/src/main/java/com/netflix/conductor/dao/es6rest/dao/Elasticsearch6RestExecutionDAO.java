@@ -1054,6 +1054,9 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
 
 	public void addAlert(Alert alert){}
 
+	public void markAlertsAsProcessed(Integer alertLookupId) {
+	}
+
 	public AlertRegistry getAlertRegistryFromLookupId(Integer lookupId) {
 		return null;
 	}
