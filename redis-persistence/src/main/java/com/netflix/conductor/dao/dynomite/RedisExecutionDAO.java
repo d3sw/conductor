@@ -612,7 +612,7 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 
 	public void addAlert(Alert alert){}
 
-	public Integer getAlertCountFromRegistry(Integer lookupId) {
+	public  AlertRegistry getAlertRegistryFromLookupId(Integer lookupId) {
 		return null;
 	}
 

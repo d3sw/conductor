@@ -342,7 +342,7 @@ public interface ExecutionDAO {
 
     void addAlert(Alert alert);
 
-    Integer getAlertCountFromRegistry(Integer lookupId);
+    AlertRegistry getAlertRegistryFromLookupId(Integer lookupId);
 
     Map<Integer, Integer> getGroupedAlerts();
 

@@ -19,8 +19,8 @@ public class AlertRegistry {
 
     private int id;
     private String lookup;
-    private String general_message;
-    private int alert_count;
+    private String generalMessage;
+    private int alertCount;
 
     public int getId() {
         return id;
@@ -38,19 +38,19 @@ public class AlertRegistry {
         this.lookup = lookup;
     }
 
-    public String getGeneral_message() {
-        return general_message;
+    public String getGeneralMessage() {
+        return generalMessage;
     }
 
-    public void setGeneral_message(String general_message) {
-        this.general_message = general_message;
+    public void setGeneralMessage(String generalMessage) {
+        this.generalMessage = generalMessage;
     }
 
-    public int getAlert_count() {
-        return alert_count;
+    public int getAlertCount() {
+        return alertCount;
     }
 
-    public void setAlert_count(int alert_count) {
-        this.alert_count = alert_count;
+    public void setAlertCount(int alertCount) {
+        this.alertCount = alertCount;
     }
 }

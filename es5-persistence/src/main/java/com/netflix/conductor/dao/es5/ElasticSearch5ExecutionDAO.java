@@ -679,7 +679,7 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 	@Override
 	public void addAlert(Alert alert){}
 
-	public Integer getAlertCountFromRegistry(Integer lookupId) {
+	public AlertRegistry getAlertRegistryFromLookupId(Integer lookupId) {
 		return null;
 	}
 

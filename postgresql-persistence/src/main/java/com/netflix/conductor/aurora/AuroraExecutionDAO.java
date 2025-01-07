@@ -989,8 +989,8 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
                 AlertRegistry alertRegistry = new AlertRegistry();
                 alertRegistry.setId( rs.getInt("id"));
                 alertRegistry.setLookup(rs.getString("lookup"));
-                alertRegistry.setGeneral_message(rs.getString("general_message"));
-                alertRegistry.setAlert_count(rs.getInt("alert_count"));
+                alertRegistry.setGeneralMessage(rs.getString("general_message"));
+                alertRegistry.setAlertCount(rs.getInt("alert_count"));
 
                 alertRegistries.add(alertRegistry);
             }
@@ -998,16 +998,24 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
         }
     }
 
-    public Integer getAlertCountFromRegistry(Integer lookupId) {
-        String SQL = "SELECT alert_count FROM alert_registry WHERE id = ?";
+    public AlertRegistry getAlertRegistryFromLookupId(Integer lookupId) {
+        String SQL = "SELECT * FROM alert_registry WHERE id = ?";
         return queryWithTransaction(SQL, q -> q.addParameter(lookupId).executeAndFetch(rs -> {
             if (rs.next()) {
-                return rs.getInt("alert_count");
+                return mapResultSetToAlertRegistry(rs);
             }
             return null;
         }));
     }
 
+    private AlertRegistry mapResultSetToAlertRegistry(ResultSet rs) throws SQLException {
+        AlertRegistry alertRegistry = new AlertRegistry();
+        alertRegistry.setId(rs.getInt("id"));
+        alertRegistry.setLookup(rs.getString("lookup"));
+        alertRegistry.setGeneralMessage(rs.getString("general_message"));
+        alertRegistry.setAlertCount(rs.getInt("alert_count"));
+        return alertRegistry;
+    }
 
     public Map<Integer, Integer> getGroupedAlerts() {
         String SQL = "SELECT alert_lookup_id, COUNT(*) AS count FROM alerts GROUP BY alert_lookup_id";
