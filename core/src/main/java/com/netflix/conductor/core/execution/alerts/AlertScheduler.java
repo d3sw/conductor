@@ -17,18 +17,15 @@ public class AlertScheduler {
     @Inject
     public AlertScheduler(AlertProcessor alertProcessor) {
         this.alertProcessor = alertProcessor;
-    }
-
-    public void start() {
-        logger.info("Starting AlertScheduler to process alerts every 10 minutes...");
         scheduler.scheduleAtFixedRate(() -> {
             try {
                 alertProcessor.processAlerts();
             } catch (Exception e) {
                 logger.error("Error processing alerts", e);
             }
-        }, 0, 10, TimeUnit.MINUTES);
+        }, 0, 1, TimeUnit.MINUTES);
     }
+
 
     public void stop() {
         logger.info("Stopping AlertScheduler...");

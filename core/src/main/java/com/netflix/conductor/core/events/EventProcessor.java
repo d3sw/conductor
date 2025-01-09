@@ -24,10 +24,12 @@ import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.events.EventExecution.Status;
 import com.netflix.conductor.common.metadata.events.EventHandler;
 import com.netflix.conductor.common.metadata.events.EventHandler.Action;
+import com.netflix.conductor.common.run.Alert;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.events.queue.ObservableQueue;
 import com.netflix.conductor.core.execution.ParametersUtils;
+import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.service.ExecutionService;
 import com.netflix.conductor.service.MetadataService;
 import com.netflix.conductor.service.MetricService;
@@ -61,13 +63,16 @@ public class EventProcessor {
 	private ExecutionService es;
 	private ActionProcessor ap;
 	private ObjectMapper om;
+	private ExecutionDAO edao;
+
 
 	@Inject
-	public EventProcessor(ExecutionService es, MetadataService ms, ActionProcessor ap, Configuration config, ObjectMapper om) {
+	public EventProcessor(ExecutionService es, MetadataService ms, ActionProcessor ap, Configuration config, ObjectMapper om, ExecutionDAO edao) {
 		this.es = es;
 		this.ms = ms;
 		this.ap = ap;
 		this.om = om;
+		this.edao = edao;
 
 		boolean disabled = Boolean.parseBoolean(config.getProperty("workflow.event.processor.disabled", "false"));
 		if (!disabled) {
@@ -492,6 +497,9 @@ public class EventProcessor {
 				evalCondition(condition, conditionClass, payloadObj);
 			} catch (Exception ex) {
 				logger.error(handler.getName() + " event handler condition validation failed " + ex.getMessage(), ex);
+				Alert alert = new Alert();
+				alert.setMessage("event handler condition validation failed");
+				edao.addAlert(alert);
 			}
 		}
 

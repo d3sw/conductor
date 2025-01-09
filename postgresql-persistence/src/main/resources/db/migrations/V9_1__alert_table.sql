@@ -14,3 +14,6 @@ CREATE TABLE IF NOT EXISTS alerts (
     is_processed boolean default false not null,
     CONSTRAINT alerts_pkey PRIMARY KEY (id)
 );
+
+insert into alert_registry (lookup,general_message,alert_count)
+values('event handler condition validation failed','Event handler validation fail','5')
