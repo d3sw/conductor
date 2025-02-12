@@ -1,5 +1,6 @@
 package com.netflix.conductor.core.execution.alerts;
 
+import com.netflix.conductor.core.config.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,9 +14,13 @@ public class AlertScheduler {
 
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     private final AlertProcessor alertProcessor;
+    private final Configuration config;
 
     @Inject
-    public AlertScheduler(AlertProcessor alertProcessor) {
+    public AlertScheduler(AlertProcessor alertProcessor, Configuration config) {
+        this.config = config;
+        int alertInitDelay = config.getIntProperty("alert.init.delay", 0);
+        int alertFrequency = config.getIntProperty("alert.frequency", 10);
         this.alertProcessor = alertProcessor;
         scheduler.scheduleAtFixedRate(() -> {
             try {
@@ -23,7 +28,7 @@ public class AlertScheduler {
             } catch (Exception e) {
                 logger.error("Error processing alerts", e);
             }
-        }, 0, 1, TimeUnit.MINUTES);
+        }, alertInitDelay, alertFrequency, TimeUnit.MINUTES);
     }
 
 
