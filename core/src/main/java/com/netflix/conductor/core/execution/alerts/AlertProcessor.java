@@ -16,6 +16,7 @@ import javax.inject.Inject;
 import javax.ws.rs.core.MediaType;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 
 public class AlertProcessor  {
@@ -41,7 +42,6 @@ public class AlertProcessor  {
     }
 
     public void processAlerts() {
-        logger.info("Fetching grouped alerts from alerts table...");
         Map<Integer, Integer> groupedAlerts = edao.getGroupedAlerts();
 
         groupedAlerts.forEach((alertLookupId, alertCount) -> {
@@ -60,8 +60,7 @@ public class AlertProcessor  {
     }
 
     private void notifyService(Integer alertLookupId, int alertCount, String message) throws Exception {
-        logger.info("Notifying service for alertLookupId: {}, alertCount: {}", alertLookupId, alertCount);
-        String serviceDiscoveryQuery = "notify.service.${TLD}";
+        String serviceDiscoveryQuery = "notify.service."+ Optional.ofNullable(System.getenv("TLD")).orElse("default");
         String uri = "/v1/notify";
         String method = "POST";
         String contentType = MediaType.APPLICATION_JSON;
@@ -124,6 +123,5 @@ public class AlertProcessor  {
             throw new Exception("HTTP Error " + response.getStatus() + ": " + entity);
         }
     }
-
 }
 
