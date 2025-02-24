@@ -59,6 +59,7 @@ public class Main {
 			jobs.add(new EventPubsJob(dataSource));
 			jobs.add(new WorkflowJob(dataSource));
 			jobs.add(new DbLogJob(dataSource));
+			jobs.add(new AlertsJob(dataSource));
 
 			// Run jobs in threads
 			CountDownLatch countDown = new CountDownLatch(jobs.size());

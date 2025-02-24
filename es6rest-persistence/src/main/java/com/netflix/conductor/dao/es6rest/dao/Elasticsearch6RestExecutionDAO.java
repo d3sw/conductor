@@ -1052,6 +1052,19 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
 
 	}
 
+	public void addAlert(Alert alert){}
+
+	public void markAlertsAsProcessed(Integer alertLookupId) {
+	}
+
+	public AlertRegistry getAlertRegistryFromLookupId(Integer lookupId) {
+		return null;
+	}
+
+
+	public Map<Integer, Integer> getGroupedAlerts() {
+		return null;
+	}
 	public List<WorkflowError> searchWorkflowErrorRegistry(WorkflowErrorRegistry workflowErrorRegistry) {
 		return null;
 	}

@@ -31,6 +31,7 @@ import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.events.queue.ObservableQueue;
 import com.netflix.conductor.core.execution.TestConfiguration;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
+import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.service.ExecutionService;
 import com.netflix.conductor.service.MetadataService;
 import org.junit.Ignore;
@@ -98,6 +99,7 @@ public class TestEventProcessor {
 		
 		//Workflow Executor Mock
 		WorkflowExecutor executor = mock(WorkflowExecutor.class);
+		ExecutionDAO edao = mock(ExecutionDAO.class);
 		String id = UUID.randomUUID().toString();
 		AtomicBoolean started = new AtomicBoolean(false);
 		doAnswer(new Answer<String>() {
@@ -118,7 +120,7 @@ public class TestEventProcessor {
 		
 		ActionProcessor ap = new ActionProcessor(executor, metadata, mock(Injector.class));
 		
-		EventProcessor ep = new EventProcessor(eservice, ms, ap, new TestConfiguration(), new ObjectMapper());
+		EventProcessor ep = new EventProcessor(eservice, ms, ap, new TestConfiguration(), new ObjectMapper(),edao);
 		assertNotNull(ep.getQueues());
 		assertEquals(1, ep.getQueues().size());
 		
@@ -171,6 +173,7 @@ public class TestEventProcessor {
 
 		//Execution Service Mock
 		ExecutionService eservice = mock(ExecutionService.class);
+		ExecutionDAO edao = mock(ExecutionDAO.class);
 		when(eservice.addEventExecution(any())).thenReturn(true);
 
 		//Workflow Executor Mock
@@ -199,7 +202,7 @@ public class TestEventProcessor {
 
 		ActionProcessor ap = new ActionProcessor(executor, metadata, mock(Injector.class));
 
-		EventProcessor ep = new EventProcessor(eservice, ms, ap, new TestConfiguration(), new ObjectMapper());
+		EventProcessor ep = new EventProcessor(eservice, ms, ap, new TestConfiguration(), new ObjectMapper(),edao);
 		assertNotNull(ep.getQueues());
 		assertEquals(1, ep.getQueues().size());
 
@@ -251,6 +254,7 @@ public class TestEventProcessor {
 
 		//Execution Service Mock
 		ExecutionService eservice = mock(ExecutionService.class);
+		ExecutionDAO edao = mock(ExecutionDAO.class);
 		when(eservice.addEventExecution(any())).thenReturn(true);
 
 		//Workflow Executor Mock
@@ -279,7 +283,7 @@ public class TestEventProcessor {
 
 		ActionProcessor ap = new ActionProcessor(executor, metadata, mock(Injector.class));
 
-		EventProcessor ep = new EventProcessor(eservice, ms, ap, new TestConfiguration(), new ObjectMapper());
+		EventProcessor ep = new EventProcessor(eservice, ms, ap, new TestConfiguration(), new ObjectMapper(),edao);
 		assertNotNull(ep.getQueues());
 		assertEquals(1, ep.getQueues().size());
 

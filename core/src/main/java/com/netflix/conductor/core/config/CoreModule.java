@@ -23,6 +23,7 @@ import com.netflix.conductor.core.events.ActionProcessor;
 import com.netflix.conductor.core.events.EventProcessor;
 import com.netflix.conductor.core.events.queue.dyno.DynoEventQueueProvider;
 import com.netflix.conductor.core.execution.WorkflowSweeper;
+import com.netflix.conductor.core.execution.alerts.AlertScheduler;
 import com.netflix.conductor.core.execution.appconfig.cache.AppConfig;
 import com.netflix.conductor.core.execution.appconfig.cache.PriorityConfig;
 import com.netflix.conductor.core.execution.batch.BatchSweeper;
@@ -64,6 +65,7 @@ public class CoreModule extends AbstractModule {
 		bind(SetVariable.class).asEagerSingleton();
 		bind(AppConfig.class).asEagerSingleton();
 		bind(PriorityConfig.class).asEagerSingleton();
+		bind(AlertScheduler.class).asEagerSingleton();
 	}
 	
 }

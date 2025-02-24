@@ -3,6 +3,7 @@ package com.netflix.conductor.aurora;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.netflix.conductor.aurora.sql.ResultSetHandler;
 import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.events.EventPublished;
 import com.netflix.conductor.common.metadata.tasks.PollData;
@@ -21,6 +22,7 @@ import org.postgresql.util.PGobject;
 import javax.inject.Inject;
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
@@ -937,6 +939,116 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
                 .executeUpdate());
     }
 
+    public void addAlert(Alert alert) {
+        int alertId = 0;
+        try {
+            Optional<AlertRegistry> alertRegistryLookup = getAlertMatching(alert.getMessage()).stream().findFirst();
+            if (alertRegistryLookup.isPresent()) {
+                AlertRegistry alertRegistry = alertRegistryLookup.get();
+                alertId = alertRegistry.getId();
+            }
+            alert.setAlertLookUpId(alertId);
+        } catch (Exception ex) {
+        }
+        withTransaction(tx -> {
+            addAlert(tx, alert);
+        });
+    }
+
+    private void addAlert(Connection tx, Alert alert) {
+
+        String SQL = "INSERT INTO alerts (message, alert_lookup_id) " +
+                "VALUES (?, ?)";
+        execute(tx, SQL, q -> q.addParameter(alert.getMessage())
+                .addParameter(alert.getAlertLookUpId())
+                .executeUpdate());
+    }
+
+    public List<AlertRegistry> getAlertMatching(String errorString) {
+        return getWithTransaction(tx -> {
+            AlertRegistryHandler handler = new AlertRegistryHandler();
+
+            StringBuilder SQL = new StringBuilder("SELECT * FROM ( ");
+            SQL.append("SELECT SUBSTRING(?, lookup) AS matched_txt, * ");
+            SQL.append("FROM alert_registry ");
+            SQL.append(") AS match_results ");
+            SQL.append("WHERE matched_txt IS NOT NULL ");
+            SQL.append("ORDER BY general_message, LENGTH(matched_txt) DESC ");
+
+            String normalizedAlertString = errorString.replace("\u0000", "");
+            return query(tx, SQL.toString(), q -> q.addParameter(normalizedAlertString).executeAndFetch(handler));
+        });
+    }
+
+    class AlertRegistryHandler implements ResultSetHandler<ArrayList<AlertRegistry>> {
+
+        public ArrayList<AlertRegistry> apply(ResultSet rs) throws SQLException {
+            ArrayList<AlertRegistry> alertRegistries = new ArrayList<>();
+
+            while( rs.next()){
+                AlertRegistry alertRegistry = new AlertRegistry();
+                alertRegistry.setId( rs.getInt("id"));
+                alertRegistry.setLookup(rs.getString("lookup"));
+                alertRegistry.setGeneralMessage(rs.getString("general_message"));
+                alertRegistry.setAlertCount(rs.getInt("alert_count"));
+
+                alertRegistries.add(alertRegistry);
+            }
+            return alertRegistries;
+        }
+    }
+
+    public void markAlertsAsProcessed(Integer alertLookupId) {
+        logger.info("Marking alerts as processed for lookup ID: {}", alertLookupId);
+        String SQL = "UPDATE alerts SET is_processed = true WHERE alert_lookup_id = ? AND is_processed = false";
+        try {
+            withTransaction(tx -> {
+                execute(tx, SQL, q -> {
+                    q.addParameter(alertLookupId);
+                    q.executeUpdate();
+                });
+            });
+            logger.info("Successfully marked alerts as processed for lookup ID: {}", alertLookupId);
+        } catch (Exception e) {
+            logger.error("Failed to mark alerts as processed for lookup ID: {}", alertLookupId, e);
+        }
+    }
+
+
+    public AlertRegistry getAlertRegistryFromLookupId(Integer lookupId) {
+        String SQL = "SELECT * FROM alert_registry WHERE id = ?";
+        return queryWithTransaction(SQL, q -> q.addParameter(lookupId).executeAndFetch(rs -> {
+            if (rs.next()) {
+                return mapResultSetToAlertRegistry(rs);
+            }
+            return null;
+        }));
+    }
+
+    private AlertRegistry mapResultSetToAlertRegistry(ResultSet rs) throws SQLException {
+        AlertRegistry alertRegistry = new AlertRegistry();
+        alertRegistry.setId(rs.getInt("id"));
+        alertRegistry.setLookup(rs.getString("lookup"));
+        alertRegistry.setGeneralMessage(rs.getString("general_message"));
+        alertRegistry.setAlertCount(rs.getInt("alert_count"));
+        return alertRegistry;
+    }
+
+    public Map<Integer, Integer> getGroupedAlerts() {
+        String SQL = "SELECT alert_lookup_id, COUNT(*) AS count " +
+                "FROM alerts " +
+                "WHERE is_processed = false " +
+                "GROUP BY alert_lookup_id";
+        return queryWithTransaction(SQL, q -> q.executeAndFetch(rs -> {
+            Map<Integer, Integer> groupedAlerts = new HashMap<>();
+            while (rs.next()) {
+                groupedAlerts.put(rs.getInt("alert_lookup_id"), rs.getInt("count"));
+            }
+            return groupedAlerts;
+        }));
+    }
+
+
     public List<WorkflowError> searchWorkflowErrorRegistry(WorkflowErrorRegistry workflowErrorRegistryEntry) {
         StringBuilder SQL = new StringBuilder("SELECT meta_error_registry.isRequiredInReporting, meta_error_registry.id, meta_error_registry.lookup,COUNT(workflow_error_registry.id) AS numberOfErrors FROM workflow_error_registry \n" +
                 "LEFT JOIN meta_error_registry ON workflow_error_registry.error_lookup_id = meta_error_registry.id  \n" +
@@ -1006,6 +1118,8 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
         });
 
     }
+
+
 
     public List<WorkflowErrorRegistry> searchWorkflowErrorRegistryList(WorkflowErrorRegistry workflowErrorRegistryEntry) {
         StringBuilder SQL = new StringBuilder("SELECT * FROM workflow_error_registry LEFT JOIN meta_error_registry on workflow_error_registry.error_lookup_id = meta_error_registry.id WHERE 1=1 ");
