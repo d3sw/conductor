@@ -76,10 +76,11 @@ public class TestDeciderOutcomes {
 	public void init() throws Exception {
 		
 		MetadataDAO metadata = mock(MetadataDAO.class);
+		ExecutionDAO executionDAO = mock(ExecutionDAO.class);
 		TaskDef td = new TaskDef();
 		td.setRetryCount(1);
 		when(metadata.getTaskDef(any())).thenReturn(td);
-		this.ds = new DeciderService(metadata, om, mock(Configuration.class));
+		this.ds = new DeciderService(metadata, om, mock(Configuration.class), executionDAO);
 	}
 	
 	@Test

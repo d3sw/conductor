@@ -610,7 +610,7 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 
 	}
 
-	public void addAlert(Alert alert){}
+	public void addAlert(String alertMessage){}
 
 	public void markAlertsAsProcessed(Integer alertLookupId) {
 	}

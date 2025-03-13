@@ -86,9 +86,10 @@ public class TestDeciderService {
 	@Before
 	public void setup(){
 		MetadataDAO mdao = mock(MetadataDAO.class);
+		ExecutionDAO executionDAO = mock(ExecutionDAO.class);
 		TaskDef taskDef = new TaskDef();
 		when(mdao.getTaskDef(any())).thenReturn(taskDef);
-		ds = new DeciderService(mdao, new ObjectMapper(), mock(Configuration.class));
+		ds = new DeciderService(mdao, new ObjectMapper(), mock(Configuration.class), executionDAO);
 		
 		workflow = new Workflow();
 		workflow.getInput().put("requestId", "request id 001");

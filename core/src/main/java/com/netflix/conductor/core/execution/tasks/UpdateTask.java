@@ -23,11 +23,13 @@ import com.netflix.conductor.common.metadata.tasks.Task.Status;
 import com.netflix.conductor.common.metadata.tasks.TaskResult;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
+import com.netflix.conductor.dao.ExecutionDAO;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -44,9 +46,16 @@ public class UpdateTask extends WorkflowSystemTask {
 	private static final String OUTPUT_PARAMETER = "output";
 	private static final String REASON_PARAMETER = "reason";
 	public static final String NAME = "UPDATE_TASK";
+	private ExecutionDAO edao;
 
 	public UpdateTask() {
 		super(NAME);
+	}
+
+	@Inject
+	public UpdateTask(ExecutionDAO edao) {
+		super(NAME);
+		this.edao = edao;
 	}
 
 	@Override
@@ -99,6 +108,7 @@ public class UpdateTask extends WorkflowSystemTask {
 			if (targetTask == null) {
 				task.setReasonForIncompletion("No task found with reference name " + taskRefName + ", workflowId " + workflowId);
 				task.setStatus(Status.FAILED);
+				edao.addAlert("No task found with reference name " + taskRefName + ", workflowId " + workflowId);
 				return;
 			}
 
