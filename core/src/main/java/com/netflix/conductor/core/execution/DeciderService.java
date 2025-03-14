@@ -32,6 +32,7 @@ import com.netflix.conductor.common.run.Workflow.WorkflowStatus;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.ScriptEvaluator;
 import com.netflix.conductor.core.utils.IDGenerator;
+import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.service.MetricService;
 import org.apache.commons.collections.CollectionUtils;
@@ -59,6 +60,8 @@ public class DeciderService {
 	
 	private MetadataDAO metadata;
 
+	private ExecutionDAO edao;
+
 	private ObjectMapper om;
 	
 	private ParametersUtils pu = new ParametersUtils();
@@ -66,8 +69,9 @@ public class DeciderService {
 	private boolean tasksAutoCleanup;
 		
 	@Inject
-	public DeciderService(MetadataDAO metadata, ObjectMapper om, Configuration config) {
+	public DeciderService(MetadataDAO metadata, ObjectMapper om, Configuration config, ExecutionDAO edao) {
 		this.metadata = metadata;
+		this.edao = edao;
 		this.om = om;
 		tasksAutoCleanup = Boolean.parseBoolean(config.getProperty("workflow.system.task.auto.cleanup", "true"));
 	}
@@ -271,6 +275,10 @@ public class DeciderService {
 				+ ",correlationId=" + workflow.getCorrelationId()
 				+ ",traceId=" + workflow.getTraceId()
 				+ ",contextUser=" + workflow.getContextUser());
+			edao.addAlert("Workflow might have a stuck state. workflowId=" + workflow.getWorkflowId()
+					+ ",correlationId=" + workflow.getCorrelationId()
+					+ ",traceId=" + workflow.getTraceId()
+					+ ",contextUser=" + workflow.getContextUser());
 		}
 
 		return false;

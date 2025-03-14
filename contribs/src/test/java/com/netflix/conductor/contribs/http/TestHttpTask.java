@@ -31,6 +31,7 @@ import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.execution.DeciderService;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
+import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.MetadataDAO;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
@@ -344,7 +345,8 @@ public class TestHttpTask {
  		wft.setTaskReferenceName("t1");
 		def.getTasks().add(wft);
  		MetadataDAO metadata = mock(MetadataDAO.class);
- 		new DeciderService(metadata, null, mock(Configuration.class)).decide(workflow, def);
+		ExecutionDAO executionDAO = mock(ExecutionDAO.class);
+ 		new DeciderService(metadata, null, mock(Configuration.class), executionDAO).decide(workflow, def);
  		
  		System.out.println(workflow.getTasks());
  		System.out.println(workflow.getStatus());

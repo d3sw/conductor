@@ -135,7 +135,7 @@ public class WorkflowExecutor {
 		this.activeWorkerLastPollnSecs = config.getIntProperty("tasks.active.worker.lastpoll", 10);
 		this.taskStatusListener = taskStatusListener;
 		this.workflowStatusListener = workflowStatusListener;
-		this.decider = new DeciderService(metadata, om, config);
+		this.decider = new DeciderService(metadata, om, config, edao);
 		this.validateAuth = Boolean.parseBoolean(config.getProperty("workflow.auth.validate", "false"));
 		this.traceIdEnabled = Boolean.parseBoolean(config.getProperty("workflow.traceid.enabled", "false"));
 		this.authContextEnabled = Boolean.parseBoolean(config.getProperty("workflow.authcontext.enabled", "false"));
@@ -523,6 +523,7 @@ public class WorkflowExecutor {
 
 		if (!workflow.getStatus().isTerminal()) {
 			logger.debug("Workflow is still running. status=" + workflow.getStatus()+",workflowId="+workflow.getWorkflowId()+",correlationId="+workflow.getCorrelationId()+ ",contextUser=" + workflow.getContextUser()+",clientId=" + workflow.getClientId());
+			edao.addAlert("Workflow is still running. status=" + workflow.getStatus()+",workflowId="+workflow.getWorkflowId()+",correlationId="+workflow.getCorrelationId()+ ",contextUser=" + workflow.getContextUser()+",clientId=" + workflow.getClientId());
 			throw new ApplicationException(Code.CONFLICT, "Workflow is still running. status=" + workflow.getStatus());
 		}
 
@@ -560,6 +561,9 @@ public class WorkflowExecutor {
 
 		if (!workflow.getStatus().isTerminal()) {
 			logger.debug("Workflow is still running. status=" + workflow.getStatus() + ",workflowId=" + workflow.getWorkflowId()
+					+ ",correlationId="+workflow.getCorrelationId() + ",traceId=" + workflow.getTraceId()
+					+ ",contextUser=" + workflow.getContextUser()+",clientId=" + workflow.getClientId());
+			edao.addAlert("Workflow is still running. status=" + workflow.getStatus() + ",workflowId=" + workflow.getWorkflowId()
 					+ ",correlationId="+workflow.getCorrelationId() + ",traceId=" + workflow.getTraceId()
 					+ ",contextUser=" + workflow.getContextUser()+",clientId=" + workflow.getClientId());
 			throw new ApplicationException(Code.CONFLICT, "Workflow is still running.  status=" + workflow.getStatus());
@@ -1344,12 +1348,14 @@ public class WorkflowExecutor {
 		logger.debug("Invoked decide for workflow " + workflowId);
 		if (workflowId == null || workflowId.isEmpty()) {
 			logger.error("ONECOND-1106: Invoked decide() with an empty or null Workflow ID");
+			edao.addAlert("ONECOND-1106: Invoked decide() with an empty or null Workflow ID");
 			return Pair.of(false, config.getSweepFrequency());
 		}
 
 		Workflow workflow = edao.getWorkflow(workflowId, true);
 		if (workflow == null) {
 			logger.error("ONECOND-1106: getWorkflow() returned null for workflow: " + workflowId);
+			edao.addAlert("ONECOND-1106: getWorkflow() returned null for workflow: " + workflowId);
 			return Pair.of(false, config.getSweepFrequency());
 		}
 

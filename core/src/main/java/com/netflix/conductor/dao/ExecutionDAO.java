@@ -340,7 +340,7 @@ public interface ExecutionDAO {
 
     void addErrorRegistry(WorkflowErrorRegistry workflowErrorRegistry);
 
-    void addAlert(Alert alert);
+    void addAlert(String alertMessage);
 
     AlertRegistry getAlertRegistryFromLookupId(Integer lookupId);
 

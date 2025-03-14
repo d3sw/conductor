@@ -939,20 +939,23 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
                 .executeUpdate());
     }
 
-    public void addAlert(Alert alert) {
+    public void addAlert(String alertMessage) {
         int alertId = 0;
         try {
-            Optional<AlertRegistry> alertRegistryLookup = getAlertMatching(alert.getMessage()).stream().findFirst();
+            Optional<AlertRegistry> alertRegistryLookup = getAlertMatching(alertMessage).stream().findFirst();
             if (alertRegistryLookup.isPresent()) {
+                Alert alert = new Alert();
+                alert.setMessage(alertMessage);
                 AlertRegistry alertRegistry = alertRegistryLookup.get();
                 alertId = alertRegistry.getId();
+                alert.setAlertLookUpId(alertId);
+                withTransaction(tx -> {
+                    addAlert(tx, alert);
+                });
             }
-            alert.setAlertLookUpId(alertId);
         } catch (Exception ex) {
+            logger.error("Error adding alert", ex);
         }
-        withTransaction(tx -> {
-            addAlert(tx, alert);
-        });
     }
 
     private void addAlert(Connection tx, Alert alert) {

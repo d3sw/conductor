@@ -497,9 +497,7 @@ public class EventProcessor {
 				evalCondition(condition, conditionClass, payloadObj);
 			} catch (Exception ex) {
 				logger.error(handler.getName() + " event handler condition validation failed " + ex.getMessage(), ex);
-				Alert alert = new Alert();
-				alert.setMessage("event handler condition validation failed");
-				edao.addAlert(alert);
+				edao.addAlert(handler.getName() + " event handler condition validation failed " + ex.getMessage());
 			}
 		}
 

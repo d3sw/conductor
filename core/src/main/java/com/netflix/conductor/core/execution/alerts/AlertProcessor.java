@@ -46,7 +46,7 @@ public class AlertProcessor  {
 
         groupedAlerts.forEach((alertLookupId, alertCount) -> {
             AlertRegistry alertRegistry = edao.getAlertRegistryFromLookupId(alertLookupId);
-            if (alertRegistry != null && alertCount > alertRegistry.getAlertCount()) {
+            if (alertRegistry != null && alertCount >= alertRegistry.getAlertCount()) {
                 logger.info("Alert threshold exceeded for lookup ID: {}. Count: {}, Threshold: {}",
                         alertLookupId, alertCount, alertRegistry.getAlertCount());
                 try {
