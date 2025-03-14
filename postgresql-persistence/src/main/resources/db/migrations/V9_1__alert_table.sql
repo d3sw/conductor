@@ -16,4 +16,19 @@ CREATE TABLE IF NOT EXISTS alerts (
 );
 
 insert into alert_registry (lookup,general_message,alert_count)
-values('event handler condition validation failed','Event handler validation fail','5')
+values('event handler condition validation failed','Event Handler Validation Failed on Startup','1');
+
+insert into alert_registry (lookup,general_message,alert_count)
+values('Workflow might have a stuck state. workflowId','Workflow has a Stuck State Warning','1');
+
+insert into alert_registry (lookup,general_message,alert_count)
+values('Workflow is still running. status','Timeout/fail/reset error occurred','1');
+
+insert into alert_registry (lookup,general_message,alert_count)
+values('No task found with reference name','Workflow Wait task Warning','1');
+
+insert into alert_registry (lookup,general_message,alert_count)
+values('ONECOND-1106','ONECOND-1106 empty/null workflowID','1');
+
+insert into alert_registry (lookup,general_message,alert_count)
+values('Service discovery failed','Service discovery failed','1');

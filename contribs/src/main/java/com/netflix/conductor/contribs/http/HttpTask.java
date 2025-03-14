@@ -28,6 +28,7 @@ import com.netflix.conductor.core.DNSLookup;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.ScriptEvaluator;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
+import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.service.MetricService;
 import datadog.trace.api.Trace;
@@ -65,12 +66,14 @@ public class HttpTask extends GenericHttpTask {
     private final long initialDelay;
 	private final long updateDelay;
 	private final QueueDAO queue;
+	private final ExecutionDAO executionDAO;
 	private ScheduledExecutorService executorService ;
 
 	@Inject
-	public HttpTask(RestClientManager rcm, Configuration config, ObjectMapper om, AuthManager authManager, ForeignAuthManager foreignAuthManager, QueueDAO queue) {
+	public HttpTask(RestClientManager rcm, Configuration config, ObjectMapper om, AuthManager authManager, ForeignAuthManager foreignAuthManager, QueueDAO queue, ExecutionDAO executionDAO) {
 		super(NAME, config, rcm, om, authManager, foreignAuthManager);
 		this.queue =queue;
+		this.executionDAO = executionDAO;
 		unackTimeout = config.getIntProperty("workflow.system.task.http.unack.timeout", 60);
 		long initialDelayCfg = config.getIntProperty("workflow.system.task.http.long.unack.initialDelay", 0);
 		long updateDelayCfg = config.getIntProperty("workflow.system.task.http.long.unack.updateDelay", 0);
@@ -103,6 +106,7 @@ public class HttpTask extends GenericHttpTask {
 				final String msg = "Service discovery failed for: " + input.getServiceDiscoveryQuery()
 						+ " . No records found.";
 				logger.error(msg);
+				executionDAO.addAlert(msg);
 				task.setStatus(Status.FAILED);
 				task.setReasonForIncompletion(msg);
 				task.getOutputData().put("response",msg);
