@@ -22,7 +22,7 @@ insert into alert_registry (lookup,general_message,alert_count)
 values('Workflow might have a stuck state. workflowId','Workflow has a Stuck State Warning','1');
 
 insert into alert_registry (lookup,general_message,alert_count)
-values('Workflow is still running. status','Timeout/fail/reset error occurred','1');
+values('Workflow is still running. status=RUNNING  Timeout/fail/reset error occurred','Timeout/fail/reset error occurred','1');
 
 insert into alert_registry (lookup,general_message,alert_count)
 values('No task found with reference name','Workflow Wait task Warning','1');
