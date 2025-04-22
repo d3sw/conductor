@@ -164,7 +164,7 @@ public class ActionProcessor {
 			op.put("conductor.event.success", true);
 
 		} catch (Exception e) {
-			logger.error(e.getMessage(), e);
+			//logger.error(e.getMessage(), e);
 			op.put("error", e.getMessage());
 		}
 

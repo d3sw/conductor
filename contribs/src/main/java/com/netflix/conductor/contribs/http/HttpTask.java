@@ -154,14 +154,14 @@ public class HttpTask extends GenericHttpTask {
 		ScheduledFuture<?> scheduledFuture = null;
 		try {
 			HttpResponse response = new HttpResponse();
-			logger.debug("http task starting. WorkflowId=" + workflow.getWorkflowId()
+			/*logger.debug("http task starting. WorkflowId=" + workflow.getWorkflowId()
 					+ ",taskReferenceName=" + task.getReferenceTaskName()
 					+ ",service=" + serviceName
 					+ ",taskId=" + task.getTaskId()
 					+ ",url=" + input.getUri()
 					+ ",correlationId=" + workflow.getCorrelationId()
 					+ ",traceId=" + workflow.getTraceId()
-					+ ",contextUser=" + workflow.getContextUser());
+					+ ",contextUser=" + workflow.getContextUser());*/
 
 			Object isLongRunningTask = task.getInputData().get(LONG_RUNNING_HTTP);
 			if (isLongRunningTask != null && Boolean.valueOf(isLongRunningTask.toString())) {
@@ -215,7 +215,7 @@ public class HttpTask extends GenericHttpTask {
 			task.getOutputData().put("response", response.asMap());
 
 			long exec_time = System.currentTimeMillis() - start_time;
-			logger.info("http task completed. WorkflowId=" + workflow.getWorkflowId()
+			/*logger.info("http task completed. WorkflowId=" + workflow.getWorkflowId()
 					+ ",taskReferenceName=" + task.getReferenceTaskName()
 					+ ",service=" + serviceName
 					+ ",taskId=" + task.getTaskId()
@@ -225,7 +225,7 @@ public class HttpTask extends GenericHttpTask {
 					+ ",correlationId=" + workflow.getCorrelationId()
 					+ ",contextUser=" + workflow.getContextUser()
 					+ ",traceId=" + workflow.getTraceId()
-					+ ",request=" + input.getBody());
+					+ ",request=" + input.getBody());*/
 			MetricService.getInstance().httpExecution(task.getTaskType(),
 					task.getReferenceTaskName(),
 					task.getTaskDefName(),
