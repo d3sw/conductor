@@ -362,8 +362,8 @@ public class HttpTask extends GenericHttpTask {
 	private void processCustomFailureReasonResponse(Task task, HttpResponse response, String failureReason, String reason) {
 		// show full response body if the provided field for failure reason does not exist
 		if (StringUtils.isEmpty(reason)) {
-			logger.error(String.format("unable to retrieve failure reason from the provided custom field, see details: field = %s, task id = %s, workflow id = %s",
-					failureReason, task.getTaskId(), task.getWorkflowInstanceId())); // log this so we can track how often this happens
+			//logger.error(String.format("unable to retrieve failure reason from the provided custom field, see details: field = %s, task id = %s, workflow id = %s",
+					//failureReason, task.getTaskId(), task.getWorkflowInstanceId())); // log this so we can track how often this happens
 			setReasonForIncompletion(response, task);
 			return;
 		}
