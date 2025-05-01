@@ -173,6 +173,7 @@ public class ActionProcessor {
 
 	@Trace(operationName = "updateTask", resourceName = "eventhandler")
 	private Map<String, Object> updateTask(Action action, Object payload, String event, String messageId) throws Exception {
+		logger.debug("Update task started. messageId={}, event={}", messageId, event);
 		UpdateTask updateTask = action.getUpdate_task();
 		Map<String, Object> op = new HashMap<>();
 		try {
@@ -258,6 +259,7 @@ public class ActionProcessor {
 			op.put("conductor.event.payload", payload);
 			op.put("conductor.event.messageId", messageId);
 			op.put("conductor.event.success", true);
+			logger.debug("Update task completed. messageId={}, event={}, payload={}", messageId, event, payload);
 		} catch (Exception e) {
 			logger.error("updateTask: failed with " + e.getMessage() + " for action=" + updateTask + ", payload=" + payload, e);
 			op.put("error", e.getMessage());
