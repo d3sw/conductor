@@ -974,9 +974,9 @@ public class WorkflowExecutor {
 					+ ",taskReasonForIncompletion=" + failedTask.getReasonForIncompletion();
 		}
 		if (WorkflowStatus.FAILED.equals(workflow.getStatus()) || WorkflowStatus.TERMINATED.equals(workflow.getStatus())) {
-			logger.error(message);
+			//logger.error(message);
 		} else {
-			logger.debug(message);
+			//logger.debug(message);
 		}
 		List<Task> tasks = workflow.getTasks();
 		cancelTasks(workflow, tasks, null);
@@ -1301,7 +1301,7 @@ public class WorkflowExecutor {
 
 		// Otherwise wake it up by unacking message via queue
 		boolean result = queue.wakeup(WorkflowExecutor.deciderQueue, workflowId, priority);
-		logger.debug("wakeUpSweeper " + result + " for " + workflowId);
+		//logger.debug("wakeUpSweeper " + result + " for " + workflowId);
 	}
 
 	public List<Task> getTasks(String taskType, String startKey, int count) throws Exception {
@@ -1409,7 +1409,7 @@ public class WorkflowExecutor {
 			}
 
 		} catch (TerminateWorkflow tw) {
-			String message = "Error in workflow execution: " + tw.getMessage()
+			/*String message = "Error in workflow execution: " + tw.getMessage()
 					+ ",workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId()
 					+ ",traceId=" + workflow.getTraceId() + ",contextUser=" + workflow.getContextUser()
 					+ ",clientId=" + workflow.getClientId();
@@ -1420,7 +1420,7 @@ public class WorkflowExecutor {
 				logger.error(message, tw);
 			} else {
 				logger.debug(message, tw);
-			}
+			}*/
 			terminate(def, workflow, tw);
 			return Pair.of(true, sweepFrequency);
 		}
@@ -1551,7 +1551,7 @@ public class WorkflowExecutor {
 	//Executes the async system task
 	public void executeSystemTask(WorkflowSystemTask systemTask, String taskId, int callbackSeconds) {
 		try {
-			logger.debug("Executing async taskId={}, callbackSeconds={}, retryTimeIn={}", taskId, callbackSeconds, systemTask.getRetryTimeInSecond());
+			//logger.debug("Executing async taskId={}, callbackSeconds={}, retryTimeIn={}", taskId, callbackSeconds, systemTask.getRetryTimeInSecond());
 
 			Task task = edao.getTask(taskId);
 			if (task == null) {

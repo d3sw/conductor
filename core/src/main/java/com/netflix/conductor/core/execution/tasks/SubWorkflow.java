@@ -111,7 +111,7 @@ public class SubWorkflow extends WorkflowSystemTask {
 		Workflow subWorkflow = provider.getWorkflow(workflowId, false);
 		WorkflowStatus subWorkflowStatus = subWorkflow.getStatus();
 		if (!subWorkflowStatus.isTerminal()) {
-			logger.debug("The sub-workflow " + subWorkflow.getWorkflowId() + " seems still running");
+			//logger.debug("The sub-workflow " + subWorkflow.getWorkflowId() + " seems still running");
 			return false;
 		}
 
