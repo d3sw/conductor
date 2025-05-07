@@ -11,7 +11,7 @@ public class TaskUtils {
 		try {
 			return Task.Status.valueOf(status.toUpperCase());
 		} catch (Exception ex) {
-			logger.error("getTaskStatus: failed with " + ex.getMessage() + " for " + status);
+			//logger.error("getTaskStatus: failed with " + ex.getMessage() + " for " + status);
 		}
 		return null;
 	}

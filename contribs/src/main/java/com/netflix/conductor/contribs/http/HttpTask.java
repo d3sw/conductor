@@ -408,7 +408,7 @@ public class HttpTask extends GenericHttpTask {
 		validate.getConditions().forEach((name, condition) -> {
 			try {
 				Boolean success = ScriptEvaluator.evalBool(condition, responseMap);
-				logger.trace("Evaluation resulted in " + success + " for " + name + "=" + condition);
+				//logger.trace("Evaluation resulted in " + success + " for " + name + "=" + condition);
 
 				// Failed ?
 				if (!success) {
@@ -420,7 +420,7 @@ public class HttpTask extends GenericHttpTask {
 					overallStatus.set(false);
 				}
 			} catch (Exception ex) {
-				logger.error("Evaluation failed for " + name + "=" + condition, ex);
+				//logger.error("Evaluation failed for " + name + "=" + condition, ex);
 
 				// Set the error message instead of false
 				addEvalResult(task, name, ex.getMessage());

@@ -974,9 +974,9 @@ public class WorkflowExecutor {
 					+ ",taskReasonForIncompletion=" + failedTask.getReasonForIncompletion();
 		}
 		if (WorkflowStatus.FAILED.equals(workflow.getStatus()) || WorkflowStatus.TERMINATED.equals(workflow.getStatus())) {
-			logger.error(message);
+			//logger.error(message);
 		} else {
-			logger.debug(message);
+			//logger.debug(message);
 		}
 		List<Task> tasks = workflow.getTasks();
 		cancelTasks(workflow, tasks, null);

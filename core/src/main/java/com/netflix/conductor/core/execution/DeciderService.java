@@ -349,9 +349,9 @@ public class DeciderService {
 				message += "," + reason;
 			}
 			if (WorkflowStatus.FAILED.equals(status)) {
-				logger.error(message);
+				//logger.error(message);
 			} else {
-				logger.debug(message);
+				//logger.debug(message);
 			}
 			throw new TerminateWorkflow(reason, status, task);
 		}
@@ -438,7 +438,7 @@ public class DeciderService {
 			String message = "Task timeout occurred. " + task
 				+ ",workflowId=" + task.getWorkflowInstanceId()
 				+ ",correlationId=" + task.getCorrelationId();
-			logger.error(message);
+			//logger.error(message);
 			throw new TerminateWorkflow(reason, WorkflowStatus.TIMED_OUT, task);
 		}
 
