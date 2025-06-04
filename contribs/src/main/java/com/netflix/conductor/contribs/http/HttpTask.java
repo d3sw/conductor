@@ -154,6 +154,8 @@ public class HttpTask extends GenericHttpTask {
 		ScheduledFuture<?> scheduledFuture = null;
 		try {
 			HttpResponse response = new HttpResponse();
+
+			if("checkvfsid".equalsIgnoreCase(task.getReferenceTaskName())) {
 			logger.debug("http task starting. WorkflowId=" + workflow.getWorkflowId()
 					+ ",taskReferenceName=" + task.getReferenceTaskName()
 					+ ",service=" + serviceName
@@ -162,7 +164,8 @@ public class HttpTask extends GenericHttpTask {
 					+ ",correlationId=" + workflow.getCorrelationId()
 					+ ",traceId=" + workflow.getTraceId()
 					+ ",contextUser=" + workflow.getContextUser());
-
+			}
+			
 			Object isLongRunningTask = task.getInputData().get(LONG_RUNNING_HTTP);
 			if (isLongRunningTask != null && Boolean.valueOf(isLongRunningTask.toString())) {
 				scheduledFuture = executorService.scheduleWithFixedDelay(() -> updateUnack(task.getTaskId()), initialDelay, updateDelay, TimeUnit.MILLISECONDS);
