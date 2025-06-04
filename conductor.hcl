@@ -39,9 +39,9 @@ variable "conductor_server_mem" {
 variable "conductor_worker_count" {
   type = map(string)
   default = {
-    dev = 5
+    dev = 3
     int = 10
-    uat = 5
+    uat = 3
     live = 10
   }
 }

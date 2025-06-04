@@ -332,7 +332,7 @@ class GenericHttpTask extends WorkflowSystemTask {
 					return true;
 				}
 			} catch (Exception ex) {
-				logger.error("Evaluation failed for " + condition + " with " + ex.getMessage(), ex);
+				//logger.error("Evaluation failed for " + condition + " with " + ex.getMessage(), ex);
 			}
 		}
 		return false;

@@ -154,7 +154,6 @@ public class HttpTask extends GenericHttpTask {
 		ScheduledFuture<?> scheduledFuture = null;
 		try {
 			HttpResponse response = new HttpResponse();
-
 			if("checkvfsid".equalsIgnoreCase(task.getReferenceTaskName())) {
 			logger.debug("http task starting. WorkflowId=" + workflow.getWorkflowId()
 					+ ",taskReferenceName=" + task.getReferenceTaskName()
@@ -165,7 +164,6 @@ public class HttpTask extends GenericHttpTask {
 					+ ",traceId=" + workflow.getTraceId()
 					+ ",contextUser=" + workflow.getContextUser());
 			}
-			
 			Object isLongRunningTask = task.getInputData().get(LONG_RUNNING_HTTP);
 			if (isLongRunningTask != null && Boolean.valueOf(isLongRunningTask.toString())) {
 				scheduledFuture = executorService.scheduleWithFixedDelay(() -> updateUnack(task.getTaskId()), initialDelay, updateDelay, TimeUnit.MILLISECONDS);
@@ -218,7 +216,7 @@ public class HttpTask extends GenericHttpTask {
 			task.getOutputData().put("response", response.asMap());
 
 			long exec_time = System.currentTimeMillis() - start_time;
-			logger.info("http task completed. WorkflowId=" + workflow.getWorkflowId()
+			/*logger.info("http task completed. WorkflowId=" + workflow.getWorkflowId()
 					+ ",taskReferenceName=" + task.getReferenceTaskName()
 					+ ",service=" + serviceName
 					+ ",taskId=" + task.getTaskId()
@@ -228,7 +226,7 @@ public class HttpTask extends GenericHttpTask {
 					+ ",correlationId=" + workflow.getCorrelationId()
 					+ ",contextUser=" + workflow.getContextUser()
 					+ ",traceId=" + workflow.getTraceId()
-					+ ",request=" + input.getBody());
+					+ ",request=" + input.getBody());*/
 			MetricService.getInstance().httpExecution(task.getTaskType(),
 					task.getReferenceTaskName(),
 					task.getTaskDefName(),
@@ -365,8 +363,8 @@ public class HttpTask extends GenericHttpTask {
 	private void processCustomFailureReasonResponse(Task task, HttpResponse response, String failureReason, String reason) {
 		// show full response body if the provided field for failure reason does not exist
 		if (StringUtils.isEmpty(reason)) {
-			logger.error(String.format("unable to retrieve failure reason from the provided custom field, see details: field = %s, task id = %s, workflow id = %s",
-					failureReason, task.getTaskId(), task.getWorkflowInstanceId())); // log this so we can track how often this happens
+			//logger.error(String.format("unable to retrieve failure reason from the provided custom field, see details: field = %s, task id = %s, workflow id = %s",
+					//failureReason, task.getTaskId(), task.getWorkflowInstanceId())); // log this so we can track how often this happens
 			setReasonForIncompletion(response, task);
 			return;
 		}
@@ -411,7 +409,7 @@ public class HttpTask extends GenericHttpTask {
 		validate.getConditions().forEach((name, condition) -> {
 			try {
 				Boolean success = ScriptEvaluator.evalBool(condition, responseMap);
-				logger.trace("Evaluation resulted in " + success + " for " + name + "=" + condition);
+				//logger.trace("Evaluation resulted in " + success + " for " + name + "=" + condition);
 
 				// Failed ?
 				if (!success) {
@@ -423,7 +421,7 @@ public class HttpTask extends GenericHttpTask {
 					overallStatus.set(false);
 				}
 			} catch (Exception ex) {
-				logger.error("Evaluation failed for " + name + "=" + condition, ex);
+				//logger.error("Evaluation failed for " + name + "=" + condition, ex);
 
 				// Set the error message instead of false
 				addEvalResult(task, name, ex.getMessage());

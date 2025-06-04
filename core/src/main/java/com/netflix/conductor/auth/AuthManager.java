@@ -172,7 +172,7 @@ public class AuthManager {
 				JsonQuery query = queryCache.get(condition);
 				List<JsonNode> result = query.apply(input);
 				if (result == null || result.isEmpty()) {
-					logger.error("Verify failed for " + rule + " rule with no result!");
+					//logger.error("Verify failed for " + rule + " rule with no result!");
 				} else {
 					boolean success = Boolean.parseBoolean(result.iterator().next().toString());
 					if (!success) {
