@@ -25,7 +25,7 @@ public class DbLogJob extends AbstractJob {
 		try {
 			AppConfig config = AppConfig.getInstance();
 			int batchSize = config.batchSize();
-			Timestamp endTime = new Timestamp(System.currentTimeMillis() - TimeUnit.DAYS.toMillis(config.keepDays()));
+			Timestamp endTime = new Timestamp(System.currentTimeMillis() - TimeUnit.DAYS.toMillis(config.logKeepDays()));
 			logger.info("Deleting records earlier than " + endTime + ", batch size = " + batchSize);
 
 			int deleted = 0;
