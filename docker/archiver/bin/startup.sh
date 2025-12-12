@@ -22,6 +22,7 @@ addParam() {
 }
 
 addParam "${archiver_keep_days}" "keep_days" "30"
+addParam "${archiver_log_keep_days}" "log_keep_days" "30"
 addParam "${archiver_batch_size}" "batch_size" "100"
 addParam "${archiver_queue_workers}" "queue_workers" "50"
 addParam "${archiver_cleanup_message_workflows}" "cleanup_message_workflows" ""
