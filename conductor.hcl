@@ -12,7 +12,7 @@ variable "conductor_server_count" {
     dev = 2
     int = 4
     uat = 2
-    live = 4
+    live = 5
   }
 }
 
@@ -237,29 +237,6 @@ job "conductor" {
       change_mode = "restart"
       env         = false
       policies    = ["read-secrets"]
-    }
-
-    service {
-      name = "${JOB}-${NOMAD_GROUP_NAME}-pxy"
-      port = "8080"
-
-      connect {
-        sidecar_service {}
-      }
-
-      check {
-        name     = "${JOB}-${NOMAD_GROUP_NAME}-pxy"
-        type     = "http"
-        path     = "/v1/health"
-        interval = "30s"
-        timeout  = "10s"
-        expose   = true
-        check_restart {
-          limit           = 3
-          grace           = "180s"
-          ignore_warnings = false
-        }
-      }
     }
 
     service {
