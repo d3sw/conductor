@@ -103,7 +103,7 @@ public class Join extends WorkflowSystemTask {
 						forkedTask.setStatus(Status.SKIPPED);
 						provider.updateTask(forkedTask);
 
-						String queueName = QueueUtils.getQueueName(task);
+						String queueName = QueueUtils.getQueueName(forkedTask);
 						provider.getQueueDao().remove(queueName, forkedTask.getTaskId());
 					}
 					task.getOutputData().put(joinOnRef, forkedTask.getOutputData());

@@ -41,6 +41,10 @@ public class AppConfig {
 		return config.getInt("keep_days", 30);
 	}
 
+	public int logKeepDays() {
+		return config.getInt("log_keep_days", 30);
+	}
+
 	public String cleanupMessageWorkflows() {
 		return config.getString("cleanup_message_workflows",null);
 	}
