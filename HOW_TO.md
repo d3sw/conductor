@@ -8,6 +8,7 @@ For example: **deluxe.one-packaging.package.progress:deluxe.conductor.queue.pack
 Where  **deluxe.one-packaging.package.progress** is a subject or queue url and
 **deluxe.conductor.queue.packaging.progress.1.1** is a group id which defines to what consumer group consumer belongs to
 To listen the messages from the same queue but in different consumer group use custom groupId value
+
 For example:
 ```java
 public class SharedShotgunQueue implements ObservableQueue {
