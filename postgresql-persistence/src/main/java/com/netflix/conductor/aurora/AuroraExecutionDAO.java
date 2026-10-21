@@ -858,7 +858,7 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 
     private void updateEventExecution(Connection tx, EventExecution ee) {
         String SQL = "UPDATE event_execution SET " +
-                "modified_on = now(), status = ?, started_on = ?, processed_on = ? " +
+                "modified_on = now(), status = ?, started_on = ?, processed_on = ?" +
                 "WHERE handler_name = ? AND event_name = ? " +
                 "AND message_id = ? AND execution_id = ?";
 
@@ -1040,7 +1040,7 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
         }
 
         if (workflowErrorRegistryEntry != null && workflowErrorRegistryEntry.getStartTime() != 0 && workflowErrorRegistryEntry.getEndTime() != 0) {
-            SQL.append("AND start_time >= ? and end_time <= ? ");
+            SQL.append("AND start_time >= ? and end_time <= ?");
             params.add(workflowErrorRegistryEntry.getStartTime());
             params.add(workflowErrorRegistryEntry.getEndTime());
         }
