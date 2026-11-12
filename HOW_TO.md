@@ -1,4 +1,4 @@
-# Local Shotgun setup for testing
+# Local Shotgun setup for testing 
 Shotgun is a MQ service that process messages in Conductor.
 The main class with Shotgun MQ configuration is
 **com.netflix.conductor.contribs.queue.shotgun.SharedShotgunQueue**
